@@ -19,28 +19,21 @@
  */
 package com.github.perlundq.yajsync.internal.session;
 
-public enum SessionStatus
-{
-    OK("@RSYNCD: OK"),
-    EXIT("@RSYNCD: EXIT"),
-    ERROR("@ERROR"),
-    AUTHREQ("@RSYNCD: AUTHREQD ");
-
+public enum SessionStatus {
+    AUTHREQ("@RSYNCD: AUTHREQD "), ERROR("@ERROR"), EXIT("@RSYNCD: EXIT"), OK("@RSYNCD: OK");
+    
     private final String _repr;
-
-    SessionStatus(String s)
-    {
-        _repr = s;
+    
+    SessionStatus(String s) {
+        this._repr = s;
     }
-
-    boolean matches(String s)
-    {
-        return s.startsWith(_repr);
+    
+    boolean matches(String s) {
+        return s.startsWith(this._repr);
     }
-
+    
     @Override
-    public String toString()
-    {
-        return _repr;
+    public String toString() {
+        return this._repr;
     }
 }

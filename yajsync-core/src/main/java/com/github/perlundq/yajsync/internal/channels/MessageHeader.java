@@ -22,74 +22,64 @@ package com.github.perlundq.yajsync.internal.channels;
 
 import java.util.Objects;
 
-public class MessageHeader
-{
-    private static final int MSG_TYPE_OFFSET = 7;
+public class MessageHeader {
     private static final int MSG_MAX_LENGTH = 0xFFFFFF;
+    private static final int MSG_TYPE_OFFSET = 7;
+    
+    /**
+     * @throws IllegalArgumentException if tag value is invalid and has no matching
+     *                                  MessageCode
+     */
+    public static MessageHeader fromTag(int tag) {
+        int length = tag & MSG_MAX_LENGTH;
+        MessageCode code = MessageCode.fromInt((tag >> 24) - MSG_TYPE_OFFSET); // throws IllegalArgumentException
+        return new MessageHeader(code, length); // throws IllegalArgumentException
+    }
+    
     private final MessageCode _code;
+    
     private final int _length;
-
+    
     /**
      * @throws IllegalArgumentException if length < 0 or length > 0xFFFFFF)
      */
-    public MessageHeader(MessageCode code, int length)
-    {
+    public MessageHeader(MessageCode code, int length) {
         assert code != null;
-        if (length < 0 || length > MSG_MAX_LENGTH) {  // NOTE: 0-length messages are valid
-            throw new IllegalArgumentException(String.format(
-                "Error: length %d out of range (0 <= length <= %d)",
-                length, MSG_MAX_LENGTH));
+        if (length < 0 || length > MSG_MAX_LENGTH) { // NOTE: 0-length messages are valid
+            throw new IllegalArgumentException(String.format("Error: length %d out of range (0 <= length <= %d)", length, MSG_MAX_LENGTH));
         }
-        _code = code;
-        _length = length;
+        this._code = code;
+        this._length = length;
     }
-
-    /**
-     * @throws IllegalArgumentException if tag value is invalid and has no
-     *         matching MessageCode
-     */
-    public static MessageHeader fromTag(int tag)
-    {
-        int length = tag & MSG_MAX_LENGTH;
-        MessageCode code = MessageCode.fromInt((tag >> 24) - MSG_TYPE_OFFSET); // throws IllegalArgumentException
-        return new MessageHeader(code, length);                                // throws IllegalArgumentException
-    }
-
+    
     @Override
-    public String toString()
-    {
-        return String.format("%s %s length=%d", getClass().getSimpleName(),
-                             _code, _length);
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
             MessageHeader other = (MessageHeader) obj;
             return this._code == other._code && this._length == other._length;
         }
         return false;
     }
-
+    
     @Override
-    public int hashCode()
-    {
-        return Objects.hash(_code, _length);
+    public int hashCode() {
+        return Objects.hash(this._code, this._length);
     }
-
-    public MessageCode messageType()
-    {
-        return _code;
+    
+    public int length() {
+        return this._length;
     }
-
-    public int length()
-    {
-        return _length;
+    
+    public MessageCode messageType() {
+        return this._code;
     }
-
-    public int toTag()
-    {
-        return ((MSG_TYPE_OFFSET + _code.value()) << 24) | _length;
+    
+    @Override
+    public String toString() {
+        return String.format("%s %s length=%d", this.getClass().getSimpleName(), this._code, this._length);
+    }
+    
+    public int toTag() {
+        return MSG_TYPE_OFFSET + this._code.value() << 24 | this._length;
     }
 }

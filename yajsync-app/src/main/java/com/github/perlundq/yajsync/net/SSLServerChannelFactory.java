@@ -22,48 +22,23 @@ import java.net.InetAddress;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
-public class SSLServerChannelFactory implements ServerChannelFactory
-{
-    private final SSLServerSocketFactory _factory;
-
-    private boolean _isWantClientAuth;
-    private boolean _isReuseAddress;
+public class SSLServerChannelFactory implements ServerChannelFactory {
     private int _backlog = 128;
-
-    public SSLServerChannelFactory()
-    {
-        _factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+    
+    private final SSLServerSocketFactory _factory;
+    private boolean _isReuseAddress;
+    private boolean _isWantClientAuth;
+    
+    public SSLServerChannelFactory() {
+        this._factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
     }
-
+    
     @Override
-    public ServerChannelFactory setReuseAddress(boolean isReuseAddress)
-    {
-        _isReuseAddress = isReuseAddress;
-        return this;
-    }
-
-    public ServerChannelFactory setWantClientAuth(boolean isWantClientAuth)
-    {
-        _isWantClientAuth = isWantClientAuth;
-        return this;
-    }
-
-    public ServerChannelFactory setBacklog(int backlog)
-    {
-        _backlog = backlog;
-        return this;
-    }
-
-    @Override
-    public ServerChannel open(InetAddress address, int port, int timeout)
-            throws IOException
-    {
-        SSLServerSocket sock =
-            (SSLServerSocket) _factory.createServerSocket(port,
-                                                          _backlog, address);
+    public ServerChannel open(InetAddress address, int port, int timeout) throws IOException {
+        SSLServerSocket sock = (SSLServerSocket) this._factory.createServerSocket(port, this._backlog, address);
         try {
-            sock.setReuseAddress(_isReuseAddress);
-            sock.setWantClientAuth(_isWantClientAuth);
+            sock.setReuseAddress(this._isReuseAddress);
+            sock.setWantClientAuth(this._isWantClientAuth);
             return new SSLServerChannel(sock, timeout);
         } catch (Throwable t) {
             if (!sock.isClosed()) {
@@ -75,5 +50,21 @@ public class SSLServerChannelFactory implements ServerChannelFactory
             }
             throw t;
         }
+    }
+    
+    public ServerChannelFactory setBacklog(int backlog) {
+        this._backlog = backlog;
+        return this;
+    }
+    
+    @Override
+    public ServerChannelFactory setReuseAddress(boolean isReuseAddress) {
+        this._isReuseAddress = isReuseAddress;
+        return this;
+    }
+    
+    public ServerChannelFactory setWantClientAuth(boolean isWantClientAuth) {
+        this._isWantClientAuth = isWantClientAuth;
+        return this;
     }
 }

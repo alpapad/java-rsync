@@ -18,16 +18,14 @@
  */
 package com.github.perlundq.yajsync.internal.util;
 
-@SuppressWarnings("serial")
-public class ArgumentParsingError extends Exception
-{
-    public ArgumentParsingError(String string)
-    {
-        super(string);
-    }
-
-    public ArgumentParsingError(Exception e)
-    {
+public class ArgumentParsingError extends Exception {
+    private static final long serialVersionUID = 1L;
+    
+    public ArgumentParsingError(Exception e) {
         super(e);
+    }
+    
+    public ArgumentParsingError(String string) {
+        super(string);
     }
 }

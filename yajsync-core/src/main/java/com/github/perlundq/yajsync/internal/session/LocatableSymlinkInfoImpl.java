@@ -21,25 +21,18 @@ import java.nio.file.Path;
 import com.github.perlundq.yajsync.attr.LocatableSymlinkInfo;
 import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 
-
-class LocatableSymlinkInfoImpl extends SymlinkInfoImpl
-                               implements LocatableSymlinkInfo
-{
+class LocatableSymlinkInfoImpl extends SymlinkInfoImpl implements LocatableSymlinkInfo {
     private final Path _path;
-
-    LocatableSymlinkInfoImpl(String pathName, byte[] pathNameBytes,
-                             RsyncFileAttributes attrs, String targetPathName,
-                             Path path)
-    {
+    
+    LocatableSymlinkInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, String targetPathName, Path path) {
         super(pathName, pathNameBytes, attrs, targetPathName);
         assert path != null;
         assert path.isAbsolute();
-        _path = path;
+        this._path = path;
     }
-
+    
     @Override
-    public Path path()
-    {
-        return _path;
+    public Path path() {
+        return this._path;
     }
 }

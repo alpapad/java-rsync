@@ -25,28 +25,23 @@ import java.util.ServiceLoader;
 
 import com.github.perlundq.yajsync.internal.util.Option;
 
-public abstract class ModuleProvider
-{
-    public static ModuleProvider getDefault()
-    {
-        ServiceLoader<ModuleProvider> loader =
-            ServiceLoader.load(ModuleProvider.class);
+public abstract class ModuleProvider {
+    public static ModuleProvider getDefault() {
+        ServiceLoader<ModuleProvider> loader = ServiceLoader.load(ModuleProvider.class);
         for (ModuleProvider provider : loader) {
             return provider;
         }
         return new Configuration.Reader();
     }
-
-    public abstract Collection<Option> options();
+    
     public abstract void close();
-
+    
     // must be thread safe
-    public abstract Modules newAuthenticated(InetAddress address,
-                                             Principal principal)
-        throws ModuleException;
-
+    public abstract Modules newAnonymous(InetAddress address) throws ModuleException;
+    
     // must be thread safe
-    public abstract Modules newAnonymous(InetAddress address)
-        throws ModuleException;
-
+    public abstract Modules newAuthenticated(InetAddress address, Principal principal) throws ModuleException;
+    
+    public abstract Collection<Option> options();
+    
 }

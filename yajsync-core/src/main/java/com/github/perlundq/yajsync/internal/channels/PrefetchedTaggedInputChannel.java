@@ -29,143 +29,119 @@ import com.github.perlundq.yajsync.internal.util.Consts;
 import com.github.perlundq.yajsync.internal.util.Environment;
 import com.github.perlundq.yajsync.internal.util.Util;
 
-public class PrefetchedTaggedInputChannel extends TaggedInputChannel
-{
+public class PrefetchedTaggedInputChannel extends TaggedInputChannel {
     private static final int DEFAULT_BUF_SIZE = 8 * 1024; // TODO: make buffer size configurable
-    private final ByteBuffer _buf;                                              // never flipped, never marked and its limit is never changed
+    private final ByteBuffer _buf; // never flipped, never marked and its limit is never changed
     private int _readIndex = 0;
-
-    public PrefetchedTaggedInputChannel(ReadableByteChannel sock,
-                                        MessageHandler handler)
-    {
+    
+    public PrefetchedTaggedInputChannel(ReadableByteChannel sock, MessageHandler handler) {
         this(sock, handler, DEFAULT_BUF_SIZE);
     }
-
-    public PrefetchedTaggedInputChannel(ReadableByteChannel sock,
-                                        MessageHandler handler,
-                                        int bufferSize)
-    {
+    
+    public PrefetchedTaggedInputChannel(ReadableByteChannel sock, MessageHandler handler, int bufferSize) {
         super(sock, handler);
         if (Environment.isAllocateDirect()) {
-            _buf = ByteBuffer.allocateDirect(bufferSize);
+            this._buf = ByteBuffer.allocateDirect(bufferSize);
         } else {
-            _buf = ByteBuffer.allocate(bufferSize);
+            this._buf = ByteBuffer.allocate(bufferSize);
         }
-        _buf.order(ByteOrder.LITTLE_ENDIAN);
+        this._buf.order(ByteOrder.LITTLE_ENDIAN);
     }
-
-    @Override
-    public String toString()
-    {
-        return String.format("buf=%s, readIndex=%d prefetched=%d, " +
-                             "contents:%n\t%s",
-                             _buf, _readIndex, numBytesPrefetched(),
-                             Text.byteBufferToString(_buf,
-                                                     _readIndex,
-                                                     writeIndex()));
+    
+    private void ensureMinimumPrefetched(int numBytes) throws ChannelException {
+        assert numBytes <= this._buf.limit();
+        this.ensureSpaceFor(numBytes);
+        while (this.numBytesPrefetched() < numBytes) {
+            this.readNextAvailable(this._buf);
+        }
+        assert this.numBytesPrefetched() >= numBytes;
     }
-
+    
+    private void ensureSpaceFor(int numBytes) {
+        assert numBytes >= 0;
+        assert numBytes <= this._buf.limit();
+        if (this._readIndex + numBytes > this._buf.limit()) {
+            ByteBuffer prefetched = this.readableSlice();
+            assert this._readIndex == this.writeIndex();
+            prefetched.compact();
+            this._readIndex = 0;
+            this._buf.position(prefetched.position());
+        }
+    }
+    
     @Override
-    public void get(ByteBuffer dst) throws ChannelException
-    {
-        ByteBuffer prefetched = nextReadableSlice(Math.min(numBytesPrefetched(),
-                                                           dst.remaining()));
+    public void get(ByteBuffer dst) throws ChannelException {
+        ByteBuffer prefetched = this.nextReadableSlice(Math.min(this.numBytesPrefetched(), dst.remaining()));
         dst.put(prefetched);
         super.get(dst);
     }
-
+    
     @Override
-    public ByteBuffer get(int numBytes) throws ChannelException
-    {
+    public ByteBuffer get(int numBytes) throws ChannelException {
         assert numBytes >= 0;
-        assert numBytes <= _buf.capacity();
-        ensureMinimumPrefetched(numBytes);
-        ByteBuffer slice = nextReadableSlice(numBytes);
+        assert numBytes <= this._buf.capacity();
+        this.ensureMinimumPrefetched(numBytes);
+        ByteBuffer slice = this.nextReadableSlice(numBytes);
         assert slice.remaining() == numBytes;
         return slice;
     }
-
+    
     @Override
-    public byte getByte() throws ChannelException
-    {
-        ensureMinimumPrefetched(Consts.SIZE_BYTE);
-        byte result = _buf.get(_readIndex);
-        _readIndex += Consts.SIZE_BYTE;
+    public byte getByte() throws ChannelException {
+        this.ensureMinimumPrefetched(Consts.SIZE_BYTE);
+        byte result = this._buf.get(this._readIndex);
+        this._readIndex += Consts.SIZE_BYTE;
         return result;
     }
-
+    
     @Override
-    public char getChar() throws ChannelException
-    {
-        ensureMinimumPrefetched(Consts.SIZE_CHAR);
-        char result = _buf.getChar(_readIndex);
-        _readIndex += Consts.SIZE_CHAR;
+    public char getChar() throws ChannelException {
+        this.ensureMinimumPrefetched(Consts.SIZE_CHAR);
+        char result = this._buf.getChar(this._readIndex);
+        this._readIndex += Consts.SIZE_CHAR;
         return result;
     }
-
+    
     @Override
-    public int getInt() throws ChannelException
-    {
-        ensureMinimumPrefetched(Consts.SIZE_INT);
-        int result = _buf.getInt(_readIndex);
-        _readIndex += Consts.SIZE_INT;
+    public int getInt() throws ChannelException {
+        this.ensureMinimumPrefetched(Consts.SIZE_INT);
+        int result = this._buf.getInt(this._readIndex);
+        this._readIndex += Consts.SIZE_INT;
         return result;
     }
-
-    @Override
-    public int numBytesAvailable()
-    {
-        return super.numBytesAvailable() + numBytesPrefetched();
-    }
-
-    public int numBytesPrefetched()
-    {
-        assert _readIndex <= writeIndex();
-        return writeIndex() - _readIndex;
-    }
-
-    private int writeIndex()
-    {
-        return _buf.position();
-    }
-
-    private ByteBuffer nextReadableSlice(int length)
-    {
+    
+    private ByteBuffer nextReadableSlice(int length) {
         assert length >= 0;
-        assert length <= numBytesPrefetched();
-        ByteBuffer slice = Util.slice(_buf, _readIndex, _readIndex + length);
-        _readIndex += length;
-        assert _readIndex <= _buf.limit();
-        assert _readIndex <= writeIndex();
+        assert length <= this.numBytesPrefetched();
+        ByteBuffer slice = Util.slice(this._buf, this._readIndex, this._readIndex + length);
+        this._readIndex += length;
+        assert this._readIndex <= this._buf.limit();
+        assert this._readIndex <= this.writeIndex();
         assert slice.remaining() == length;
         return slice;
     }
-
-    private ByteBuffer readableSlice()
-    {
-        return nextReadableSlice(numBytesPrefetched());
+    
+    @Override
+    public int numBytesAvailable() {
+        return super.numBytesAvailable() + this.numBytesPrefetched();
     }
-
-    private void ensureSpaceFor(int numBytes)
-    {
-        assert numBytes >= 0;
-        assert numBytes <= _buf.limit();
-        if (_readIndex + numBytes > _buf.limit()) {
-            ByteBuffer prefetched = readableSlice();
-            assert _readIndex == writeIndex();
-            prefetched.compact();
-            _readIndex = 0;
-            _buf.position(prefetched.position());
-        }
+    
+    public int numBytesPrefetched() {
+        assert this._readIndex <= this.writeIndex();
+        return this.writeIndex() - this._readIndex;
     }
-
-    private void ensureMinimumPrefetched(int numBytes) throws ChannelException
-    {
-        assert numBytes <= _buf.limit();
-        ensureSpaceFor(numBytes);
-        while (numBytesPrefetched() < numBytes) {
-            readNextAvailable(_buf);
-        }
-        assert numBytesPrefetched() >= numBytes;
+    
+    private ByteBuffer readableSlice() {
+        return this.nextReadableSlice(this.numBytesPrefetched());
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("buf=%s, readIndex=%d prefetched=%d, " + "contents:%n\t%s", this._buf, this._readIndex, this.numBytesPrefetched(),
+                Text.byteBufferToString(this._buf, this._readIndex, this.writeIndex()));
+    }
+    
+    private int writeIndex() {
+        return this._buf.position();
     }
 }

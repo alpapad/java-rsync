@@ -16,31 +16,26 @@
  */
 package com.github.perlundq.yajsync.internal.util;
 
-public final class Triple<S, T, U>
-{
+public final class Triple<S, T, U> {
     private final S _first;
     private final T _second;
     private final U _third;
-
-    public Triple(S first, T second, U third)
-    {
-        _first = first;
-        _second = second;
-        _third = third;
+    
+    public Triple(S first, T second, U third) {
+        this._first = first;
+        this._second = second;
+        this._third = third;
     }
-
-    public S first()
-    {
-        return _first;
+    
+    public S first() {
+        return this._first;
     }
-
-    public T second()
-    {
-        return _second;
+    
+    public T second() {
+        return this._second;
     }
-
-    public U third()
-    {
-        return _third;
+    
+    public U third() {
+        return this._third;
     }
 }

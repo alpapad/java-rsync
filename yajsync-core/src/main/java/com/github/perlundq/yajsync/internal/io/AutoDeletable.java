@@ -22,29 +22,24 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class AutoDeletable implements AutoCloseable
-{
+public class AutoDeletable implements AutoCloseable {
     private final Path _path;
-
-    public AutoDeletable(Path path)
-    {
-        _path = path;
+    
+    public AutoDeletable(Path path) {
+        this._path = path;
     }
-
-    public Path path()
-    {
-        return _path;
-    }
-
+    
     @Override
-    public String toString()
-    {
-        return _path.toString();
+    public void close() throws IOException {
+        Files.deleteIfExists(this._path);
     }
-
+    
+    public Path path() {
+        return this._path;
+    }
+    
     @Override
-    public void close() throws IOException
-    {
-        Files.deleteIfExists(_path);
+    public String toString() {
+        return this._path.toString();
     }
 }

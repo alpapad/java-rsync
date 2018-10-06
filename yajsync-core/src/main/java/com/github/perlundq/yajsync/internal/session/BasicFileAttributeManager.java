@@ -28,41 +28,32 @@ import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 import com.github.perlundq.yajsync.attr.User;
 import com.github.perlundq.yajsync.internal.util.FileOps;
 
-public class BasicFileAttributeManager extends FileAttributeManager
-{
-    private final User _defaultUser;
-    private final Group _defaultGroup;
-    private final int _defaultFilePermissions;
+public class BasicFileAttributeManager extends FileAttributeManager {
     private final int _defaultDirectoryPermissions;
-
-    public BasicFileAttributeManager(User defaultUser, Group defaultGroup,
-                                    int defaultFilePermissions, int defaultDirectoryPermissions)
-    {
-        _defaultUser = defaultUser;
-        _defaultGroup = defaultGroup;
-        _defaultFilePermissions = defaultFilePermissions;
-        _defaultDirectoryPermissions = defaultDirectoryPermissions;
+    private final int _defaultFilePermissions;
+    private final Group _defaultGroup;
+    private final User _defaultUser;
+    
+    public BasicFileAttributeManager(User defaultUser, Group defaultGroup, int defaultFilePermissions, int defaultDirectoryPermissions) {
+        this._defaultUser = defaultUser;
+        this._defaultGroup = defaultGroup;
+        this._defaultFilePermissions = defaultFilePermissions;
+        this._defaultDirectoryPermissions = defaultDirectoryPermissions;
     }
-
+    
     @Override
-    public RsyncFileAttributes stat(Path path) throws IOException
-    {
-        BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class,
-                                                         LinkOption.NOFOLLOW_LINKS);
-        return new RsyncFileAttributes(toMode(attrs),
-                                       attrs.size(),
-                                       attrs.lastModifiedTime().to(TimeUnit.SECONDS),
-                                       _defaultUser, _defaultGroup);
+    public RsyncFileAttributes stat(Path path) throws IOException {
+        BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+        return new RsyncFileAttributes(this.toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), this._defaultUser, this._defaultGroup);
     }
-
-    private int toMode(BasicFileAttributes attrs)
-    {
+    
+    private int toMode(BasicFileAttributes attrs) {
         if (attrs.isDirectory()) {
-            return FileOps.S_IFDIR | _defaultDirectoryPermissions;
+            return FileOps.S_IFDIR | this._defaultDirectoryPermissions;
         } else if (attrs.isRegularFile()) {
-            return FileOps.S_IFREG | _defaultFilePermissions;
+            return FileOps.S_IFREG | this._defaultFilePermissions;
         } else if (attrs.isSymbolicLink()) {
-            return FileOps.S_IFLNK | _defaultFilePermissions;
+            return FileOps.S_IFLNK | this._defaultFilePermissions;
         } else {
             return FileOps.S_IFUNK;
         }

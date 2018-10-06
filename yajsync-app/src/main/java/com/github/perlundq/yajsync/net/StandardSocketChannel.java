@@ -27,101 +27,84 @@ import java.util.Optional;
 
 import com.github.perlundq.yajsync.internal.util.Environment;
 
-public class StandardSocketChannel implements DuplexByteChannel
-{
-    private final InputStream _is;
-    private final SocketChannel _socketChannel;
-    private final int _timeout;
-
-    public StandardSocketChannel(SocketChannel socketChannel, int timeout) throws IOException
-    {
-        if (timeout > 0) {
-            assert Environment.hasAllocateDirectArray() ||
-            !Environment.isAllocateDirect();
-        }
-        _socketChannel = socketChannel;
-        _timeout = timeout;
-        _socketChannel.socket().setSoTimeout(timeout);
-        _is = _socketChannel.socket().getInputStream();
-    }
-
-    public static StandardSocketChannel open(String address, int port,
-                                             int contimeout, int timeout)
-            throws IOException
-    {
+public class StandardSocketChannel implements DuplexByteChannel {
+    public static StandardSocketChannel open(String address, int port, int contimeout, int timeout) throws IOException {
         InetSocketAddress socketAddress = new InetSocketAddress(address, port);
         SocketChannel socketChannel = SocketChannel.open();
         socketChannel.socket().connect(socketAddress, contimeout);
         return new StandardSocketChannel(socketChannel, timeout);
     }
-
-    @Override
-    public String toString()
-    {
-        return _socketChannel.toString();
-    }
-
-    @Override
-    public boolean isOpen()
-    {
-        return _socketChannel.isOpen();
-    }
-
-    @Override
-    public void close() throws IOException
-    {
-        _socketChannel.close();
-    }
-
-    @Override
-    public int read(ByteBuffer dst) throws IOException
-    {
-        if (_timeout == 0) {
-            return _socketChannel.read(dst);
+    
+    private final InputStream _is;
+    private final SocketChannel _socketChannel;
+    
+    private final int _timeout;
+    
+    public StandardSocketChannel(SocketChannel socketChannel, int timeout) throws IOException {
+        if (timeout > 0) {
+            assert Environment.hasAllocateDirectArray() || !Environment.isAllocateDirect();
         }
-
-        byte[] buf = dst.array();
-        int offset = dst.arrayOffset() + dst.position();
-        int len = dst.remaining();
-        int n = _is.read(buf, offset, len);
-        if (n != -1) {
-            dst.position(dst.position() + n);
-        }
-        return n;
+        this._socketChannel = socketChannel;
+        this._timeout = timeout;
+        this._socketChannel.socket().setSoTimeout(timeout);
+        this._is = this._socketChannel.socket().getInputStream();
     }
-
+    
     @Override
-    public int write(ByteBuffer src) throws IOException
-    {
-        return _socketChannel.write(src);
+    public void close() throws IOException {
+        this._socketChannel.close();
     }
-
+    
     @Override
-    public InetAddress peerAddress()
-    {
+    public boolean isOpen() {
+        return this._socketChannel.isOpen();
+    }
+    
+    @Override
+    public InetAddress peerAddress() {
         try {
-            InetSocketAddress socketAddress =
-                (InetSocketAddress) _socketChannel.getRemoteAddress();
+            InetSocketAddress socketAddress = (InetSocketAddress) this._socketChannel.getRemoteAddress();
             if (socketAddress == null) {
-                throw new IllegalStateException(String.format(
-                    "unable to determine remote address of %s - not connected",
-                    _socketChannel));
+                throw new IllegalStateException(String.format("unable to determine remote address of %s - not connected", this._socketChannel));
             }
             InetAddress addrOrNull = socketAddress.getAddress();
             if (addrOrNull == null) {
-                throw new IllegalStateException(String.format(
-                    "unable to determine address of %s - unresolved",
-                    socketAddress));
+                throw new IllegalStateException(String.format("unable to determine address of %s - unresolved", socketAddress));
             }
             return addrOrNull;
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
     }
-
+    
     @Override
-    public Optional<Principal> peerPrincipal()
-    {
+    public Optional<Principal> peerPrincipal() {
         return Optional.empty();
+    }
+    
+    @Override
+    public int read(ByteBuffer dst) throws IOException {
+        if (this._timeout == 0) {
+            return this._socketChannel.read(dst);
+        }
+        
+        byte[] buf = dst.array();
+        int offset = dst.arrayOffset() + dst.position();
+        int len = dst.remaining();
+        int n = this._is.read(buf, offset, len);
+        if (n != -1) {
+            dst.position(dst.position() + n);
+        }
+        return n;
+    }
+    
+    @Override
+    public String toString() {
+        return this._socketChannel.toString();
+    }
+    
+    @Override
+    public int write(ByteBuffer src) throws IOException {
+        return this._socketChannel.write(src);
     }
 }

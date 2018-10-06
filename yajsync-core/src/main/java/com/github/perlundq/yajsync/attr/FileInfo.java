@@ -32,8 +32,8 @@ package com.github.perlundq.yajsync.attr;
  * Also, if the file has a local path representation, an as specific as possible
  * instance of LocatableFileInfo will be used.
  */
-public interface FileInfo extends Comparable<FileInfo>
-{
+public interface FileInfo extends Comparable<FileInfo> {
     RsyncFileAttributes attrs();
+    
     String pathName();
 }

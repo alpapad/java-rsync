@@ -16,35 +16,29 @@
  */
 package com.github.perlundq.yajsync.internal.session;
 
-import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 import com.github.perlundq.yajsync.attr.DeviceInfo;
+import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 
-class DeviceInfoImpl extends FileInfoImpl implements DeviceInfo
-{
+class DeviceInfoImpl extends FileInfoImpl implements DeviceInfo {
     private final int _major;
     private final int _minor;
-
-    DeviceInfoImpl(String pathName, byte[] pathNameBytes,
-                   RsyncFileAttributes attrs, int major, int minor)
-    {
+    
+    DeviceInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, int major, int minor) {
         super(pathName, pathNameBytes, attrs);
-        assert attrs.isBlockDevice() || attrs.isCharacterDevice() ||
-               attrs.isFifo() || attrs.isSocket();
+        assert attrs.isBlockDevice() || attrs.isCharacterDevice() || attrs.isFifo() || attrs.isSocket();
         assert major >= 0;
         assert minor >= 0;
-        _major = major;
-        _minor = minor;
+        this._major = major;
+        this._minor = minor;
     }
-
+    
     @Override
-    public int major()
-    {
-        return _major;
+    public int major() {
+        return this._major;
     }
-
+    
     @Override
-    public int minor()
-    {
-        return _minor;
+    public int minor() {
+        return this._minor;
     }
 }

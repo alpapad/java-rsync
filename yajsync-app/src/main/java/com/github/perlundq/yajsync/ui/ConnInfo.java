@@ -21,103 +21,86 @@ import java.util.Objects;
 import com.github.perlundq.yajsync.RsyncServer;
 import com.github.perlundq.yajsync.internal.util.Environment;
 
-final class ConnInfo
-{
-    public static final int PORT_MIN = 1;
-    public static final int PORT_MAX = 65535;
-    private final int _portNumber;
-    private final String _userName;
-    private final String _address;
-
-    private ConnInfo(Builder builder)
-    {
-        _userName = builder._userName;
-        _address = builder._address;
-        _portNumber = builder._portNumber;
-    }
-
-    @Override
-    public String toString()
-    {
-        return String.format("rsync://%s%s:%d",
-                             _userName.isEmpty() ? "" : _userName + "@",
-                             _address, _portNumber);
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (obj != null && getClass() == obj.getClass()) {
-            ConnInfo other = (ConnInfo) obj;
-            return _userName.equals(other._userName) &&
-                   _address.equals(other._address) &&
-                   _portNumber == other._portNumber;
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(_address, _userName, _portNumber);
-    }
-
-    public String userName()
-    {
-        return _userName;
-    }
-
-    public String address()
-    {
-        return _address;
-    }
-
-    public int portNumber()
-    {
-        return _portNumber;
-    }
-
-    public static boolean isValidPortNumber(int portNumber)
-    {
-        return portNumber >= PORT_MIN && portNumber <= PORT_MAX;
-    }
-
-    public static class Builder
-    {
+final class ConnInfo {
+    public static class Builder {
         private final String _address;
-        private String _userName = Environment.getUserName();
         private int _portNumber = RsyncServer.DEFAULT_LISTEN_PORT;
-
-        public Builder(String address) throws IllegalUrlException
-        {
+        private String _userName = Environment.getUserName();
+        
+        public Builder(String address) throws IllegalUrlException {
             assert address != null;
             if (address.isEmpty()) {
                 throw new IllegalUrlException("address is empty");
             }
-            _address = address;
+            this._address = address;
         }
-
-        public Builder userName(String userName)
-        {
-            assert userName != null;
-            _userName = userName;
-            return this;
-        }
-
-        public Builder portNumber(int portNumber) throws IllegalUrlException
-        {
-            if (!isValidPortNumber(portNumber)) {
-                throw new IllegalUrlException(String.format(
-                        "illegal port %d - must be within the range [%d, %d]",
-                        portNumber, PORT_MIN, PORT_MAX));
-            }
-            _portNumber = portNumber;
-            return this;
-        }
-
-        public ConnInfo build()
-        {
+        
+        public ConnInfo build() {
             return new ConnInfo(this);
         }
+        
+        public Builder portNumber(int portNumber) throws IllegalUrlException {
+            if (!isValidPortNumber(portNumber)) {
+                throw new IllegalUrlException(String.format("illegal port %d - must be within the range [%d, %d]", portNumber, PORT_MIN, PORT_MAX));
+            }
+            this._portNumber = portNumber;
+            return this;
+        }
+        
+        public Builder userName(String userName) {
+            assert userName != null;
+            this._userName = userName;
+            return this;
+        }
+    }
+    
+    public static final int PORT_MAX = 65535;
+    public static final int PORT_MIN = 1;
+    
+    public static boolean isValidPortNumber(int portNumber) {
+        return portNumber >= PORT_MIN && portNumber <= PORT_MAX;
+    }
+    
+    private final String _address;
+    
+    private final int _portNumber;
+    
+    private final String _userName;
+    
+    private ConnInfo(Builder builder) {
+        this._userName = builder._userName;
+        this._address = builder._address;
+        this._portNumber = builder._portNumber;
+    }
+    
+    public String address() {
+        return this._address;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj != null && this.getClass() == obj.getClass()) {
+            ConnInfo other = (ConnInfo) obj;
+            return this._userName.equals(other._userName) && this._address.equals(other._address) && this._portNumber == other._portNumber;
+        }
+        return false;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(this._address, this._userName, this._portNumber);
+    }
+    
+    public int portNumber() {
+        return this._portNumber;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("rsync://%s%s:%d", this._userName.isEmpty() ? "" : this._userName + "@", this._address, this._portNumber);
+    }
+    
+    public String userName() {
+        return this._userName;
     }
 }

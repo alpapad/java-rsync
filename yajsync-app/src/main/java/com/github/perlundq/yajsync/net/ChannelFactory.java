@@ -18,9 +18,6 @@ package com.github.perlundq.yajsync.net;
 
 import java.io.IOException;
 
-public interface ChannelFactory
-{
-    DuplexByteChannel open(String address, int remotePort, int contimeout,
-                           int timeout)
-            throws IOException;
+public interface ChannelFactory {
+    DuplexByteChannel open(String address, int remotePort, int contimeout, int timeout) throws IOException;
 }

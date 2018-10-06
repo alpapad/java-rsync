@@ -29,95 +29,17 @@ import java.util.logging.Logger;
 import com.github.perlundq.yajsync.RsyncException;
 import com.github.perlundq.yajsync.internal.channels.ChannelException;
 
-public final class RsyncTaskExecutor
-{
-    private static final Logger _log =
-        Logger.getLogger(RsyncTaskExecutor.class.getName());
-    private final Executor _executor;
-
-    public RsyncTaskExecutor(Executor executor)
-    {
-        assert executor != null;
-        _executor = executor;
-    }
-
-    public boolean exec(RsyncTask... tasks)
-        throws RsyncException,InterruptedException
-    {
-        CompletionService<Boolean> ecs =
-            new ExecutorCompletionService<>(_executor);
-
-        List<Future<Boolean>> futures = new LinkedList<>();
-        for (RsyncTask task : tasks) {
-            futures.add(ecs.submit(task));
-        }
-
-        Throwable thrown = null;
-        boolean isOK = true;
-
-        for (int i = 0; i < futures.size(); i++) {
-            try {
-                if (_log.isLoggable(Level.FINER)) {
-                    _log.finer(String.format("waiting for result from task " +
-                                             "%d/%d", i + 1, futures.size()));
-                }
-                // take throws InterruptedException,
-                // get throws CancellationException
-                boolean isThreadOK = ecs.take().get();
-                isOK = isOK && isThreadOK;
-                if (_log.isLoggable(Level.FINER)) {
-                    _log.finer(String.format("task %d/%d finished %s",
-                                             i + 1, futures.size(),
-                                             isThreadOK ? "OK" : "ERROR"));
-                }
-            } catch (Throwable t) {
-                if (_log.isLoggable(Level.FINER)) {
-                    _log.finer(String.format(
-                        "deferring exception raised by task %d/%d: %s",
-                        i + 1, futures.size(), t));
-                }
-                if (thrown == null) {
-                    thrown = t;
-                    for (Future<Boolean> future : futures) {
-                        future.cancel(true);
-                    }
-                    for (RsyncTask task : tasks) {
-                        if (!task.isInterruptible()) {
-                            try {
-                                task.closeChannel();
-                            } catch (ChannelException e){
-                                t.addSuppressed(e);
-                            }
-                        }
-                    }
-                } else {
-                    thrown.addSuppressed(t);
-                }
-            }
-        }
-
-        boolean isException = thrown != null;
-        if (isException) {
-            throwUnwrappedException(thrown);
-        }
-
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine("exit " + (isOK ? "OK" : "ERROR"));
-        }
-
-        return isOK;
-    }
-
-    public static void throwUnwrappedException(Throwable thrown)
-        throws InterruptedException, RsyncException
-    {
+public final class RsyncTaskExecutor {
+    private static final Logger _log = Logger.getLogger(RsyncTaskExecutor.class.getName());
+    
+    public static void throwUnwrappedException(Throwable thrown) throws InterruptedException, RsyncException {
         Throwable cause;
         if (thrown instanceof ExecutionException) {
             cause = thrown.getCause();
         } else {
             cause = thrown;
         }
-
+        
         if (cause instanceof InterruptedException) {
             throw (InterruptedException) cause;
         } else if (cause instanceof RsyncException) {
@@ -129,5 +51,71 @@ public final class RsyncTaskExecutor
             throw (Error) cause;
         }
         throw new AssertionError("BUG - missing statement for " + cause);
+    }
+    
+    private final Executor _executor;
+    
+    public RsyncTaskExecutor(Executor executor) {
+        assert executor != null;
+        this._executor = executor;
+    }
+    
+    public boolean exec(RsyncTask... tasks) throws RsyncException, InterruptedException {
+        CompletionService<Boolean> ecs = new ExecutorCompletionService<>(this._executor);
+        
+        List<Future<Boolean>> futures = new LinkedList<>();
+        for (RsyncTask task : tasks) {
+            futures.add(ecs.submit(task));
+        }
+        
+        Throwable thrown = null;
+        boolean isOK = true;
+        
+        for (int i = 0; i < futures.size(); i++) {
+            try {
+                if (_log.isLoggable(Level.FINER)) {
+                    _log.finer(String.format("waiting for result from task " + "%d/%d", i + 1, futures.size()));
+                }
+                // take throws InterruptedException,
+                // get throws CancellationException
+                boolean isThreadOK = ecs.take().get();
+                isOK = isOK && isThreadOK;
+                if (_log.isLoggable(Level.FINER)) {
+                    _log.finer(String.format("task %d/%d finished %s", i + 1, futures.size(), isThreadOK ? "OK" : "ERROR"));
+                }
+            } catch (Throwable t) {
+                if (_log.isLoggable(Level.FINER)) {
+                    _log.finer(String.format("deferring exception raised by task %d/%d: %s", i + 1, futures.size(), t));
+                }
+                if (thrown == null) {
+                    thrown = t;
+                    for (Future<Boolean> future : futures) {
+                        future.cancel(true);
+                    }
+                    for (RsyncTask task : tasks) {
+                        if (!task.isInterruptible()) {
+                            try {
+                                task.closeChannel();
+                            } catch (ChannelException e) {
+                                t.addSuppressed(e);
+                            }
+                        }
+                    }
+                } else {
+                    thrown.addSuppressed(t);
+                }
+            }
+        }
+        
+        boolean isException = thrown != null;
+        if (isException) {
+            throwUnwrappedException(thrown);
+        }
+        
+        if (_log.isLoggable(Level.FINE)) {
+            _log.fine("exit " + (isOK ? "OK" : "ERROR"));
+        }
+        
+        return isOK;
     }
 }

@@ -28,104 +28,88 @@ import com.github.perlundq.yajsync.internal.text.Text;
 import com.github.perlundq.yajsync.internal.util.PathOps;
 
 /**
- * A RestrictedPath is a representation of a module and its root
- * directory path that provides robust semantics for safely resolving
- * any untrusted path coming from a possible external source. It
- * allows resolving of any path that is below the module root
- * directory and will throw a RsyncSecurityException for any other
- * path.
+ * A RestrictedPath is a representation of a module and its root directory path
+ * that provides robust semantics for safely resolving any untrusted path coming
+ * from a possible external source. It allows resolving of any path that is
+ * below the module root directory and will throw a RsyncSecurityException for
+ * any other path.
  */
-public final class RestrictedPath
-{
+public final class RestrictedPath {
     private static final Pattern MODULE_REGEX = Pattern.compile("^\\w+$");
-    private final String _moduleName;
-    private final Path _rootPath;
     private final Path _dotDir;
     private final Path _dotDotDir;
-
+    private final String _moduleName;
+    private final Path _rootPath;
+    
     /**
      * @param moduleName
-     * @param rootPath the absolute path to the module top directory.
+     * @param rootPath   the absolute path to the module top directory.
      */
-    public RestrictedPath(String moduleName, Path rootPath)
-    {
+    public RestrictedPath(String moduleName, Path rootPath) {
         if (!MODULE_REGEX.matcher(moduleName).matches()) {
-            throw new IllegalArgumentException(String.format(
-                    "rsync module must consist of alphanumeric characters " +
-                    "and underscore only: %s", moduleName));
+            throw new IllegalArgumentException(String.format("rsync module must consist of alphanumeric characters " + "and underscore only: %s", moduleName));
         }
         assert rootPath.isAbsolute() : rootPath;
-        _moduleName = moduleName;
-        _rootPath = rootPath.normalize();
-        _dotDir = _rootPath.getFileSystem().getPath(Text.DOT);
-        _dotDotDir = _rootPath.getFileSystem().getPath(Text.DOT_DOT);
+        this._moduleName = moduleName;
+        this._rootPath = rootPath.normalize();
+        this._dotDir = this._rootPath.getFileSystem().getPath(Text.DOT);
+        this._dotDotDir = this._rootPath.getFileSystem().getPath(Text.DOT_DOT);
     }
-
+    
     @Override
-    public String toString()
-    {
-        return String.format("%s(name=%s, root=%s)", getClass().getSimpleName(),
-                             _moduleName, _rootPath);
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (other != null && other.getClass() == getClass()) {
+    public boolean equals(Object other) {
+        if (other != null && other.getClass() == this.getClass()) {
             RestrictedPath otherPath = (RestrictedPath) other;
-            return _moduleName.equals(otherPath._moduleName) &&
-                   _rootPath.equals(otherPath._rootPath);
+            return this._moduleName.equals(otherPath._moduleName) && this._rootPath.equals(otherPath._rootPath);
         }
         return false;
     }
-
+    
     @Override
-    public int hashCode()
-    {
-        return Objects.hash(_moduleName, _rootPath);
+    public int hashCode() {
+        return Objects.hash(this._moduleName, this._rootPath);
     }
-
-    public Path resolve(String pathName) throws RsyncSecurityException
-    {
+    
+    /**
+     * resolve other in a secure manner without any call to stat.
+     *
+     * @throws RsyncSecurityException
+     */
+    private Path resolve(Path path) throws RsyncSecurityException {
+        Path result;
+        Path normalized = path.normalize();
+        if (normalized.startsWith(this._moduleName)) {
+            if (normalized.getNameCount() == 1) {
+                result = this._rootPath;
+            } else {
+                Path strippedOfModulePrefix = normalized.subpath(1, normalized.getNameCount());
+                result = this._rootPath.resolve(strippedOfModulePrefix).normalize();
+            }
+        } else {
+            throw new RsyncSecurityException(String.format("\"%s\" is outside virtual dir for module %s", path, this._moduleName));
+        }
+        if (path.endsWith(this._dotDir)) {
+            return result.resolve(this._dotDir);
+        } else {
+            return result;
+        }
+    }
+    
+    public Path resolve(String pathName) throws RsyncSecurityException {
         try {
-            Path otherPath = PathOps.get(_rootPath.getFileSystem(), pathName);
-            Path resolved = resolve(otherPath);
-            if (PathOps.contains(resolved, _dotDotDir)) {
-                throw new RsyncSecurityException(String.format(
-                        "resolved path of %s contains ..: %s",
-                        pathName, resolved));
+            Path otherPath = PathOps.get(this._rootPath.getFileSystem(), pathName);
+            Path resolved = this.resolve(otherPath);
+            if (PathOps.contains(resolved, this._dotDotDir)) {
+                throw new RsyncSecurityException(String.format("resolved path of %s contains ..: %s", pathName, resolved));
             }
             return resolved;
         } catch (InvalidPathException e) {
             throw new RsyncSecurityException(e);
         }
     }
-
-    /**
-     * resolve other in a secure manner without any call to stat.
-     * @throws RsyncSecurityException
-     */
-    private Path resolve(Path path) throws RsyncSecurityException
-    {
-        Path result;
-        Path normalized = path.normalize();
-        if (normalized.startsWith(_moduleName)) {
-            if (normalized.getNameCount() == 1) {
-                result = _rootPath;
-            } else {
-                Path strippedOfModulePrefix =
-                        normalized.subpath(1, normalized.getNameCount());
-                result = _rootPath.resolve(strippedOfModulePrefix).normalize();
-            }
-        } else {
-            throw new RsyncSecurityException(String.format(
-                "\"%s\" is outside virtual dir for module %s",
-                path, _moduleName));
-        }
-        if (path.endsWith(_dotDir)) {
-            return result.resolve(_dotDir);
-        } else {
-            return result;
-        }
+    
+    @Override
+    public String toString() {
+        return String.format("%s(name=%s, root=%s)", this.getClass().getSimpleName(), this._moduleName, this._rootPath);
     }
 }

@@ -22,58 +22,53 @@ package com.github.perlundq.yajsync.internal.channels;
 import com.github.perlundq.yajsync.internal.session.Filelist;
 import com.github.perlundq.yajsync.internal.util.BitOps;
 
-public class IndexDecoderImpl implements IndexDecoder
-{
-    private final byte[] _readBuf = new byte[4];
-    private final Readable _src;
+public class IndexDecoderImpl implements IndexDecoder {
     private int _prevNegativeReadIndex = 1;
     private int _prevPositiveReadIndex = -1;
-
-    public IndexDecoderImpl(Readable src)
-    {
-        _src = src;
+    private final byte[] _readBuf = new byte[4];
+    private final Readable _src;
+    
+    public IndexDecoderImpl(Readable src) {
+        this._src = src;
     }
-
+    
     @Override
-    public int decodeIndex() throws ChannelException
-    {
-        _readBuf[0] = _src.getByte();
-        if (_readBuf[0] == 0) {
+    public int decodeIndex() throws ChannelException {
+        this._readBuf[0] = this._src.getByte();
+        if (this._readBuf[0] == 0) {
             return Filelist.DONE;
         }
-
+        
         int prevVal;
         boolean setNegative = false;
-        if ((0xFF & _readBuf[0]) == 0xFF) {
-            _readBuf[0] = _src.getByte();
-            prevVal = _prevNegativeReadIndex;
+        if ((0xFF & this._readBuf[0]) == 0xFF) {
+            this._readBuf[0] = this._src.getByte();
+            prevVal = this._prevNegativeReadIndex;
             setNegative = true;
         } else {
-            prevVal = _prevPositiveReadIndex;
+            prevVal = this._prevPositiveReadIndex;
         }
-
+        
         int value;
-        if ((0xFF & _readBuf[0]) == 0xFE) {
-            _src.get(_readBuf, 0, 2);
-            if ((0x80 & _readBuf[0]) != 0) {
-                _readBuf[3] = (byte) (~0x80 & _readBuf[0]);
-                _readBuf[0] = _readBuf[1];
-                _src.get(_readBuf, 1, 2);
-                value = BitOps.toBigEndianInt(_readBuf, 0);
+        if ((0xFF & this._readBuf[0]) == 0xFE) {
+            this._src.get(this._readBuf, 0, 2);
+            if ((0x80 & this._readBuf[0]) != 0) {
+                this._readBuf[3] = (byte) (~0x80 & this._readBuf[0]);
+                this._readBuf[0] = this._readBuf[1];
+                this._src.get(this._readBuf, 1, 2);
+                value = BitOps.toBigEndianInt(this._readBuf, 0);
             } else {
-                value = ((0xFF & _readBuf[0]) << 8) +
-                        (0xFF & _readBuf[1]) +
-                        prevVal;
+                value = ((0xFF & this._readBuf[0]) << 8) + (0xFF & this._readBuf[1]) + prevVal;
             }
         } else {
-            value = (0xFF & _readBuf[0]) + prevVal;
+            value = (0xFF & this._readBuf[0]) + prevVal;
         }
-
+        
         if (setNegative) {
-            _prevNegativeReadIndex = value;
+            this._prevNegativeReadIndex = value;
             return -value;
         } else {
-            _prevPositiveReadIndex = value;
+            this._prevPositiveReadIndex = value;
             return value;
         }
     }

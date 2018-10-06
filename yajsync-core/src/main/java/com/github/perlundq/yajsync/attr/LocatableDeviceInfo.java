@@ -16,4 +16,5 @@
  */
 package com.github.perlundq.yajsync.attr;
 
-public interface LocatableDeviceInfo extends DeviceInfo, LocatableFileInfo {}
+public interface LocatableDeviceInfo extends DeviceInfo, LocatableFileInfo {
+}

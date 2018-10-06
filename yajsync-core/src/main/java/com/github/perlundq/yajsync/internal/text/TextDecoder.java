@@ -31,103 +31,59 @@ import com.github.perlundq.yajsync.internal.util.MemoryPolicy;
 import com.github.perlundq.yajsync.internal.util.OverflowException;
 import com.github.perlundq.yajsync.internal.util.Util;
 
-public class TextDecoder
-{
+public class TextDecoder {
+    public static TextDecoder newFallback(Charset charset) {
+        CharsetDecoder encoder = charset.newDecoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
+        TextDecoder instance = new TextDecoder(encoder);
+        return instance;
+    }
+    
+    public static TextDecoder newStrict(Charset charset) {
+        CharsetDecoder encoder = charset.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT);
+        TextDecoder instance = new TextDecoder(encoder);
+        return instance;
+    }
+    
     private final CharsetDecoder _decoder;
-
-    private TextDecoder(CharsetDecoder decoder)
-    {
-        _decoder = decoder;
+    
+    private TextDecoder(CharsetDecoder decoder) {
+        this._decoder = decoder;
     }
-
-    public static TextDecoder newStrict(Charset charset)
-    {
-        CharsetDecoder encoder = charset.newDecoder().
-            onMalformedInput(CodingErrorAction.REPORT).
-            onUnmappableCharacter(CodingErrorAction.REPORT);
-        TextDecoder instance = new TextDecoder(encoder);
-        return instance;
-    }
-
-    public static TextDecoder newFallback(Charset charset)
-    {
-        CharsetDecoder encoder = charset.newDecoder().
-            onMalformedInput(CodingErrorAction.REPLACE).
-            onUnmappableCharacter(CodingErrorAction.REPLACE);
-        TextDecoder instance = new TextDecoder(encoder);
-        return instance;
-    }
-
-    public Charset charset()
-    {
-        return _decoder.charset();
-    }
-
-    public String decodeOrNull(ByteBuffer input)
-    {
-        return _decode(input, ErrorPolicy.RETURN_NULL, MemoryPolicy.IGNORE);
-    }
-
+    
     /**
-     *  @throws TextConversionException
+     * @throws TextConversionException
      */
-    public String decode(ByteBuffer input)
-    {
-        return _decode(input, ErrorPolicy.THROW, MemoryPolicy.IGNORE);
-    }
-
-    /**
-     *  @throws TextConversionException
-     */
-    public String secureDecode(ByteBuffer input)
-    {
-        return _decode(input, ErrorPolicy.THROW, MemoryPolicy.ZERO);
-    }
-
-    /**
-     *  @throws TextConversionException
-     */
-    private String _decode(ByteBuffer input,
-                           ErrorPolicy errorPolicy,
-                           MemoryPolicy memoryPolicy)
-    {
-        _decoder.reset();
-        CharBuffer output = CharBuffer.allocate(
-                                (int) Math.ceil(input.capacity() *
-                                                _decoder.averageCharsPerByte()));
+    private String _decode(ByteBuffer input, ErrorPolicy errorPolicy, MemoryPolicy memoryPolicy) {
+        this._decoder.reset();
+        CharBuffer output = CharBuffer.allocate((int) Math.ceil(input.capacity() * this._decoder.averageCharsPerByte()));
         try {
             CoderResult result;
             while (true) {
-                result = _decoder.decode(input, output, true);
+                result = this._decoder.decode(input, output, true);
                 if (result.isOverflow()) {
-                    output = Util.enlargeCharBuffer(output, memoryPolicy,
-                                                    Consts.MAX_BUF_SIZE / 2);   // throws OverflowException
+                    output = Util.enlargeCharBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE / 2); // throws OverflowException
                 } else {
                     break;
                 }
             }
-
+            
             while (!result.isError()) {
-                result = _decoder.flush(output);
+                result = this._decoder.flush(output);
                 if (result.isOverflow()) {
-                    output = Util.enlargeCharBuffer(output, memoryPolicy,
-                                                    Consts.MAX_BUF_SIZE / 2);   // throws OverflowException
+                    output = Util.enlargeCharBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE / 2); // throws OverflowException
                 } else {
                     break;
                 }
             }
-
+            
             if (result.isUnderflow()) {
                 return output.flip().toString();
             }
-
+            
             if (errorPolicy == ErrorPolicy.THROW) {
                 input.limit(input.position() + result.length());
-                throw new TextConversionException(String.format(
-                    "failed to decode %d bytes after %s (using %s): %s -> %s",
-                    result.length(), output.flip().toString(),
-                    _decoder.charset(), Text.byteBufferToString(input),
-                    result));
+                throw new TextConversionException(String.format("failed to decode %d bytes after %s (using %s): %s -> %s", result.length(), output.flip().toString(), this._decoder.charset(),
+                        Text.byteBufferToString(input), result));
             }
             return null;
         } catch (OverflowException e) {
@@ -141,10 +97,31 @@ public class TextDecoder
             }
         }
     }
-
-    public String decodeOrNull(byte[] bytes)
-    {
+    
+    public Charset charset() {
+        return this._decoder.charset();
+    }
+    
+    /**
+     * @throws TextConversionException
+     */
+    public String decode(ByteBuffer input) {
+        return this._decode(input, ErrorPolicy.THROW, MemoryPolicy.IGNORE);
+    }
+    
+    public String decodeOrNull(byte[] bytes) {
         ByteBuffer input = ByteBuffer.wrap(bytes);
-        return decodeOrNull(input);
+        return this.decodeOrNull(input);
+    }
+    
+    public String decodeOrNull(ByteBuffer input) {
+        return this._decode(input, ErrorPolicy.RETURN_NULL, MemoryPolicy.IGNORE);
+    }
+    
+    /**
+     * @throws TextConversionException
+     */
+    public String secureDecode(ByteBuffer input) {
+        return this._decode(input, ErrorPolicy.THROW, MemoryPolicy.ZERO);
     }
 }

@@ -16,11 +16,10 @@
  */
 package com.github.perlundq.yajsync.server.module;
 
-@SuppressWarnings("serial")
-public class ModuleSecurityException extends ModuleException
-{
-    public ModuleSecurityException(String message)
-    {
+public class ModuleSecurityException extends ModuleException {
+    private static final long serialVersionUID = 1L;
+    
+    public ModuleSecurityException(String message) {
         super(message);
     }
 }

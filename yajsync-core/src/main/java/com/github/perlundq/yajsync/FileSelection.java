@@ -20,23 +20,21 @@ package com.github.perlundq.yajsync;
  * An rsync transfer handles the initial list of file arguments sent by the
  * client in three different ways: 1. transfer the initial files exactly but
  * exclude all directories 2. transfer the initial files but also recurse into
- * directories 3. transfer the initial files but also transfer the contents
- * of any dot directories (i.e. the name ends with a trailing slash "dir/"' or a
+ * directories 3. transfer the initial files but also transfer the contents of
+ * any dot directories (i.e. the name ends with a trailing slash "dir/"' or a
  * slash followed by one dot "dir/."
  */
-public enum FileSelection
-{
+public enum FileSelection {
     /**
-     * Transfer the initial client file list literally while excluding
-     * directories.
+     * Transfer the initial client file list literally while excluding directories.
      */
     EXACT,
-
+    
     /**
      * Transfer the initial client file list but also recurse into directories.
      */
     RECURSE,
-
+    
     /**
      * Transfer the initial client file list and the contents of any dot
      * directories.

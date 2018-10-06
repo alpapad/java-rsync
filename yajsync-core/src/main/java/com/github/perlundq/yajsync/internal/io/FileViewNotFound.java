@@ -18,11 +18,10 @@
  */
 package com.github.perlundq.yajsync.internal.io;
 
-@SuppressWarnings("serial")
-public class FileViewNotFound extends FileViewOpenFailed
-{
-    FileViewNotFound(String message)
-    {
+public class FileViewNotFound extends FileViewOpenFailed {
+    private static final long serialVersionUID = 1L;
+    
+    FileViewNotFound(String message) {
         super(message);
     }
 }

@@ -18,7 +18,6 @@
  */
 package com.github.perlundq.yajsync.internal.channels;
 
-public interface IndexEncoder
-{
+public interface IndexEncoder {
     void encodeIndex(int index) throws ChannelException;
 }

@@ -16,11 +16,10 @@
  */
 package com.github.perlundq.yajsync.server.module;
 
-@SuppressWarnings("serial")
-public class ModuleNotFoundException extends ModuleException
-{
-    public ModuleNotFoundException(String message)
-    {
+public class ModuleNotFoundException extends ModuleException {
+    private static final long serialVersionUID = 1L;
+    
+    public ModuleNotFoundException(String message) {
         super(message);
     }
 }

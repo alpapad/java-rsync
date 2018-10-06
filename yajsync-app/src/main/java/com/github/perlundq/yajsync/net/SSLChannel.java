@@ -35,94 +35,80 @@ import javax.net.ssl.SSLSocketFactory;
 
 import com.github.perlundq.yajsync.internal.util.Environment;
 
-public class SSLChannel implements DuplexByteChannel
-{
-    private final InputStream _is;
-    private final OutputStream _os;
-    private final SSLSocket _sslSocket;
-
-    public SSLChannel(SSLSocket sslSocket, int timeout) throws IOException
-    {
-        assert Environment.hasAllocateDirectArray() ||
-               !Environment.isAllocateDirect();
-        _sslSocket = sslSocket;
-        _sslSocket.setSoTimeout(timeout);
-        _is = _sslSocket.getInputStream();
-        _os = _sslSocket.getOutputStream();
-    }
-
-    public static SSLChannel open(String address, int port, int contimeout,
-                                  int timeout)
-            throws IOException
-    {
+public class SSLChannel implements DuplexByteChannel {
+    public static SSLChannel open(String address, int port, int contimeout, int timeout) throws IOException {
         SocketFactory factory = SSLSocketFactory.getDefault();
         InetSocketAddress socketAddress = new InetSocketAddress(address, port);
         Socket sock = factory.createSocket();
         sock.connect(socketAddress, contimeout);
         return new SSLChannel((SSLSocket) sock, timeout);
     }
-
-    @Override
-    public String toString()
-    {
-        return _sslSocket.toString();
+    
+    private final InputStream _is;
+    private final OutputStream _os;
+    
+    private final SSLSocket _sslSocket;
+    
+    public SSLChannel(SSLSocket sslSocket, int timeout) throws IOException {
+        assert Environment.hasAllocateDirectArray() || !Environment.isAllocateDirect();
+        this._sslSocket = sslSocket;
+        this._sslSocket.setSoTimeout(timeout);
+        this._is = this._sslSocket.getInputStream();
+        this._os = this._sslSocket.getOutputStream();
     }
-
+    
     @Override
-    public void close() throws IOException
-    {
-        _sslSocket.close(); // will implicitly close _is and _os also
+    public void close() throws IOException {
+        this._sslSocket.close(); // will implicitly close _is and _os also
     }
-
+    
     @Override
-    public boolean isOpen()
-    {
-        return !_sslSocket.isClosed();
+    public boolean isOpen() {
+        return !this._sslSocket.isClosed();
     }
-
+    
     @Override
-    public int write(ByteBuffer src) throws IOException
-    {
-        byte[] buf = src.array();
-        int offset = src.arrayOffset() + src.position();
-        int len = src.remaining();
-        _os.write(buf, offset, len);
-        src.position(src.position() + len);
-        return len;
+    public InetAddress peerAddress() {
+        InetAddress address = this._sslSocket.getInetAddress();
+        if (address == null) {
+            throw new IllegalStateException(String.format("unable to determine remote address of %s - not connected", this._sslSocket));
+        }
+        return address;
     }
-
+    
     @Override
-    public int read(ByteBuffer dst) throws IOException
-    {
+    public Optional<Principal> peerPrincipal() {
+        try {
+            return Optional.of(this._sslSocket.getSession().getPeerPrincipal());
+        } catch (SSLPeerUnverifiedException e) {
+            return Optional.empty();
+        }
+    }
+    
+    @Override
+    public int read(ByteBuffer dst) throws IOException {
         byte[] buf = dst.array();
         int offset = dst.arrayOffset() + dst.position();
         int len = dst.remaining();
-        int n = _is.read(buf, offset, len);
+        int n = this._is.read(buf, offset, len);
         if (n != -1) {
             dst.position(dst.position() + n);
         }
         return n;
     }
-
+    
     @Override
-    public InetAddress peerAddress()
-    {
-        InetAddress address = _sslSocket.getInetAddress();
-        if (address == null) {
-            throw new IllegalStateException(String.format(
-                "unable to determine remote address of %s - not connected",
-                _sslSocket));
-        }
-        return address;
+    public String toString() {
+        return this._sslSocket.toString();
     }
-
+    
     @Override
-    public Optional<Principal> peerPrincipal()
-    {
-        try {
-            return Optional.of(_sslSocket.getSession().getPeerPrincipal());
-        } catch (SSLPeerUnverifiedException e) {
-            return Optional.empty();
-        }
+    public int write(ByteBuffer src) throws IOException {
+        byte[] buf = src.array();
+        int offset = src.arrayOffset() + src.position();
+        int len = src.remaining();
+        this._os.write(buf, offset, len);
+        src.position(src.position() + len);
+        return len;
     }
 }

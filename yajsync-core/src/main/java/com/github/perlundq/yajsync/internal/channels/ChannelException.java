@@ -20,16 +20,14 @@ package com.github.perlundq.yajsync.internal.channels;
 
 import com.github.perlundq.yajsync.RsyncException;
 
-@SuppressWarnings("serial")
-public class ChannelException extends RsyncException
-{
-    public ChannelException(String message)
-    {
-        super(message);
-    }
-
-    public ChannelException(Exception e)
-    {
+public class ChannelException extends RsyncException {
+    private static final long serialVersionUID = 1L;
+    
+    public ChannelException(Exception e) {
         super(e);
+    }
+    
+    public ChannelException(String message) {
+        super(message);
     }
 }

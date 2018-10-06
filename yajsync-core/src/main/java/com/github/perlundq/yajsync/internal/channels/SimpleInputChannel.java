@@ -29,102 +29,51 @@ import com.github.perlundq.yajsync.internal.util.Consts;
 import com.github.perlundq.yajsync.internal.util.Environment;
 import com.github.perlundq.yajsync.internal.util.RuntimeInterruptException;
 
-public class SimpleInputChannel implements Readable
-{
+public class SimpleInputChannel implements Readable {
     private static final int DEFAULT_BUF_SIZE = 1024;
-    private final ReadableByteChannel _sourceChannel;
     private final ByteBuffer _byteBuf;
     private final ByteBuffer _charBuf;
     private final ByteBuffer _intBuf;
     private long _numBytesRead;
-
-    public SimpleInputChannel(ReadableByteChannel sock)
-    {
+    private final ReadableByteChannel _sourceChannel;
+    
+    public SimpleInputChannel(ReadableByteChannel sock) {
         assert sock != null;
-        _sourceChannel = sock;
+        this._sourceChannel = sock;
         if (Environment.isAllocateDirect()) {
-            _byteBuf = ByteBuffer.allocateDirect(Consts.SIZE_BYTE);
-            _charBuf = ByteBuffer.allocateDirect(Consts.SIZE_CHAR);
-            _intBuf = ByteBuffer.allocateDirect(Consts.SIZE_INT);
+            this._byteBuf = ByteBuffer.allocateDirect(Consts.SIZE_BYTE);
+            this._charBuf = ByteBuffer.allocateDirect(Consts.SIZE_CHAR);
+            this._intBuf = ByteBuffer.allocateDirect(Consts.SIZE_INT);
         } else {
-            _byteBuf = ByteBuffer.allocate(Consts.SIZE_BYTE);
-            _charBuf = ByteBuffer.allocate(Consts.SIZE_CHAR);
-            _intBuf = ByteBuffer.allocate(Consts.SIZE_INT);
+            this._byteBuf = ByteBuffer.allocate(Consts.SIZE_BYTE);
+            this._charBuf = ByteBuffer.allocate(Consts.SIZE_CHAR);
+            this._intBuf = ByteBuffer.allocate(Consts.SIZE_INT);
         }
-        _charBuf.order(ByteOrder.LITTLE_ENDIAN);
-        _intBuf.order(ByteOrder.LITTLE_ENDIAN);
+        this._charBuf.order(ByteOrder.LITTLE_ENDIAN);
+        this._intBuf.order(ByteOrder.LITTLE_ENDIAN);
     }
-
-    @Override
-    public byte getByte() throws ChannelException
-    {
-        _byteBuf.clear();
-        get(_byteBuf);
-        _byteBuf.flip();
-        return _byteBuf.get();
-    }
-
-    @Override
-    public char getChar() throws ChannelException
-    {
-        _charBuf.clear();
-        get(_charBuf);
-        _charBuf.flip();
-        return _charBuf.getChar();
-    }
-
-    @Override
-    public int getInt() throws ChannelException
-    {
-        _intBuf.clear();
-        get(_intBuf);
-        _intBuf.flip();
-        return _intBuf.getInt();
-    }
-
-    @Override
-    public ByteBuffer get(int numBytes) throws ChannelException
-    {
-        ByteBuffer result = ByteBuffer.allocate(numBytes);
-        get(result);
-        result.flip();
-        return result;
-    }
-
-    @Override
-    public void get(byte[] dst, int offset, int length) throws ChannelException
-    {
-        get(ByteBuffer.wrap(dst, offset, length));
-    }
-
-    @Override
-    public void skip(int numBytes) throws ChannelException
-    {
-        assert numBytes >= 0;
-        int numBytesSkipped = 0;
-        while (numBytesSkipped < numBytes) {
-            int chunkSize = Math.min(numBytes - numBytesSkipped,
-                                     DEFAULT_BUF_SIZE);
-            get(chunkSize); // ignore result
-            numBytesSkipped += chunkSize;
+    
+    public void close() throws ChannelException {
+        try {
+            this._sourceChannel.close();
+        } catch (IOException e) {
+            throw new ChannelException(e);
         }
     }
-
-    public long numBytesRead()
-    {
-        return _numBytesRead;
+    
+    @Override
+    public void get(byte[] dst, int offset, int length) throws ChannelException {
+        this.get(ByteBuffer.wrap(dst, offset, length));
     }
-
-    protected void get(ByteBuffer dst) throws ChannelException
-    {
+    
+    protected void get(ByteBuffer dst) throws ChannelException {
         try {
             while (dst.hasRemaining()) {
-                int count = _sourceChannel.read(dst);
+                int count = this._sourceChannel.read(dst);
                 if (count <= 0) {
-                    throw new ChannelEOFException(String.format(
-                        "channel read unexpectedly returned %d (EOF)", count));
+                    throw new ChannelEOFException(String.format("channel read unexpectedly returned %d (EOF)", count));
                 }
-                _numBytesRead += count;
+                this._numBytesRead += count;
             }
         } catch (EOFException e) {
             throw new ChannelEOFException(e);
@@ -134,13 +83,51 @@ public class SimpleInputChannel implements Readable
             throw new ChannelException(e);
         }
     }
-
-    public void close() throws ChannelException
-    {
-        try {
-            _sourceChannel.close();
-        } catch (IOException e) {
-            throw new ChannelException(e);
+    
+    @Override
+    public ByteBuffer get(int numBytes) throws ChannelException {
+        ByteBuffer result = ByteBuffer.allocate(numBytes);
+        this.get(result);
+        result.flip();
+        return result;
+    }
+    
+    @Override
+    public byte getByte() throws ChannelException {
+        this._byteBuf.clear();
+        this.get(this._byteBuf);
+        this._byteBuf.flip();
+        return this._byteBuf.get();
+    }
+    
+    @Override
+    public char getChar() throws ChannelException {
+        this._charBuf.clear();
+        this.get(this._charBuf);
+        this._charBuf.flip();
+        return this._charBuf.getChar();
+    }
+    
+    @Override
+    public int getInt() throws ChannelException {
+        this._intBuf.clear();
+        this.get(this._intBuf);
+        this._intBuf.flip();
+        return this._intBuf.getInt();
+    }
+    
+    public long numBytesRead() {
+        return this._numBytesRead;
+    }
+    
+    @Override
+    public void skip(int numBytes) throws ChannelException {
+        assert numBytes >= 0;
+        int numBytesSkipped = 0;
+        while (numBytesSkipped < numBytes) {
+            int chunkSize = Math.min(numBytes - numBytesSkipped, DEFAULT_BUF_SIZE);
+            this.get(chunkSize); // ignore result
+            numBytesSkipped += chunkSize;
         }
     }
 }

@@ -22,18 +22,17 @@ import java.io.IOException;
  * Provides a user name and password when the client authenticates with a server
  * that has requested rsync authentication for an rsync module.
  */
-public interface AuthProvider
-{
+public interface AuthProvider {
+    /**
+     * @return password as a char array. The array will be zeroed out as quickly as
+     *         possible once it has been used.
+     * @throws IOException
+     */
+    char[] getPassword() throws IOException;
+    
     /**
      * @return the user name to be authenticated as.
      * @throws IOException
      */
     String getUser() throws IOException;
-
-    /**
-     * @return password as a char array. The array will be zeroed out as quickly
-     *     as possible once it has been used.
-     * @throws IOException
-     */
-    char[] getPassword() throws IOException;
 }

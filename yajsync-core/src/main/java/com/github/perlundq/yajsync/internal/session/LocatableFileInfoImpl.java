@@ -21,22 +21,18 @@ import java.nio.file.Path;
 import com.github.perlundq.yajsync.attr.LocatableFileInfo;
 import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 
-class LocatableFileInfoImpl extends FileInfoImpl implements LocatableFileInfo
-{
+class LocatableFileInfoImpl extends FileInfoImpl implements LocatableFileInfo {
     private final Path _path;
-
-    LocatableFileInfoImpl(String pathName, byte[] pathNameBytes,
-                          RsyncFileAttributes attrs, Path path)
-    {
+    
+    LocatableFileInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, Path path) {
         super(pathName, pathNameBytes, attrs);
         assert path != null;
         assert path.isAbsolute();
-        _path = path;
+        this._path = path;
     }
-
+    
     @Override
-    public Path path()
-    {
-        return _path;
+    public Path path() {
+        return this._path;
     }
 }

@@ -20,11 +20,12 @@
  */
 package com.github.perlundq.yajsync.internal.session;
 
-final class RsyncCompatibilities
-{
-    private RsyncCompatibilities() {}
-    public static final byte CF_INC_RECURSE   = 1 << 0;
-    public static final byte CF_SYMLINK_TIMES = 1 << 1;
+final class RsyncCompatibilities {
+    public static final byte CF_INC_RECURSE = 1 << 0;
+    public static final byte CF_SAFE_FLIST = 1 << 3;
     public static final byte CF_SYMLINK_ICONV = 1 << 2;
-    public static final byte CF_SAFE_FLIST    = 1 << 3;
+    public static final byte CF_SYMLINK_TIMES = 1 << 1;
+    
+    private RsyncCompatibilities() {
+    }
 }

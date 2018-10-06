@@ -30,63 +30,40 @@ import com.github.perlundq.yajsync.internal.text.TextEncoder;
 import com.github.perlundq.yajsync.internal.util.Consts;
 import com.github.perlundq.yajsync.internal.util.MD5;
 
-public class RsyncAuthContext
-{
-    private final String _challenge;
-    private final TextEncoder _characterEncoder;
-
-    private RsyncAuthContext(TextEncoder characterEncoder, String challenge)
-    {
-        _challenge = challenge;
-        _characterEncoder = characterEncoder;
-    }
-
-    public RsyncAuthContext(TextEncoder characterEncoder)
-    {
-        _challenge = newChallenge();
-        _characterEncoder = characterEncoder;
-    }
-
-    public static RsyncAuthContext fromChallenge(TextEncoder characterEncoder,
-                                                 String challenge)
-    {
+public class RsyncAuthContext {
+    public static RsyncAuthContext fromChallenge(TextEncoder characterEncoder, String challenge) {
         return new RsyncAuthContext(characterEncoder, challenge);
     }
-
-    public String challenge()
-    {
-        return _challenge;
+    
+    private final String _challenge;
+    
+    private final TextEncoder _characterEncoder;
+    
+    public RsyncAuthContext(TextEncoder characterEncoder) {
+        this._challenge = this.newChallenge();
+        this._characterEncoder = characterEncoder;
     }
-
+    
+    private RsyncAuthContext(TextEncoder characterEncoder, String challenge) {
+        this._challenge = challenge;
+        this._characterEncoder = characterEncoder;
+    }
+    
+    public String challenge() {
+        return this._challenge;
+    }
+    
     /**
      * @throws TextConversionException if _challenge cannot be encoded
      */
-    public String response(char[] password)
-    {
-        byte[] hashedBytes = hash(password);
-        return Base64.getEncoder().withoutPadding().encodeToString(hashedBytes);
-    }
-
-    private String newChallenge()
-    {
-        long rand = new SecureRandom().nextLong();
-        byte[] randBytes = ByteBuffer.allocate(Consts.SIZE_LONG).putLong(rand).array();
-        return Base64.getEncoder().withoutPadding().encodeToString(randBytes);
-    }
-
-    /**
-     * @throws TextConversionException if _challenge cannot be encoded
-     */
-    private byte[] hash(char[] password)
-    {
+    private byte[] hash(char[] password) {
         byte[] passwordBytes = null;
         try {
-            passwordBytes = _characterEncoder.secureEncodeOrNull(password);
+            passwordBytes = this._characterEncoder.secureEncodeOrNull(password);
             if (passwordBytes == null) {
-                throw new RuntimeException("Unable to encode characters in " +
-                                           "password");
+                throw new RuntimeException("Unable to encode characters in " + "password");
             }
-            byte[] challengeBytes = _characterEncoder.encode(_challenge);       // throws TextConversionException
+            byte[] challengeBytes = this._characterEncoder.encode(this._challenge); // throws TextConversionException
             MessageDigest md = MD5.newInstance();
             md.update(passwordBytes);
             md.update(challengeBytes);
@@ -96,5 +73,19 @@ public class RsyncAuthContext
                 Arrays.fill(passwordBytes, (byte) 0);
             }
         }
+    }
+    
+    private String newChallenge() {
+        long rand = new SecureRandom().nextLong();
+        byte[] randBytes = ByteBuffer.allocate(Consts.SIZE_LONG).putLong(rand).array();
+        return Base64.getEncoder().withoutPadding().encodeToString(randBytes);
+    }
+    
+    /**
+     * @throws TextConversionException if _challenge cannot be encoded
+     */
+    public String response(char[] password) {
+        byte[] hashedBytes = this.hash(password);
+        return Base64.getEncoder().withoutPadding().encodeToString(hashedBytes);
     }
 }

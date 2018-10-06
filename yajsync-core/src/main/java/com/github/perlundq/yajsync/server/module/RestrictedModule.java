@@ -29,48 +29,42 @@ package com.github.perlundq.yajsync.server.module;
  * from authenticate matches what peer has supplied, toModule is invoked to get
  * a regular, unrestricted Module.
  */
-public abstract class RestrictedModule implements Module
-{
+public abstract class RestrictedModule implements Module {
     /**
-     * Returns the expected response for user given the supplied authContext.
-     * If the response matches the user supplied response this will be followed
-     * by a call to toModule.
+     * Returns the expected response for user given the supplied authContext. If the
+     * response matches the user supplied response this will be followed by a call
+     * to toModule.
      *
      * @param authContext the authContext used for computing the response.
-     * @param userName the userName to use with authContext.response
+     * @param userName    the userName to use with authContext.response
      * @return the expected response for userName computed from
      *         authContext.response()
      */
-    abstract public String authenticate(RsyncAuthContext authContext,
-                                        String userName)
-        throws ModuleSecurityException;
-
+    abstract public String authenticate(RsyncAuthContext authContext, String userName) throws ModuleSecurityException;
+    
+    @Override
+    abstract public String comment();
+    
+    @Override
+    public final boolean isReadable() {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public final boolean isWritable() {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    abstract public String name();
+    
+    @Override
+    public final RestrictedPath restrictedPath() {
+        throw new UnsupportedOperationException();
+    }
+    
     /**
      * @return the corresponding regular, unrestricted Module of this instance.
      */
     abstract public Module toModule();
-
-    @Override
-    abstract public String name();
-
-    @Override
-    abstract public String comment();
-
-    @Override
-    public final RestrictedPath restrictedPath()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public final boolean isReadable()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public final boolean isWritable()
-    {
-        throw new UnsupportedOperationException();
-    }
 }

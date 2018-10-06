@@ -26,123 +26,107 @@ import java.util.logging.Level;
 
 import com.github.perlundq.yajsync.internal.text.Text;
 
-public class Message
-{
+public class Message {
     private final MessageHeader _header;
     private final ByteBuffer _payload;
-
+    
     /**
      * @throws IllegalArgumentException
      * @throws IllegalStateException
      */
-    public Message(MessageCode code, ByteBuffer payload)
-    {
+    public Message(MessageCode code, ByteBuffer payload) {
         this(new MessageHeader(code, payload.remaining()), payload);
     }
-
+    
     /**
-     * @throws IllegalArgumentException if type is IO_ERROR or NO_SEND and
-     *         length of message header is not 4 bytes
-     * @throws IllegalStateException if header is of an unsupported message type
+     * @throws IllegalArgumentException if type is IO_ERROR or NO_SEND and length of
+     *                                  message header is not 4 bytes
+     * @throws IllegalStateException    if header is of an unsupported message type
      */
-    public Message(MessageHeader header, ByteBuffer payload)
-    {
+    public Message(MessageHeader header, ByteBuffer payload) {
         switch (header.messageType()) {
-        case IO_ERROR:
-        case NO_SEND:
-            if (header.length() != 4) {
-                throw new IllegalArgumentException(String.format(
-                    "received tag %s with an illegal number of bytes, got %d," +
-                    " expected %d", header.messageType(), header.length(), 4));
-            }
-            break;
-        case DATA:
-        case INFO:
-        case ERROR:
-        case ERROR_XFER:
-        case WARNING:
-        case LOG:
-            break;
-        default:
-            throw new IllegalStateException("TODO: (not yet implemented) " +
-                                            "missing case statement for " +
-                                            header.messageType());
+            case IO_ERROR:
+            case NO_SEND:
+                if (header.length() != 4) {
+                    throw new IllegalArgumentException(String.format("received tag %s with an illegal number of bytes, got %d," + " expected %d", header.messageType(), header.length(), 4));
+                }
+                break;
+            case DATA:
+            case INFO:
+            case ERROR:
+            case ERROR_XFER:
+            case WARNING:
+            case LOG:
+                break;
+            default:
+                throw new IllegalStateException("TODO: (not yet implemented) " + "missing case statement for " + header.messageType());
         }
-        _header = header;
-        _payload = payload;
+        this._header = header;
+        this._payload = payload;
     }
-
-    @Override
-    public String toString()
-    {
-        return String.format("%s %s %s %s",
-                             getClass().getSimpleName(), _header, _payload,
-                             Text.byteBufferToString(_payload));
-    }
-
+    
     /**
      * Note: Message.payload() changes state when being read
      */
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
             Message other = (Message) obj;
             if (this.header().equals(other.header())) {
-                return _payload.equals(other._payload);
+                return this._payload.equals(other._payload);
             }
         }
         return false;
     }
-
+    
     /**
      * Note: Message.payload() changes state when being read
      */
     @Override
-    public int hashCode()
-    {
-        return Objects.hash(_header, _payload);
+    public int hashCode() {
+        return Objects.hash(this._header, this._payload);
     }
-
-    public MessageHeader header()
-    {
-        return _header;
+    
+    public MessageHeader header() {
+        return this._header;
     }
-
-    public ByteBuffer payload()
-    {
-        return _payload;
-    }
-
-    public boolean isText()
-    {
-        switch (_header.messageType()) {
-        case LOG:
-        case INFO:
-        case WARNING:
-        case ERROR_XFER:
-        case ERROR:
-            return true;
-        default:
-            return false;
+    
+    public boolean isText() {
+        switch (this._header.messageType()) {
+            case LOG:
+            case INFO:
+            case WARNING:
+            case ERROR_XFER:
+            case ERROR:
+                return true;
+            default:
+                return false;
         }
     }
-
-    public Level logLevelOrNull()
-    {
-        assert isText();
-        switch (_header.messageType()) {
-        case LOG:
-            return Level.FINE;
-        case INFO:
-            return Level.INFO;
-        case WARNING:
-            return Level.WARNING;
-        case ERROR_XFER: // fall through
-        case ERROR:
-            return Level.SEVERE;
-        default:
-            return null;
+    
+    public Level logLevelOrNull() {
+        assert this.isText();
+        switch (this._header.messageType()) {
+            case LOG:
+                return Level.FINE;
+            case INFO:
+                return Level.INFO;
+            case WARNING:
+                return Level.WARNING;
+            case ERROR_XFER: // fall through
+            case ERROR:
+                return Level.SEVERE;
+            default:
+                return null;
         }
+    }
+    
+    public ByteBuffer payload() {
+        return this._payload;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("%s %s %s %s", this.getClass().getSimpleName(), this._header, this._payload, Text.byteBufferToString(this._payload));
     }
 }

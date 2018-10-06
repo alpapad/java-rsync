@@ -19,39 +19,30 @@
  */
 package com.github.perlundq.yajsync.internal.session;
 
-final class Item
-{
-    private Item() {}
-
-    public static final char NO_CHANGE          = 0;      // used
-    public static final char REPORT_ATIME       = (1<<0);
-    public static final char REPORT_CHANGE      = (1<<1);
-    public static final char REPORT_SIZE        = (1<<2); // used
-    public static final char REPORT_TIMEFAIL    = (1<<2);
-    public static final char REPORT_TIME        = (1<<3); // used
-    public static final char REPORT_PERMS       = (1<<4); // used
-    public static final char REPORT_OWNER       = (1<<5); // used
-    public static final char REPORT_GROUP       = (1<<6); // used
-    public static final char REPORT_ACL         = (1<<7);
-    public static final char REPORT_XATTR       = (1<<8);
-    public static final char BASIS_TYPE_FOLLOWS = (1<<11);
-    public static final char XNAME_FOLLOWS      = (1<<12);
-    public static final char IS_NEW             = (1<<13); // used
-    public static final char LOCAL_CHANGE       = (1<<14); // used
-    public static final char TRANSFER           = (1<<15); // used
-
-    private static final char _supported = IS_NEW |
-                                           LOCAL_CHANGE |
-                                           REPORT_CHANGE |
-                                           REPORT_OWNER |
-                                           REPORT_GROUP |
-                                           REPORT_PERMS |
-                                           REPORT_SIZE |
-                                           REPORT_TIME |
-                                           TRANSFER;
-
-    public static boolean isValidItem(int flags)
-    {
+final class Item {
+    
+    public static final char BASIS_TYPE_FOLLOWS = 1 << 11;
+    public static final char IS_NEW = 1 << 13; // used
+    public static final char LOCAL_CHANGE = 1 << 14; // used
+    public static final char NO_CHANGE = 0; // used
+    public static final char REPORT_ACL = 1 << 7;
+    public static final char REPORT_ATIME = 1 << 0;
+    public static final char REPORT_CHANGE = 1 << 1;
+    public static final char REPORT_GROUP = 1 << 6; // used
+    public static final char REPORT_OWNER = 1 << 5; // used
+    public static final char REPORT_PERMS = 1 << 4; // used
+    public static final char REPORT_SIZE = 1 << 2; // used
+    public static final char REPORT_TIME = 1 << 3; // used
+    public static final char REPORT_TIMEFAIL = 1 << 2;
+    public static final char REPORT_XATTR = 1 << 8;
+    public static final char TRANSFER = 1 << 15; // used
+    public static final char XNAME_FOLLOWS = 1 << 12;
+    private static final char _supported = IS_NEW | LOCAL_CHANGE | REPORT_CHANGE | REPORT_OWNER | REPORT_GROUP | REPORT_PERMS | REPORT_SIZE | REPORT_TIME | TRANSFER;
+    
+    public static boolean isValidItem(int flags) {
         return (flags | _supported) == _supported;
+    }
+    
+    private Item() {
     }
 }

@@ -32,84 +32,63 @@ import com.github.perlundq.yajsync.internal.util.MemoryPolicy;
 import com.github.perlundq.yajsync.internal.util.OverflowException;
 import com.github.perlundq.yajsync.internal.util.Util;
 
-public class TextEncoder
-{
+public class TextEncoder {
+    public static TextEncoder newFallback(Charset charset) {
+        CharsetEncoder encoder = charset.newEncoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
+        TextEncoder instance = new TextEncoder(encoder);
+        return instance;
+    }
+    
+    public static TextEncoder newStrict(Charset charset) {
+        CharsetEncoder encoder = charset.newEncoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT);
+        TextEncoder instance = new TextEncoder(encoder);
+        return instance;
+    }
+    
     private final CharsetEncoder _encoder;
-
-    private TextEncoder(CharsetEncoder encoder)
-    {
-        _encoder = encoder;
+    
+    private TextEncoder(CharsetEncoder encoder) {
+        this._encoder = encoder;
     }
-
-    public static TextEncoder newStrict(Charset charset)
-    {
-        CharsetEncoder encoder = charset.newEncoder().
-            onMalformedInput(CodingErrorAction.REPORT).
-            onUnmappableCharacter(CodingErrorAction.REPORT);
-        TextEncoder instance = new TextEncoder(encoder);
-        return instance;
+    
+    public Charset charset() {
+        return this._encoder.charset();
     }
-
-    public static TextEncoder newFallback(Charset charset)
-    {
-        CharsetEncoder encoder = charset.newEncoder().
-            onMalformedInput(CodingErrorAction.REPLACE).
-            onUnmappableCharacter(CodingErrorAction.REPLACE);
-        TextEncoder instance = new TextEncoder(encoder);
-        return instance;
-    }
-
-    public Charset charset()
-    {
-        return _encoder.charset();
-    }
-
+    
     /**
-     * @throws TextConversionException 
+     * @throws TextConversionException
      */
-    private byte[] encode(CharBuffer input,
-                          ErrorPolicy errorPolicy,
-                          MemoryPolicy memoryPolicy)
-    {
-        _encoder.reset();
-        ByteBuffer output = ByteBuffer.allocate(
-                                (int) Math.ceil(input.capacity() *
-                                                _encoder.averageBytesPerChar()));
+    private byte[] encode(CharBuffer input, ErrorPolicy errorPolicy, MemoryPolicy memoryPolicy) {
+        this._encoder.reset();
+        ByteBuffer output = ByteBuffer.allocate((int) Math.ceil(input.capacity() * this._encoder.averageBytesPerChar()));
         try {
             CoderResult result;
             while (true) {
-                result = _encoder.encode(input, output, true);
+                result = this._encoder.encode(input, output, true);
                 if (result.isOverflow()) {
-                    output = Util.enlargeByteBuffer(output, memoryPolicy,
-                                                    Consts.MAX_BUF_SIZE);
+                    output = Util.enlargeByteBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE);
                 } else {
                     break;
                 }
             }
-
+            
             while (!result.isError()) {
-                result = _encoder.flush(output);
+                result = this._encoder.flush(output);
                 if (result.isOverflow()) {
-                    output = Util.enlargeByteBuffer(output, memoryPolicy,
-                                                    Consts.MAX_BUF_SIZE);
+                    output = Util.enlargeByteBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE);
                 } else {
                     break;
                 }
             }
-
+            
             if (result.isUnderflow()) {
-                return Arrays.copyOfRange(output.array(),
-                                          output.arrayOffset(),
-                                          output.position());
+                return Arrays.copyOfRange(output.array(), output.arrayOffset(), output.position());
             }
-
+            
             if (errorPolicy == ErrorPolicy.THROW) { // NOTE: in some circumstances we should avoid printing the contents
                 input.limit(input.position() + result.length());
-                throw new TextConversionException(String.format(
-                    "failed to encode %d bytes after %s (using %s): %s -> %s",
-                    result.length(), output.flip().toString(),
-                    _encoder.charset(), Text.charBufferToString(input),
-                    result));
+                throw new TextConversionException(String.format("failed to encode %d bytes after %s (using %s): %s -> %s", result.length(), output.flip().toString(), this._encoder.charset(),
+                        Text.charBufferToString(input), result));
             }
             return null;
         } catch (OverflowException e) {
@@ -123,31 +102,24 @@ public class TextEncoder
             }
         }
     }
-
-    public byte[] secureEncodeOrNull(char[] inputChars)
-    {
-        CharBuffer input = CharBuffer.wrap(inputChars);
-        return encode(input,
-                      ErrorPolicy.RETURN_NULL,
-                      MemoryPolicy.ZERO);
-    }
-
-    public byte[] encodeOrNull(String string)
-    {
-        char[] inputChars = string.toCharArray();
-        CharBuffer input = CharBuffer.wrap(inputChars);
-        return encode(input,
-                      ErrorPolicy.RETURN_NULL,
-                      MemoryPolicy.IGNORE);
-    }
     
     /**
-     * @throws TextConversionException 
+     * @throws TextConversionException
      */
-    public byte[] encode(String string)
-    {
+    public byte[] encode(String string) {
         char[] inputChars = string.toCharArray();
         CharBuffer input = CharBuffer.wrap(inputChars);
-        return encode(input, ErrorPolicy.THROW, MemoryPolicy.IGNORE);
+        return this.encode(input, ErrorPolicy.THROW, MemoryPolicy.IGNORE);
+    }
+    
+    public byte[] encodeOrNull(String string) {
+        char[] inputChars = string.toCharArray();
+        CharBuffer input = CharBuffer.wrap(inputChars);
+        return this.encode(input, ErrorPolicy.RETURN_NULL, MemoryPolicy.IGNORE);
+    }
+    
+    public byte[] secureEncodeOrNull(char[] inputChars) {
+        CharBuffer input = CharBuffer.wrap(inputChars);
+        return this.encode(input, ErrorPolicy.RETURN_NULL, MemoryPolicy.ZERO);
     }
 }

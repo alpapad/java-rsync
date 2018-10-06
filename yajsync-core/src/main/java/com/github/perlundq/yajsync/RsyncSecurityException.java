@@ -22,16 +22,14 @@ package com.github.perlundq.yajsync;
  * Signals that an error which could compromise the integrity of yajsync has
  * occurred.
  */
-@SuppressWarnings("serial")
-public class RsyncSecurityException extends RsyncException
-{
-    public RsyncSecurityException(String message)
-    {
-        super(message);
-    }
-
-    public RsyncSecurityException(Exception e)
-    {
+public class RsyncSecurityException extends RsyncException {
+    private static final long serialVersionUID = 1L;
+    
+    public RsyncSecurityException(Exception e) {
         super(e);
+    }
+    
+    public RsyncSecurityException(String message) {
+        super(message);
     }
 }

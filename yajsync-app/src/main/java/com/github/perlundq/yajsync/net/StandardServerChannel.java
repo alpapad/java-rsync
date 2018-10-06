@@ -19,26 +19,22 @@ package com.github.perlundq.yajsync.net;
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 
-public class StandardServerChannel implements ServerChannel
-{
+public class StandardServerChannel implements ServerChannel {
     private final ServerSocketChannel _sock;
     private final int _timeout;
-
-    public StandardServerChannel(ServerSocketChannel sock, int timeout)
-    {
-        _sock = sock;
-        _timeout = timeout;
+    
+    public StandardServerChannel(ServerSocketChannel sock, int timeout) {
+        this._sock = sock;
+        this._timeout = timeout;
     }
-
+    
     @Override
-    public void close() throws IOException
-    {
-        _sock.close();
+    public StandardSocketChannel accept() throws IOException {
+        return new StandardSocketChannel(this._sock.accept(), this._timeout);
     }
-
+    
     @Override
-    public StandardSocketChannel accept() throws IOException
-    {
-        return new StandardSocketChannel(_sock.accept(), _timeout);
+    public void close() throws IOException {
+        this._sock.close();
     }
 }

@@ -20,55 +20,47 @@ package com.github.perlundq.yajsync.internal.session;
 
 import java.util.Objects;
 
-public final class ProtocolVersion implements Comparable<ProtocolVersion>
-{
+public final class ProtocolVersion implements Comparable<ProtocolVersion> {
     private final int _major;
     private final int _minor;
-
-    public ProtocolVersion(int major, int minor)
-    {
-        _major = major;
-        _minor = minor;
+    
+    public ProtocolVersion(int major, int minor) {
+        this._major = major;
+        this._minor = minor;
     }
-
+    
     @Override
-    public String toString()
-    {
-        return String.format("%d.%d", _major, _minor);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(_major, _minor);
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (o != null && getClass() == o.getClass()) {
-            return compareTo((ProtocolVersion) o) == 0;
-        }
-        return false;
-    }
-
-    @Override
-    public int compareTo(ProtocolVersion other)
-    {
-        int res = _major - other._major;
+    public int compareTo(ProtocolVersion other) {
+        int res = this._major - other._major;
         if (res == 0) {
-            return _minor - other._minor;
+            return this._minor - other._minor;
         }
         return res;
     }
-
-    public int major()
-    {
-        return _major;
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o != null && this.getClass() == o.getClass()) {
+            return this.compareTo((ProtocolVersion) o) == 0;
+        }
+        return false;
     }
-
-    public int minor()
-    {
-        return _minor;
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(this._major, this._minor);
+    }
+    
+    public int major() {
+        return this._major;
+    }
+    
+    public int minor() {
+        return this._minor;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("%d.%d", this._major, this._minor);
     }
 }

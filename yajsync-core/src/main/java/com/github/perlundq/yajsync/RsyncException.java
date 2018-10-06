@@ -19,16 +19,14 @@ package com.github.perlundq.yajsync;
 /**
  * Signals that a generic rsync related error has occurred.
  */
-@SuppressWarnings("serial")
-public class RsyncException extends Exception
-{
-    public RsyncException(String msg)
-    {
+public class RsyncException extends Exception {
+    private static final long serialVersionUID = 1L;
+    
+    public RsyncException(String msg) {
         super(msg);
     }
-
-    public RsyncException(Throwable t)
-    {
+    
+    public RsyncException(Throwable t) {
         super(t);
     }
 }

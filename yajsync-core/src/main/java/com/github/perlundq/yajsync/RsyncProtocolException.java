@@ -21,17 +21,14 @@ package com.github.perlundq.yajsync;
 /**
  * Signals that a rsync protocol error has occurred.
  */
-@SuppressWarnings("serial")
-public class RsyncProtocolException extends RsyncException
-{
-    public RsyncProtocolException(String msg)
-    {
-        super(msg);
-    }
-
-    public RsyncProtocolException(Exception e)
-    {
+public class RsyncProtocolException extends RsyncException {
+    private static final long serialVersionUID = 1L;
+    
+    public RsyncProtocolException(Exception e) {
         super(e);
     }
+    
+    public RsyncProtocolException(String msg) {
+        super(msg);
+    }
 }
-

@@ -21,7 +21,6 @@ package com.github.perlundq.yajsync.internal.channels;
 
 import com.github.perlundq.yajsync.RsyncProtocolException;
 
-public interface MessageHandler
-{
+public interface MessageHandler {
     void handleMessage(Message message) throws RsyncProtocolException;
 }

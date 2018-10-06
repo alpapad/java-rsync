@@ -21,25 +21,21 @@ package com.github.perlundq.yajsync.internal.channels;
 
 import java.nio.channels.WritableByteChannel;
 
-public class RsyncOutChannel extends TaggedOutputChannel implements IndexEncoder
-{
+public class RsyncOutChannel extends TaggedOutputChannel implements IndexEncoder {
     private final IndexEncoder _indexEncoder;
-
-    public RsyncOutChannel(WritableByteChannel sock)
-    {
+    
+    public RsyncOutChannel(WritableByteChannel sock) {
         super(sock);
-        _indexEncoder = new IndexEncoderImpl(this);
+        this._indexEncoder = new IndexEncoderImpl(this);
     }
-
-    public RsyncOutChannel(WritableByteChannel sock, int bufferSize)
-    {
+    
+    public RsyncOutChannel(WritableByteChannel sock, int bufferSize) {
         super(sock, bufferSize);
-        _indexEncoder = new IndexEncoderImpl(this);
+        this._indexEncoder = new IndexEncoderImpl(this);
     }
-
+    
     @Override
-    public void encodeIndex(int index) throws ChannelException
-    {
-        _indexEncoder.encodeIndex(index);
+    public void encodeIndex(int index) throws ChannelException {
+        this._indexEncoder.encodeIndex(index);
     }
 }

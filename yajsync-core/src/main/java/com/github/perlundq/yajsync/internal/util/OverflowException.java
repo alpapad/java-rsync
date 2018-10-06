@@ -18,11 +18,10 @@
  */
 package com.github.perlundq.yajsync.internal.util;
 
-@SuppressWarnings("serial")
-public class OverflowException extends RuntimeException
-{
-    public OverflowException(String message)
-    {
+public class OverflowException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+    
+    public OverflowException(String message) {
         super(message);
     }
 }

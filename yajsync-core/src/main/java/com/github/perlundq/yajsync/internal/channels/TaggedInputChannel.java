@@ -30,87 +30,72 @@ import com.github.perlundq.yajsync.RsyncProtocolException;
 import com.github.perlundq.yajsync.internal.text.Text;
 import com.github.perlundq.yajsync.internal.util.Util;
 
-public class TaggedInputChannel extends SimpleInputChannel
-{
-    private static final Logger _log =
-        Logger.getLogger(TaggedInputChannel.class.getName());
-
+public class TaggedInputChannel extends SimpleInputChannel {
+    private static final Logger _log = Logger.getLogger(TaggedInputChannel.class.getName());
+    
     private final SimpleInputChannel _inputChannel;
     private final MessageHandler _msgHandler;
     private int _readAmountAvailable = 0;
-
-    public TaggedInputChannel(ReadableByteChannel sock, MessageHandler handler)
-    {
+    
+    public TaggedInputChannel(ReadableByteChannel sock, MessageHandler handler) {
         super(sock);
-        _inputChannel = new SimpleInputChannel(sock);
-        _msgHandler = handler;
+        this._inputChannel = new SimpleInputChannel(sock);
+        this._msgHandler = handler;
     }
-
+    
     @Override
-    protected void get(ByteBuffer dst) throws ChannelException
-    {
+    protected void get(ByteBuffer dst) throws ChannelException {
         while (dst.hasRemaining()) {
-            readNextAvailable(dst);
+            this.readNextAvailable(dst);
         }
     }
-
-    public int numBytesAvailable()
-    {
-        return _readAmountAvailable;
+    
+    public int numBytesAvailable() {
+        return this._readAmountAvailable;
     }
-
+    
+    @Override
+    public long numBytesRead() {
+        return super.numBytesRead() + this._inputChannel.numBytesRead();
+    }
+    
     /**
      * @throws RsyncProtocolException if peer sends an invalid message
      */
-    protected void readNextAvailable(ByteBuffer dst) throws ChannelException
-    {
-        while (_readAmountAvailable == 0) {
-            _readAmountAvailable = readNextMessage();
+    protected void readNextAvailable(ByteBuffer dst) throws ChannelException {
+        while (this._readAmountAvailable == 0) {
+            this._readAmountAvailable = this.readNextMessage();
         }
-        int chunkLength = Math.min(_readAmountAvailable, dst.remaining());
-        ByteBuffer slice = Util.slice(dst,
-                                      dst.position(),
-                                      dst.position() + chunkLength);
+        int chunkLength = Math.min(this._readAmountAvailable, dst.remaining());
+        ByteBuffer slice = Util.slice(dst, dst.position(), dst.position() + chunkLength);
         super.get(slice);
         if (_log.isLoggable(Level.FINEST)) {
-            ByteBuffer tmp = Util.slice(dst,
-                                        dst.position(),
-                                        dst.position() + Math.min(chunkLength,
-                                                                  64));
+            ByteBuffer tmp = Util.slice(dst, dst.position(), dst.position() + Math.min(chunkLength, 64));
             _log.finest(Text.byteBufferToString(tmp));
         }
         dst.position(slice.position());
-        _readAmountAvailable -= chunkLength;
+        this._readAmountAvailable -= chunkLength;
     }
-
-    @Override
-    public long numBytesRead()
-    {
-        return super.numBytesRead() + _inputChannel.numBytesRead();
-    }
-
-    private int readNextMessage() throws ChannelException
-    {
+    
+    private int readNextMessage() throws ChannelException {
         try {
             // throws IllegalArgumentException
-            MessageHeader hdr = MessageHeader.fromTag(_inputChannel.getInt());
+            MessageHeader hdr = MessageHeader.fromTag(this._inputChannel.getInt());
             if (hdr.messageType() == MessageCode.DATA) {
                 if (_log.isLoggable(Level.FINER)) {
                     _log.finer("< " + hdr);
                 }
                 return hdr.length();
             }
-            ByteBuffer payload = _inputChannel.get(hdr.length()).
-                                               order(ByteOrder.LITTLE_ENDIAN);
+            ByteBuffer payload = this._inputChannel.get(hdr.length()).order(ByteOrder.LITTLE_ENDIAN);
             // throws IllegalArgumentException, IllegalStateException
             Message message = new Message(hdr, payload);
             if (_log.isLoggable(Level.FINER)) {
                 _log.finer("< " + message);
             }
-            _msgHandler.handleMessage(message);
+            this._msgHandler.handleMessage(message);
             return 0;
-        } catch (RsyncProtocolException | IllegalStateException |
-                 IllegalArgumentException e) {
+        } catch (RsyncProtocolException | IllegalStateException | IllegalArgumentException e) {
             throw new ChannelException(e);
         }
     }

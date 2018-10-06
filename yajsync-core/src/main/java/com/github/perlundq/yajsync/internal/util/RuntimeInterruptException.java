@@ -18,11 +18,10 @@
  */
 package com.github.perlundq.yajsync.internal.util;
 
-@SuppressWarnings("serial")
-public class RuntimeInterruptException extends RuntimeException
-{
-    public RuntimeInterruptException(Exception e)
-    {
+public class RuntimeInterruptException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+    
+    public RuntimeInterruptException(Exception e) {
         super(e);
     }
 }

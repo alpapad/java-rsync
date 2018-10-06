@@ -18,4 +18,6 @@
  */
 package com.github.perlundq.yajsync.internal.util;
 
-public enum MemoryPolicy { ZERO, IGNORE }
+public enum MemoryPolicy {
+    IGNORE, ZERO
+}

@@ -20,99 +20,82 @@ package com.github.perlundq.yajsync.internal.channels;
 
 import java.nio.ByteBuffer;
 
-public class BufferedDuplexChannel implements Readable, Bufferable
-{
+public class BufferedDuplexChannel implements Readable, Bufferable {
     private final Readable _inputChannel;
     private final Bufferable _outputChannel;
-
-    public BufferedDuplexChannel(Readable readable, Bufferable writable)
-    {
-        _inputChannel = readable;
-        _outputChannel = writable;
+    
+    public BufferedDuplexChannel(Readable readable, Bufferable writable) {
+        this._inputChannel = readable;
+        this._outputChannel = writable;
     }
-
+    
     @Override
-    public String toString()
-    {
-        return String.format("%s %s %s", getClass().getSimpleName(),
-                             _inputChannel, _outputChannel);
+    public void flush() throws ChannelException {
+        this._outputChannel.flush();
     }
-
+    
     @Override
-    public void flush() throws ChannelException
-    {
-        _outputChannel.flush();
+    public void get(byte[] dst, int offset, int length) throws ChannelException {
+        this._inputChannel.get(dst, offset, length);
     }
-
+    
     @Override
-    public void put(ByteBuffer src) throws ChannelException
-    {
-        _outputChannel.put(src);
+    public ByteBuffer get(int numBytes) throws ChannelException {
+        return this._inputChannel.get(numBytes);
     }
-
+    
     @Override
-    public void put(byte[] src, int offset, int length) throws ChannelException
-    {
-        _outputChannel.put(src, offset, length);
+    public byte getByte() throws ChannelException {
+        return this._inputChannel.getByte();
     }
-
+    
     @Override
-    public void putByte(byte b) throws ChannelException
-    {
-        _outputChannel.putByte(b);
+    public char getChar() throws ChannelException {
+        return this._inputChannel.getChar();
     }
-
+    
     @Override
-    public void putChar(char c) throws ChannelException
-    {
-        _outputChannel.putChar(c);
+    public int getInt() throws ChannelException {
+        return this._inputChannel.getInt();
     }
-
+    
     @Override
-    public void putInt(int i) throws ChannelException
-    {
-        _outputChannel.putInt(i);
+    public int numBytesBuffered() {
+        return this._outputChannel.numBytesBuffered();
     }
-
+    
     @Override
-    public ByteBuffer get(int numBytes) throws ChannelException
-    {
-        return _inputChannel.get(numBytes);
+    public void put(byte[] src, int offset, int length) throws ChannelException {
+        this._outputChannel.put(src, offset, length);
     }
-
+    
     @Override
-    public void get(byte[] dst, int offset, int length) throws ChannelException
-    {
-        _inputChannel.get(dst, offset, length);
+    public void put(ByteBuffer src) throws ChannelException {
+        this._outputChannel.put(src);
     }
-
+    
     @Override
-    public byte getByte() throws ChannelException
-    {
-        return _inputChannel.getByte();
+    public void putByte(byte b) throws ChannelException {
+        this._outputChannel.putByte(b);
     }
-
+    
     @Override
-    public char getChar() throws ChannelException
-    {
-        return _inputChannel.getChar();
+    public void putChar(char c) throws ChannelException {
+        this._outputChannel.putChar(c);
     }
-
+    
     @Override
-    public int getInt() throws ChannelException
-    {
-        return _inputChannel.getInt();
+    public void putInt(int i) throws ChannelException {
+        this._outputChannel.putInt(i);
     }
-
+    
     @Override
-    public void skip(int numBytes) throws ChannelException
-    {
-        _inputChannel.skip(numBytes);
+    public void skip(int numBytes) throws ChannelException {
+        this._inputChannel.skip(numBytes);
     }
-
+    
     @Override
-    public int numBytesBuffered()
-    {
-        return _outputChannel.numBytesBuffered();
+    public String toString() {
+        return String.format("%s %s %s", this.getClass().getSimpleName(), this._inputChannel, this._outputChannel);
     }
 }

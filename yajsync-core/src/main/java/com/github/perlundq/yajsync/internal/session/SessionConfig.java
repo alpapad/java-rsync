@@ -42,187 +42,157 @@ import com.github.perlundq.yajsync.internal.util.MemoryPolicy;
 import com.github.perlundq.yajsync.internal.util.OverflowException;
 import com.github.perlundq.yajsync.internal.util.Util;
 
-public abstract class SessionConfig
-{
-    private static final Logger _log =
-        Logger.getLogger(SessionConfig.class.getName());
+public abstract class SessionConfig {
+    private static final Logger _log = Logger.getLogger(SessionConfig.class.getName());
+    private static final Pattern PROTOCOL_VERSION_REGEX = Pattern.compile("@RSYNCD: (\\d+)\\.(\\d+)$");
     private static final ProtocolVersion VERSION = new ProtocolVersion(30, 0);
-    private static final Pattern PROTOCOL_VERSION_REGEX =
-        Pattern.compile("@RSYNCD: (\\d+)\\.(\\d+)$");
-
-    protected final AutoFlushableDuplexChannel _peerConnection;
-    protected SessionStatus _status;
-    protected TextEncoder _characterEncoder;
+    
     protected TextDecoder _characterDecoder;
-    protected byte[] _checksumSeed; // always stored in little endian
-
+    protected TextEncoder _characterEncoder;
     private Charset _charset;
-
+    protected byte[] _checksumSeed; // always stored in little endian
+    protected final AutoFlushableDuplexChannel _peerConnection;
+    
+    protected SessionStatus _status;
+    
     /**
      * @throws IllegalArgumentException if charset is not supported
      */
-    protected SessionConfig(ReadableByteChannel in, WritableByteChannel out,
-                            Charset charset)
-    {
-        _peerConnection =
-            new AutoFlushableDuplexChannel(new SimpleInputChannel(in),
-                                           new BufferedOutputChannel(out));
-        setCharset(charset);
+    protected SessionConfig(ReadableByteChannel in, WritableByteChannel out, Charset charset) {
+        this._peerConnection = new AutoFlushableDuplexChannel(new SimpleInputChannel(in), new BufferedOutputChannel(out));
+        this.setCharset(charset);
     }
-
-    public Charset charset()
-    {
-        assert _charset != null;
-        return _charset;
+    
+    public Charset charset() {
+        assert this._charset != null;
+        return this._charset;
     }
-
-    public byte[] checksumSeed()
-    {
-        assert _checksumSeed != null;
-        return _checksumSeed;
+    
+    public byte[] checksumSeed() {
+        assert this._checksumSeed != null;
+        return this._checksumSeed;
     }
-
-    public SessionStatus status()
-    {
-        assert _status != null;
-        return _status;
-    }
-
+    
     /**
      * @throws RsyncProtocolException if peer sent a version less than ours
      * @throws RsyncProtocolException if protocol version is invalid
      * @throws RsyncProtocolException if peer sent premature null character
-     * @throws RsyncProtocolException if peer sent too large amount of
-     *         characters
-     * @throws ChannelException if there is a communication failure with peer
-     * @throws IllegalStateException if failing to encode output characters
-     *         using current character set
+     * @throws RsyncProtocolException if peer sent too large amount of characters
+     * @throws ChannelException       if there is a communication failure with peer
+     * @throws IllegalStateException  if failing to encode output characters using
+     *                                current character set
      */
-    protected void exchangeProtocolVersion() throws ChannelException,
-                                                    RsyncProtocolException
-    {
-        sendVersion(VERSION);
-        ProtocolVersion peerVersion = receivePeerVersion();
+    protected void exchangeProtocolVersion() throws ChannelException, RsyncProtocolException {
+        this.sendVersion(VERSION);
+        ProtocolVersion peerVersion = this.receivePeerVersion();
         if (peerVersion.compareTo(VERSION) < 0) {
-            throw new RsyncProtocolException(String.format(
-                "Error: peer version is less than our version (%s < %s)",
-                peerVersion, VERSION));
+            throw new RsyncProtocolException(String.format("Error: peer version is less than our version (%s < %s)", peerVersion, VERSION));
         }
     }
-
+    
     /**
-     * @throws RsyncProtocolException if failing to decode input characters
-     *         from peer using current character set
+     * @throws RsyncProtocolException if failing to decode input characters from
+     *                                peer using current character set
      * @throws RsyncProtocolException if peer sent premature null character
-     * @throws RsyncProtocolException if peer sent too large amount of
-     *         characters
-     * @throws ChannelException if there is a communication failure with peer
+     * @throws RsyncProtocolException if peer sent too large amount of characters
+     * @throws ChannelException       if there is a communication failure with peer
      */
-    protected String readLine() throws ChannelException, RsyncProtocolException
-    {
+    protected String readLine() throws ChannelException, RsyncProtocolException {
         ByteBuffer buf = ByteBuffer.allocate(64);
         String result = null;
         while (result == null) {
-            byte lastByte = _peerConnection.getByte();
+            byte lastByte = this._peerConnection.getByte();
             switch (lastByte) {
-            case Text.ASCII_CR:
-                break;
-            case Text.ASCII_NEWLINE:
-                buf.flip();
-                try {
-                    result = _characterDecoder.decode(buf);
-                } catch (TextConversionException e) {
-                    throw new RsyncProtocolException(e);
-                }
-                break;
-            case Text.ASCII_NULL:
-                throw new RsyncProtocolException(String.format(
-                    "got a null-terminated input string without a newline: " +
-                    "\"%s\"", _characterDecoder.decode(buf)));
-            default:
-                if (!buf.hasRemaining()) {
+                case Text.ASCII_CR:
+                    break;
+                case Text.ASCII_NEWLINE:
+                    buf.flip();
                     try {
-                        buf = Util.enlargeByteBuffer(buf, MemoryPolicy.IGNORE,
-                                                     Consts.MAX_BUF_SIZE);
-                    } catch (OverflowException e) {
+                        result = this._characterDecoder.decode(buf);
+                    } catch (TextConversionException e) {
                         throw new RsyncProtocolException(e);
                     }
-                }
-                buf.put(lastByte);
+                    break;
+                case Text.ASCII_NULL:
+                    throw new RsyncProtocolException(String.format("got a null-terminated input string without a newline: " + "\"%s\"", this._characterDecoder.decode(buf)));
+                default:
+                    if (!buf.hasRemaining()) {
+                        try {
+                            buf = Util.enlargeByteBuffer(buf, MemoryPolicy.IGNORE, Consts.MAX_BUF_SIZE);
+                        } catch (OverflowException e) {
+                            throw new RsyncProtocolException(e);
+                        }
+                    }
+                    buf.put(lastByte);
             }
         }
-
+        
         if (_log.isLoggable(Level.FINER)) {
             _log.finer("< " + result);
         }
         return result;
     }
-
+    
     /**
-     * @throws IllegalStateException if failing to encode output characters
-     *         using current character set
+     * @throws RsyncProtocolException if protocol version is invalid
+     * @throws RsyncProtocolException if failing to decode input characters using
+     *                                current character set
+     * @throws RsyncProtocolException if peer sent premature null character
+     * @throws RsyncProtocolException if received too large amount of characters
+     * @throws ChannelException       if there is a communication failure with peer
      */
-    protected void writeString(String text) throws ChannelException
-    {
+    private ProtocolVersion receivePeerVersion() throws ChannelException, RsyncProtocolException {
+        String versionResponse = this.readLine();
+        Matcher m = PROTOCOL_VERSION_REGEX.matcher(versionResponse);
+        if (m.matches()) {
+            return new ProtocolVersion(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
+        } else {
+            throw new RsyncProtocolException(String.format("Invalid protocol version: %s", versionResponse));
+        }
+    }
+    
+    /**
+     * @throws IllegalStateException if failing to encode output characters using
+     *                               current character set
+     * @throws ChannelException      if there is a communication failure with peer
+     */
+    private void sendVersion(ProtocolVersion version) throws ChannelException {
+        this.writeString(String.format("@RSYNCD: %d.%d\n", version.major(), version.minor()));
+    }
+    
+    /**
+     * @throws IllegalArgumentException if charset is not supported
+     */
+    private void setCharset(Charset charset) {
+        assert charset != null;
+        if (!Util.isValidCharset(charset)) {
+            throw new IllegalArgumentException(String.format(
+                    "character set %s is not supported - cannot encode SLASH (/)," + " DOT (.), NEWLINE (\n), CARRIAGE RETURN (\r) and NULL (\0) " + "to their ASCII counterparts and vice versa",
+                    charset));
+        }
+        this._charset = charset;
+        this._characterEncoder = TextEncoder.newStrict(this._charset);
+        this._characterDecoder = TextDecoder.newStrict(this._charset);
+    }
+    
+    public SessionStatus status() {
+        assert this._status != null;
+        return this._status;
+    }
+    
+    /**
+     * @throws IllegalStateException if failing to encode output characters using
+     *                               current character set
+     */
+    protected void writeString(String text) throws ChannelException {
         try {
             if (_log.isLoggable(Level.FINER)) {
                 _log.finer("> " + text);
             }
-            byte[] textEncoded = _characterEncoder.encode(text);
-            _peerConnection.put(textEncoded, 0, textEncoded.length);
+            byte[] textEncoded = this._characterEncoder.encode(text);
+            this._peerConnection.put(textEncoded, 0, textEncoded.length);
         } catch (TextConversionException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    /**
-     * @throws IllegalStateException if failing to encode output characters
-     *         using current character set
-     * @throws ChannelException if there is a communication failure with peer
-     */
-    private void sendVersion(ProtocolVersion version) throws ChannelException
-    {
-        writeString(String.format("@RSYNCD: %d.%d\n",
-                                  version.major(), version.minor()));
-    }
-
-    /**
-     * @throws RsyncProtocolException if protocol version is invalid
-     * @throws RsyncProtocolException if failing to decode input characters
-     *         using current character set
-     * @throws RsyncProtocolException if peer sent premature null character
-     * @throws RsyncProtocolException if received too large amount of characters
-     * @throws ChannelException if there is a communication failure with peer
-     */
-    private ProtocolVersion receivePeerVersion() throws ChannelException,
-                                                        RsyncProtocolException
-    {
-        String versionResponse = readLine();
-        Matcher m = PROTOCOL_VERSION_REGEX.matcher(versionResponse);
-        if (m.matches()) {
-            return new ProtocolVersion(Integer.parseInt(m.group(1)),
-                                       Integer.parseInt(m.group(2)));
-        } else {
-            throw new RsyncProtocolException(
-                    String.format("Invalid protocol version: %s",
-                                  versionResponse));
-        }
-    }
-
-    /**
-     * @throws IllegalArgumentException if charset is not supported
-     */
-    private void setCharset(Charset charset)
-    {
-        assert charset != null;
-        if (!Util.isValidCharset(charset)) {
-            throw new IllegalArgumentException(String.format(
-                "character set %s is not supported - cannot encode SLASH (/)," +
-                " DOT (.), NEWLINE (\n), CARRIAGE RETURN (\r) and NULL (\0) " +
-                "to their ASCII counterparts and vice versa", charset));
-        }
-        _charset = charset;
-        _characterEncoder = TextEncoder.newStrict(_charset);
-        _characterDecoder = TextDecoder.newStrict(_charset);
     }
 }

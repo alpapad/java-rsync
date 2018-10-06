@@ -16,4 +16,5 @@
  */
 package com.github.perlundq.yajsync.attr;
 
-public interface LocatableSymlinkInfo extends SymlinkInfo, LocatableFileInfo {}
+public interface LocatableSymlinkInfo extends SymlinkInfo, LocatableFileInfo {
+}

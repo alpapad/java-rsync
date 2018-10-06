@@ -19,22 +19,18 @@ package com.github.perlundq.yajsync.internal.session;
 import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 import com.github.perlundq.yajsync.attr.SymlinkInfo;
 
-class SymlinkInfoImpl extends FileInfoImpl implements SymlinkInfo
-{
+class SymlinkInfoImpl extends FileInfoImpl implements SymlinkInfo {
     private final String _targetPathName;
-
-    public SymlinkInfoImpl(String pathName, byte[] pathNameBytes,
-                           RsyncFileAttributes attrs, String targetPathName)
-    {
+    
+    public SymlinkInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, String targetPathName) {
         super(pathName, pathNameBytes, attrs);
         assert targetPathName != null;
-        assert attrs().isSymbolicLink();
-        _targetPathName = targetPathName;
+        assert this.attrs().isSymbolicLink();
+        this._targetPathName = targetPathName;
     }
-
+    
     @Override
-    public String targetPathName()
-    {
-        return _targetPathName;
+    public String targetPathName() {
+        return this._targetPathName;
     }
 }

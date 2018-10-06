@@ -18,12 +18,9 @@ package com.github.perlundq.yajsync.net;
 
 import java.io.IOException;
 
-public class SSLChannelFactory implements ChannelFactory
-{
+public class SSLChannelFactory implements ChannelFactory {
     @Override
-    public DuplexByteChannel open(String address, int port, int contimeout, int timeout)
-        throws IOException
-    {
+    public DuplexByteChannel open(String address, int port, int contimeout, int timeout) throws IOException {
         return SSLChannel.open(address, port, contimeout, timeout);
     }
 }

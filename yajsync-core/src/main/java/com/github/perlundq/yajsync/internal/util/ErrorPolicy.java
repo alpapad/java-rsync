@@ -19,4 +19,6 @@
  */
 package com.github.perlundq.yajsync.internal.util;
 
-public enum ErrorPolicy { THROW, RETURN_NULL }
+public enum ErrorPolicy {
+    RETURN_NULL, THROW
+}

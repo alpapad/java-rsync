@@ -18,16 +18,14 @@
  */
 package com.github.perlundq.yajsync.internal.channels;
 
-@SuppressWarnings("serial")
-public class ChannelEOFException extends ChannelException
-{
-    public ChannelEOFException(String message)
-    {
-        super(message);
-    }
-
-    public ChannelEOFException(Exception e)
-    {
+public class ChannelEOFException extends ChannelException {
+    private static final long serialVersionUID = 1L;
+    
+    public ChannelEOFException(Exception e) {
         super(e);
+    }
+    
+    public ChannelEOFException(String message) {
+        super(message);
     }
 }

@@ -22,27 +22,17 @@ import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.channels.ServerSocketChannel;
 
-public class StandardServerChannelFactory implements ServerChannelFactory
-{
+public class StandardServerChannelFactory implements ServerChannelFactory {
     private boolean _isReuseAddress;
-
+    
     @Override
-    public ServerChannelFactory setReuseAddress(boolean isReuseAddress)
-    {
-        _isReuseAddress = isReuseAddress;
-        return this;
-    }
-
-    @Override
-    public ServerChannel open(InetAddress address, int port, int timeout) throws IOException
-    {
+    public ServerChannel open(InetAddress address, int port, int timeout) throws IOException {
         ServerSocketChannel sock = ServerSocketChannel.open();
         try {
-            if (_isReuseAddress) {
+            if (this._isReuseAddress) {
                 sock.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             }
-            InetSocketAddress socketAddress =
-                new InetSocketAddress(address, port);
+            InetSocketAddress socketAddress = new InetSocketAddress(address, port);
             sock.bind(socketAddress);
             return new StandardServerChannel(sock, timeout);
         } catch (Throwable t) {
@@ -55,5 +45,11 @@ public class StandardServerChannelFactory implements ServerChannelFactory
             }
             throw t;
         }
+    }
+    
+    @Override
+    public ServerChannelFactory setReuseAddress(boolean isReuseAddress) {
+        this._isReuseAddress = isReuseAddress;
+        return this;
     }
 }

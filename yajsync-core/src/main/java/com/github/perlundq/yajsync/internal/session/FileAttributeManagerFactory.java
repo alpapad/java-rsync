@@ -22,52 +22,31 @@ import java.nio.file.FileSystem;
 import com.github.perlundq.yajsync.attr.Group;
 import com.github.perlundq.yajsync.attr.User;
 
-public final class FileAttributeManagerFactory
-{
-    private FileAttributeManagerFactory() {}
-
-    public static FileAttributeManager getMostPerformant(FileSystem fs,
-                                                         boolean isPreserveUser,
-                                                         boolean isPreserveGroup,
-                                                         boolean isPreserveDevices,
-                                                         boolean isPreserveSpecials,
-                                                         boolean isNumericIds,
-                                                         User defaultUser, Group defaultGroup,
-                                                         int defaultFilePermissions,
-                                                         int defaultDirectoryPermissions)
-    {
-        if (isUnixSupported(fs) &&
-            (isPreserveDevices || isPreserveSpecials || isPreserveUser || isPreserveGroup)) {
+public final class FileAttributeManagerFactory {
+    public static FileAttributeManager getMostPerformant(FileSystem fs, boolean isPreserveUser, boolean isPreserveGroup, boolean isPreserveDevices, boolean isPreserveSpecials, boolean isNumericIds,
+            User defaultUser, Group defaultGroup, int defaultFilePermissions, int defaultDirectoryPermissions) {
+        if (isUnixSupported(fs) && (isPreserveDevices || isPreserveSpecials || isPreserveUser || isPreserveGroup)) {
             try {
-                return new UnixFileAttributeManager(defaultUser, defaultGroup, isPreserveUser,
-                                                    isPreserveGroup);
+                return new UnixFileAttributeManager(defaultUser, defaultGroup, isPreserveUser, isPreserveGroup);
             } catch (IOException e) {
                 return new PosixFileAttributeManager(defaultUser.id(), defaultGroup.id());
             }
         } else if (isPosixSupported(fs) && (isPreserveUser || isPreserveGroup)) {
             return new PosixFileAttributeManager(defaultUser.id(), defaultGroup.id());
         } else {
-            return new BasicFileAttributeManager(defaultUser, defaultGroup,
-                                                 defaultFilePermissions,
-                                                 defaultDirectoryPermissions);
+            return new BasicFileAttributeManager(defaultUser, defaultGroup, defaultFilePermissions, defaultDirectoryPermissions);
         }
     }
-
-    private static boolean isUnixSupported(FileSystem fs)
-    {
-        return fs.supportedFileAttributeViews().contains("unix");
-    }
-
-    private static boolean isPosixSupported(FileSystem fs)
-    {
+    
+    private static boolean isPosixSupported(FileSystem fs) {
         return fs.supportedFileAttributeViews().contains("posix");
     }
-
-    public static FileAttributeManager newMostAble(FileSystem fs, User defaultUser,
-                                                   Group defaultGroup,
-                                                   int defaultFilePermissions,
-                                                   int defaultDirectoryPermissions)
-    {
+    
+    private static boolean isUnixSupported(FileSystem fs) {
+        return fs.supportedFileAttributeViews().contains("unix");
+    }
+    
+    public static FileAttributeManager newMostAble(FileSystem fs, User defaultUser, Group defaultGroup, int defaultFilePermissions, int defaultDirectoryPermissions) {
         if (isUnixSupported(fs)) {
             try {
                 return new UnixFileAttributeManager(defaultUser, defaultGroup, true, true);
@@ -78,8 +57,10 @@ public final class FileAttributeManagerFactory
         if (isPosixSupported(fs)) {
             return new PosixFileAttributeManager(defaultUser.id(), defaultGroup.id());
         } else {
-            return new BasicFileAttributeManager(defaultUser, defaultGroup, defaultFilePermissions,
-                                                 defaultDirectoryPermissions);
+            return new BasicFileAttributeManager(defaultUser, defaultGroup, defaultFilePermissions, defaultDirectoryPermissions);
         }
+    }
+    
+    private FileAttributeManagerFactory() {
     }
 }

@@ -21,24 +21,18 @@ import java.nio.file.Path;
 import com.github.perlundq.yajsync.attr.LocatableDeviceInfo;
 import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 
-class LocatableDeviceInfoImpl extends DeviceInfoImpl
-                              implements LocatableDeviceInfo
-{
+class LocatableDeviceInfoImpl extends DeviceInfoImpl implements LocatableDeviceInfo {
     private final Path _path;
-
-    public LocatableDeviceInfoImpl(String pathName, byte[] pathNameBytes,
-                                   RsyncFileAttributes attrs,
-                                   int major, int minor, Path path)
-    {
+    
+    public LocatableDeviceInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, int major, int minor, Path path) {
         super(pathName, pathNameBytes, attrs, major, minor);
         assert path != null;
         assert path.isAbsolute();
-        _path = path;
+        this._path = path;
     }
-
+    
     @Override
-    public Path path()
-    {
-        return _path;
+    public Path path() {
+        return this._path;
     }
 }

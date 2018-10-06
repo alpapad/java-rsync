@@ -16,4 +16,6 @@
  */
 package com.github.perlundq.yajsync.internal.session;
 
-public enum FilterMode { NONE, SEND, RECEIVE }
+public enum FilterMode {
+    NONE, RECEIVE, SEND
+}

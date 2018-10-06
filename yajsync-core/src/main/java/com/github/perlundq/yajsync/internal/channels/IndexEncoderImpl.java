@@ -21,53 +21,50 @@ package com.github.perlundq.yajsync.internal.channels;
 
 import com.github.perlundq.yajsync.internal.session.Filelist;
 
-public class IndexEncoderImpl implements IndexEncoder
-{
+public class IndexEncoderImpl implements IndexEncoder {
     private final Writable _dst;
     private int _prevNegativeWriteIndex = 1;
     private int _prevPositiveWriteIndex = -1;
-
-    public IndexEncoderImpl(Writable dst)
-    {
-        _dst = dst;
+    
+    public IndexEncoderImpl(Writable dst) {
+        this._dst = dst;
     }
-
-    //  A diff of 1 - 253 is sent as a one-byte diff; a diff of 254 - 32767
-    //  or 0 is sent as a 0xFE + a two-byte diff; otherwise send 0xFE
-    //  and all 4 bytes of the (non-negative) num with the high-bit set.
+    
+    // A diff of 1 - 253 is sent as a one-byte diff; a diff of 254 - 32767
+    // or 0 is sent as a 0xFE + a two-byte diff; otherwise send 0xFE
+    // and all 4 bytes of the (non-negative) num with the high-bit set.
     @Override
-    public void encodeIndex(int index) throws ChannelException
-    {
+    public void encodeIndex(int index) throws ChannelException {
         if (index == Filelist.DONE) {
-            _dst.putByte((byte) 0);
+            this._dst.putByte((byte) 0);
             return;
         }
-
+        
         int indexPositive;
         int diff;
         if (index >= 0) {
             indexPositive = index;
-            diff = indexPositive - _prevPositiveWriteIndex;
-            _prevPositiveWriteIndex = indexPositive;
+            diff = indexPositive - this._prevPositiveWriteIndex;
+            this._prevPositiveWriteIndex = indexPositive;
         } else {
             indexPositive = -index;
-            diff = indexPositive - _prevNegativeWriteIndex;
-            _prevNegativeWriteIndex = indexPositive;
-            _dst.putByte((byte) 0xFF);
+            diff = indexPositive - this._prevNegativeWriteIndex;
+            this._prevNegativeWriteIndex = indexPositive;
+            this._dst.putByte((byte) 0xFF);
         }
-
+        
         if (diff < 0xFE && diff > 0) {
-            _dst.putByte((byte) diff);
+            this._dst.putByte((byte) diff);
         } else if (diff < 0 || diff > 0x7FFF) {
-            _dst.putByte((byte) 0xFE);
-            _dst.putByte((byte) ((indexPositive >> 24) | 0x80));
-            _dst.putByte((byte) indexPositive);
-            _dst.putByte((byte) (indexPositive >> 8));
-            _dst.putByte((byte) (indexPositive >> 16));
+            this._dst.putByte((byte) 0xFE);
+            this._dst.putByte((byte) (indexPositive >> 24 | 0x80));
+            this._dst.putByte((byte) indexPositive);
+            this._dst.putByte((byte) (indexPositive >> 8));
+            this._dst.putByte((byte) (indexPositive >> 16));
         } else {
-            _dst.putByte((byte) 0xFE);
-            _dst.putByte((byte) (diff >> 8));
-            _dst.putByte((byte) diff);
+            this._dst.putByte((byte) 0xFE);
+            this._dst.putByte((byte) (diff >> 8));
+            this._dst.putByte((byte) diff);
         }
     }
 }

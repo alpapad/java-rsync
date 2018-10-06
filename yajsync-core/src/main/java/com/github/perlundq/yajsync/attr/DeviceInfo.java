@@ -16,8 +16,8 @@
  */
 package com.github.perlundq.yajsync.attr;
 
-public interface DeviceInfo extends FileInfo
-{
+public interface DeviceInfo extends FileInfo {
     int major();
+    
     int minor();
 }

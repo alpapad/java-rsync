@@ -18,16 +18,14 @@
  */
 package com.github.perlundq.yajsync.internal.io;
 
-@SuppressWarnings("serial")
-public class FileViewException extends Exception
-{
-    FileViewException(Exception e)
-    {
+public class FileViewException extends Exception {
+    private static final long serialVersionUID = 1L;
+    
+    FileViewException(Exception e) {
         super(e);
     }
-
-    FileViewException(String message)
-    {
+    
+    FileViewException(String message) {
         super(message);
     }
 }

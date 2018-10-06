@@ -24,44 +24,35 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import com.github.perlundq.yajsync.attr.FileInfo;
 
-public class ConcurrentFilelist extends Filelist
-{
-    public ConcurrentFilelist(boolean isRecursive, boolean isPruneDuplicates)
-    {
-        super(isRecursive,
-              isPruneDuplicates,
-              Collections.synchronizedList(new ArrayList<Segment>()));
+public class ConcurrentFilelist extends Filelist {
+    public ConcurrentFilelist(boolean isRecursive, boolean isPruneDuplicates) {
+        super(isRecursive, isPruneDuplicates, Collections.synchronizedList(new ArrayList<Segment>()));
     }
-
+    
     @Override
-    public String toString()
-    {
-        synchronized(_segments) {
-            return super.toString();
+    public Segment deleteFirstSegment() {
+        synchronized (this._segments) {
+            return super.deleteFirstSegment();
         }
     }
-
+    
     @Override
-    public Segment newSegment(SegmentBuilder builder)
-    {
-        return super.newSegment(builder,
-                                new ConcurrentSkipListMap<Integer, FileInfo>());
-    }
-
-    @Override
-    public Segment getSegmentWith(int fileIndex)
-    {
+    public Segment getSegmentWith(int fileIndex) {
         assert fileIndex >= 0;
-        synchronized(_segments) {
+        synchronized (this._segments) {
             return super.getSegmentWith(fileIndex);
         }
     }
-
+    
     @Override
-    public Segment deleteFirstSegment()
-    {
-        synchronized(_segments) {
-            return super.deleteFirstSegment();
+    public Segment newSegment(SegmentBuilder builder) {
+        return super.newSegment(builder, new ConcurrentSkipListMap<Integer, FileInfo>());
+    }
+    
+    @Override
+    public String toString() {
+        synchronized (this._segments) {
+            return super.toString();
         }
     }
 }

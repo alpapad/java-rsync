@@ -22,74 +22,62 @@ package com.github.perlundq.yajsync.internal.session;
 import com.github.perlundq.yajsync.attr.Group;
 import com.github.perlundq.yajsync.attr.User;
 
-class FileInfoCache
-{
+class FileInfoCache {
+    private byte[] _prevFileName = {};
+    private Group _prevGroup;
+    private long _prevLastModified = 0;
     private int _prevMajor = -1;
     private int _prevMode = -1;
-    private byte[] _prevFileName = {};
-    private long _prevLastModified = 0;
     private User _prevUser;
-    private Group _prevGroup;
-
-    public FileInfoCache() {}
-
-    public int getPrevMode()
-    {
-        return _prevMode;
+    
+    public FileInfoCache() {
     }
-
-    public void setPrevMode(int prevMode)
-    {
-        _prevMode = prevMode;
+    
+    public byte[] getPrevFileNameBytes() {
+        return this._prevFileName;
     }
-
-    public byte[] getPrevFileNameBytes()
-    {
-        return _prevFileName;
+    
+    public Group getPrevGroupOrNull() {
+        return this._prevGroup;
     }
-
-    public void setPrevFileNameBytes(byte[] prevFileName)
-    {
-        _prevFileName = prevFileName;
+    
+    public long getPrevLastModified() {
+        return this._prevLastModified;
     }
-
-    public long getPrevLastModified()
-    {
-        return _prevLastModified;
+    
+    public int getPrevMajor() {
+        return this._prevMajor;
     }
-
-    public void setPrevLastModified(long prevLastModified)
-    {
-        _prevLastModified = prevLastModified;
+    
+    public int getPrevMode() {
+        return this._prevMode;
     }
-
-    public User getPrevUserOrNull()
-    {
-        return _prevUser;
+    
+    public User getPrevUserOrNull() {
+        return this._prevUser;
     }
-
-    public void setPrevUser(User user)
-    {
-        _prevUser = user;
+    
+    public void setPrevFileNameBytes(byte[] prevFileName) {
+        this._prevFileName = prevFileName;
     }
-
-    public Group getPrevGroupOrNull()
-    {
-        return _prevGroup;
+    
+    public void setPrevGroup(Group group) {
+        this._prevGroup = group;
     }
-
-    public void setPrevGroup(Group group)
-    {
-        _prevGroup = group;
+    
+    public void setPrevLastModified(long prevLastModified) {
+        this._prevLastModified = prevLastModified;
     }
-
-    public void setPrevMajor(int major)
-    {
-        _prevMajor = major;
+    
+    public void setPrevMajor(int major) {
+        this._prevMajor = major;
     }
-
-    public int getPrevMajor()
-    {
-        return _prevMajor;
+    
+    public void setPrevMode(int prevMode) {
+        this._prevMode = prevMode;
+    }
+    
+    public void setPrevUser(User user) {
+        this._prevUser = user;
     }
 }

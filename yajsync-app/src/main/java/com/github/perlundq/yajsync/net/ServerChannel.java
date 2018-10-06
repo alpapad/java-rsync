@@ -18,8 +18,9 @@ package com.github.perlundq.yajsync.net;
 
 import java.io.IOException;
 
-public interface ServerChannel extends AutoCloseable
-{
+public interface ServerChannel extends AutoCloseable {
     DuplexByteChannel accept() throws IOException;
-    @Override void close() throws IOException;
+    
+    @Override
+    void close() throws IOException;
 }

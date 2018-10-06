@@ -21,22 +21,19 @@ import java.util.Objects;
 
 import com.github.perlundq.yajsync.internal.util.Environment;
 
-public final class Group
-{
+public final class Group {
     public static final int ID_MAX = 65535;
     private static final int ID_NOBODY = ID_MAX - 1;
+    
     private static final int MAX_NAME_LENGTH = 255;
-
-    public static final Group ROOT = new Group("root", 0);
     public static final Group NOBODY = new Group("nobody", ID_NOBODY);
-    public static final Group JVM_GROUP = new Group(Environment.getGroupName(),
-                                                    Environment.getGroupId());
-
-    private final String _name;
+    public static final Group ROOT = new Group("root", 0);
+    public static final Group JVM_GROUP = new Group(Environment.getGroupName(), Environment.getGroupId());
+    
     private final int _id;
-
-    public Group(String name, int id)
-    {
+    private final String _name;
+    
+    public Group(String name, int id) {
         if (name == null) {
             throw new IllegalArgumentException();
         }
@@ -46,42 +43,36 @@ public final class Group
         if (id < 0 || id > ID_MAX) {
             throw new IllegalArgumentException();
         }
-        _name = name;
-        _id = id;
+        this._name = name;
+        this._id = id;
     }
-
+    
     @Override
-    public String toString()
-    {
-        return String.format("%s (%s, %d)",
-                             getClass().getSimpleName(), _name, _id);
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
+    public boolean equals(Object other) {
         if (this == other) {
             return true;
-        } else if (other != null && getClass() == other.getClass()) {
+        } else if (other != null && this.getClass() == other.getClass()) {
             Group otherGroup = (Group) other;
-            return _id == otherGroup._id && _name.equals(otherGroup._name);
+            return this._id == otherGroup._id && this._name.equals(otherGroup._name);
         }
         return false;
     }
-
+    
     @Override
-    public int hashCode()
-    {
-        return Objects.hash(_name, _id);
+    public int hashCode() {
+        return Objects.hash(this._name, this._id);
     }
-
-    public String name()
-    {
-        return _name;
+    
+    public int id() {
+        return this._id;
     }
-
-    public int id()
-    {
-        return _id;
+    
+    public String name() {
+        return this._name;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), this._name, this._id);
     }
 }

@@ -18,66 +18,65 @@
  */
 package com.github.perlundq.yajsync;
 
-public interface Statistics
-{
+public interface Statistics {
+    /**
+     * @return time for the generation and transfer of the initial segment excluding
+     *         sending the end of segment (in milliseconds). Warning: not really
+     *         useful since yajsync uses incremental recursion only (i.e. it splits
+     *         up the file list into several segments).
+     */
+    long fileListBuildTime();
+    
+    /**
+     * @return time for sending of end of initial segment and additional meta data
+     *         (in milliseconds). Warning: not really useful since yajsync uses
+     *         incremental recursion only (i.e. it splits up the file list into
+     *         several segments).
+     */
+    long fileListTransferTime();
+    
     /**
      * @return total amount of files in all file list segments
      */
     int numFiles();
-
+    
     /**
      * @return total amount of files transferred
      */
     int numTransferredFiles();
-
+    
     /**
      * @return total amount of data received from peer (in bytes)
      */
     long totalBytesRead();
-
+    
     /**
      * @return total amount of data sent to peer (in bytes)
      */
     long totalBytesWritten();
-
-    /**
-     * @return total size of all files in all segments (in bytes)
-     */
-    long totalFileSize();
-
-    /**
-     * @return total size of all files transferred (in bytes)
-     */
-    long totalTransferredSize();
-
-    /**
-     * @return total amount of transferred literal file data (in bytes)
-     */
-    long totalLiteralSize();
-
-    /**
-     * @return total amount of matched file data (in bytes)
-     */
-    long totalMatchedSize();
-
+    
     /**
      * @return total file list size (in bytes)
      */
     long totalFileListSize();
-
+    
     /**
-     * @return time for the generation and transfer of the initial segment
-     *     excluding sending the end of segment (in milliseconds). Warning:
-     *     not really useful since yajsync uses incremental recursion only (i.e.
-     *     it splits up the file list into several segments).
+     * @return total size of all files in all segments (in bytes)
      */
-    long fileListBuildTime();
-
+    long totalFileSize();
+    
     /**
-     * @return time for sending of end of initial segment and additional meta
-     *     data (in milliseconds). Warning: not really useful since yajsync uses
-     *     incremental recursion only (i.e. it splits up the file list into
-     *     several segments).
+     * @return total amount of transferred literal file data (in bytes)
      */
-    long fileListTransferTime();
+    long totalLiteralSize();
+    
+    /**
+     * @return total amount of matched file data (in bytes)
+     */
+    long totalMatchedSize();
+    
+    /**
+     * @return total size of all files transferred (in bytes)
+     */
+    long totalTransferredSize();
 }

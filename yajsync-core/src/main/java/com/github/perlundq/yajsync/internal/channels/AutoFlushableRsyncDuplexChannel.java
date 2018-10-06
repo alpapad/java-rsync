@@ -18,69 +18,56 @@
  */
 package com.github.perlundq.yajsync.internal.channels;
 
-public class AutoFlushableRsyncDuplexChannel extends AutoFlushableDuplexChannel
-                                             implements Taggable, IndexDecoder,
-                                                        IndexEncoder
-{
+public class AutoFlushableRsyncDuplexChannel extends AutoFlushableDuplexChannel implements Taggable, IndexDecoder, IndexEncoder {
     private final RsyncInChannel _inChannel;
     private final RsyncOutChannel _outChannel;
-
-    public AutoFlushableRsyncDuplexChannel(RsyncInChannel inChannel,
-                                           RsyncOutChannel outChannel)
-    {
+    
+    public AutoFlushableRsyncDuplexChannel(RsyncInChannel inChannel, RsyncOutChannel outChannel) {
         super(inChannel, outChannel);
-        _inChannel = inChannel;
-        _outChannel = outChannel;
+        this._inChannel = inChannel;
+        this._outChannel = outChannel;
     }
-
+    
+    public void close() throws ChannelException {
+        try {
+            this._inChannel.close();
+        } finally {
+            this._outChannel.close();
+        }
+    }
+    
     @Override
-    public void flush() throws ChannelException
-    {
-        if (_inChannel.numBytesAvailable() == 0) {
+    public int decodeIndex() throws ChannelException {
+        this.flush();
+        return this._inChannel.decodeIndex();
+    }
+    
+    @Override
+    public void encodeIndex(int index) throws ChannelException {
+        this._outChannel.encodeIndex(index);
+    }
+    
+    @Override
+    public void flush() throws ChannelException {
+        if (this._inChannel.numBytesAvailable() == 0) {
             super.flush();
         }
     }
-
+    
+    public int numBytesAvailable() {
+        return this._inChannel.numBytesAvailable();
+    }
+    
+    public long numBytesRead() {
+        return this._inChannel.numBytesRead();
+    }
+    
+    public long numBytesWritten() {
+        return this._outChannel.numBytesWritten();
+    }
+    
     @Override
-    public void putMessage(Message message) throws ChannelException
-    {
-        _outChannel.putMessage(message);
-    }
-
-    @Override
-    public void encodeIndex(int index) throws ChannelException
-    {
-        _outChannel.encodeIndex(index);
-    }
-
-    @Override
-    public int decodeIndex() throws ChannelException
-    {
-        flush();
-        return _inChannel.decodeIndex();
-    }
-
-    public int numBytesAvailable()
-    {
-        return _inChannel.numBytesAvailable();
-    }
-
-    public long numBytesRead()
-    {
-        return _inChannel.numBytesRead();
-    }
-
-    public long numBytesWritten()
-    {
-        return _outChannel.numBytesWritten();
-    }
-
-    public void close() throws ChannelException
-    {
-        try {
-            _inChannel.close();
-        } finally {
-            _outChannel.close();
-        }
+    public void putMessage(Message message) throws ChannelException {
+        this._outChannel.putMessage(message);
     }
 }

@@ -22,56 +22,48 @@ package com.github.perlundq.yajsync.internal.channels;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum MessageCode
-{
-    DATA         (0),
-    ERROR_XFER   (1),
-    INFO         (2),   /* remote logging */
-    ERROR        (3),   /* remote logging */
-    WARNING      (4),   /* remote logging */
-    ERROR_SOCKET (5),   /* sibling logging */
-    LOG          (6),
-    CLIENT       (7),   /* sibling logging */
-    ERROR_UTF8   (8),   /* sibling logging */
-    REDO         (9),   /* reprocess indicated flist index */
-    FLIST        (20),  /* extra file list over sibling socket */
-    FLIST_EOF    (21),  /* we've transmitted all the file lists */
-    IO_ERROR     (22),  /* the sending side had an I/O error */
-    NOOP         (42),  /* a do-nothing message */
-    DONE         (86),  /* current phase is done */
-    SUCCESS      (100), /* successfully updated indicated flist index */
-    DELETED      (101), /* successfully deleted a file on receiving side */
-    NO_SEND      (102); /* sender failed to open a file we wanted */
-
-    private final int _value;
+public enum MessageCode {
+    CLIENT(7), DATA(0), DELETED(101), /* remote logging */
+    DONE(86), /* remote logging */
+    ERROR(3), /* remote logging */
+    ERROR_SOCKET(5), /* sibling logging */
+    ERROR_UTF8(8), ERROR_XFER(1), /* sibling logging */
+    FLIST(20), /* sibling logging */
+    FLIST_EOF(21), /* reprocess indicated flist index */
+    INFO(2), /* extra file list over sibling socket */
+    IO_ERROR(22), /* we've transmitted all the file lists */
+    LOG(6), /* the sending side had an I/O error */
+    NO_SEND(102), /* a do-nothing message */
+    NOOP(42), /* current phase is done */
+    REDO(9), /* successfully updated indicated flist index */
+    SUCCESS(100), /* successfully deleted a file on receiving side */
+    WARNING(4); /* sender failed to open a file we wanted */
+    
     private static final Map<Integer, MessageCode> _map = new HashMap<>();
-
     static {
         for (MessageCode message : MessageCode.values()) {
             _map.put(message.value(), message);
         }
     }
     
-    MessageCode(int value)
-    {
-        _value = value;
-    }
-
-    public int value()
-    {
-        return _value;
-    }
-    
     /**
      * @throws IllegalArgumentException
      */
-    public static MessageCode fromInt(int value)
-    {
+    public static MessageCode fromInt(int value) {
         MessageCode message = _map.get(value);
         if (message == null) {
-            throw new IllegalArgumentException(String.format(
-                "Error: unknown tag for %d", value));
+            throw new IllegalArgumentException(String.format("Error: unknown tag for %d", value));
         }
         return message;
+    }
+    
+    private final int _value;
+    
+    MessageCode(int value) {
+        this._value = value;
+    }
+    
+    public int value() {
+        return this._value;
     }
 }

@@ -18,15 +18,15 @@
  */
 package com.github.perlundq.yajsync.internal.util;
 
-public final class Consts
-{
+public final class Consts {
     public static final int DEFAULT_UMASK = 0022;
     public static final int MAX_BUF_SIZE = 1024;
     public static final int SIZE_BYTE = 1;
     public static final int SIZE_CHAR = 2;
-    public static final int SIZE_SHORT = 2;
     public static final int SIZE_INT = 4;
     public static final int SIZE_LONG = 8;
-
-    private Consts() {}
+    public static final int SIZE_SHORT = 2;
+    
+    private Consts() {
+    }
 }

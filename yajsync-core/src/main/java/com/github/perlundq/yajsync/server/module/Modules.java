@@ -18,23 +18,22 @@
  */
 package com.github.perlundq.yajsync.server.module;
 
-public interface Modules
-{
+public interface Modules {
     /**
-     * @return a Module directly available to the principal or a
-     *         RestrictedModule in case further authentication is required
-     *         (using rsync challenge response protocol).
-     * @throws ModuleSecurityException if principal should be denied access to
-     *         this module.
-     * @throws ModuleException for any other errors that is expected to be
-     *         handled.
-     */
-    Module get(String moduleName) throws ModuleException;
-
-    /**
-     * @return an iterable over all modules available to the principal connected
-     *         to this instance. Any module should be an instance of
-     *         RestrictedModule if further authentication is required.
+     * @return an iterable over all modules available to the principal connected to
+     *         this instance. Any module should be an instance of RestrictedModule
+     *         if further authentication is required.
      */
     Iterable<Module> all();
+    
+    /**
+     * @return a Module directly available to the principal or a RestrictedModule in
+     *         case further authentication is required (using rsync challenge
+     *         response protocol).
+     * @throws ModuleSecurityException if principal should be denied access to this
+     *                                 module.
+     * @throws ModuleException         for any other errors that is expected to be
+     *                                 handled.
+     */
+    Module get(String moduleName) throws ModuleException;
 }

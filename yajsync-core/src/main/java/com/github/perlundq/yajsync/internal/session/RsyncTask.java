@@ -21,11 +21,11 @@ import java.util.concurrent.Callable;
 import com.github.perlundq.yajsync.RsyncException;
 import com.github.perlundq.yajsync.internal.channels.ChannelException;
 
-public interface RsyncTask extends Callable<Boolean>
-{
+public interface RsyncTask extends Callable<Boolean> {
     @Override
-    Boolean call() throws RsyncException,InterruptedException;
-
-    boolean isInterruptible();
+    Boolean call() throws RsyncException, InterruptedException;
+    
     void closeChannel() throws ChannelException;
+    
+    boolean isInterruptible();
 }

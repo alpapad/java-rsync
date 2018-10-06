@@ -16,11 +16,10 @@
  */
 package com.github.perlundq.yajsync.ui;
 
-@SuppressWarnings("serial")
-class IllegalUrlException extends Exception
-{
-    public IllegalUrlException(String msg)
-    {
+class IllegalUrlException extends Exception {
+    private static final long serialVersionUID = 1L;
+    
+    public IllegalUrlException(String msg) {
         super(msg);
     }
 }

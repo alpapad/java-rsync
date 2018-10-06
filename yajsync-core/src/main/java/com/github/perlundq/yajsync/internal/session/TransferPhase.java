@@ -18,23 +18,21 @@
  */
 package com.github.perlundq.yajsync.internal.session;
 
-enum TransferPhase
-{
-    TRANSFER, TEAR_DOWN_1, TEAR_DOWN_2, STOP;
-
-    public TransferPhase next()
-    {
+enum TransferPhase {
+    STOP, TEAR_DOWN_1, TEAR_DOWN_2, TRANSFER;
+    
+    public TransferPhase next() {
         switch (this) {
-        case TRANSFER:
-            return TEAR_DOWN_1;
-        case TEAR_DOWN_1:
-            return TEAR_DOWN_2;
-        case TEAR_DOWN_2:
-            return STOP;
-        case STOP:
-            return STOP;
-        default:
-            throw new IllegalStateException();
+            case TRANSFER:
+                return TEAR_DOWN_1;
+            case TEAR_DOWN_1:
+                return TEAR_DOWN_2;
+            case TEAR_DOWN_2:
+                return STOP;
+            case STOP:
+                return STOP;
+            default:
+                throw new IllegalStateException();
         }
     }
 }

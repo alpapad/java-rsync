@@ -53,161 +53,25 @@ import com.github.perlundq.yajsync.server.module.ModuleException;
 import com.github.perlundq.yajsync.server.module.ModuleProvider;
 import com.github.perlundq.yajsync.server.module.Modules;
 
-
-public final class YajsyncServer
-{
-    private static final Logger _log =
-        Logger.getLogger(YajsyncServer.class.getName());
+public final class YajsyncServer {
+    private static final Logger _log = Logger.getLogger(YajsyncServer.class.getName());
     private static final int THREAD_FACTOR = 4;
-    private boolean _isTLS;
-    private CountDownLatch _isListeningLatch;
-    private int _numThreads = Runtime.getRuntime().availableProcessors() *
-                              THREAD_FACTOR;
-    private int _port = RsyncServer.DEFAULT_LISTEN_PORT;
-    private int _verbosity;
     private InetAddress _address = InetAddress.getLoopbackAddress();
-    private int _timeout = 0;
-    private ModuleProvider _moduleProvider = ModuleProvider.getDefault();
-    private PrintStream _out = System.out;
     private PrintStream _err = System.err;
+    private CountDownLatch _isListeningLatch;
+    private boolean _isTLS;
+    private ModuleProvider _moduleProvider = ModuleProvider.getDefault();
+    private int _numThreads = Runtime.getRuntime().availableProcessors() * THREAD_FACTOR;
+    private PrintStream _out = System.out;
+    private int _port = RsyncServer.DEFAULT_LISTEN_PORT;
     private final RsyncServer.Builder _serverBuilder = new RsyncServer.Builder();
-
-
-    public YajsyncServer() {}
-
-    public YajsyncServer setStandardOut(PrintStream out)
-    {
-        _out = out;
-        return this;
+    private int _timeout = 0;
+    private int _verbosity;
+    
+    public YajsyncServer() {
     }
-
-    public YajsyncServer setStandardErr(PrintStream err)
-    {
-        _err = err;
-        return this;
-    }
-
-    public YajsyncServer setIsListeningLatch(CountDownLatch isListeningLatch)
-    {
-        _isListeningLatch = isListeningLatch;
-        return this;
-    }
-
-    public void setModuleProvider(ModuleProvider moduleProvider)
-    {
-        _moduleProvider = moduleProvider;
-    }
-
-    private Iterable<Option> options()
-    {
-        List<Option> options = new LinkedList<>();
-        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "charset", "",
-                                           "which charset to use (default UTF-8)",
-                                           option -> {
-                                               String charsetName = (String) option.getValue();
-                                               try {
-                                                   Charset charset = Charset.forName(charsetName);
-                                                   _serverBuilder.charset(charset);
-                                                   return ArgumentParser.Status.CONTINUE;
-                                               } catch (IllegalCharsetNameException |
-                                                        UnsupportedCharsetException e) {
-                                                   throw new ArgumentParsingError(String.format(
-                                                           "failed to set character set to %s: %s",
-                                                           charsetName, e));
-                                               }}));
-
-        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v",
-                                              String.format("output verbosity (default %d)",
-                                                            _verbosity),
-                                              option -> {
-                                                  _verbosity++;
-                                                  return ArgumentParser.Status.CONTINUE;
-                                              }));
-
-        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "address", "",
-                                           String.format("address to bind to (default %s)",
-                                                         _address),
-                                           option -> {
-                                               try {
-                                                   String name = (String) option.getValue();
-                                                   _address = InetAddress.getByName(name);
-                                                   return ArgumentParser.Status.CONTINUE;
-                                               } catch (UnknownHostException e) {
-                                                   throw new ArgumentParsingError(e);
-                                               }}));
-
-        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "port", "",
-                                            String.format("port number to listen on (default %d)",
-                                                          _port),
-                                            option -> {
-                                                _port = (int) option.getValue();
-                                                return ArgumentParser.Status.CONTINUE;
-                                            }));
-
-        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "threads", "",
-                                            String.format("size of thread pool (default %d)",
-                                                          _numThreads),
-                                            option -> {
-                                                _numThreads = (int) option.getValue();
-                                                return ArgumentParser.Status.CONTINUE;
-                                            }));
-
-        String deferredWriteHelp = "receiver defers writing into target tempfile as long as " +
-                                   "possible to reduce I/O, at the cost of highly increased risk " +
-                                   "of the file being modified by a process already having it " +
-                                   "opened (default false)";
-
-        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "defer-write", "",
-                                              deferredWriteHelp,
-                                              option -> {
-                                                  _serverBuilder.isDeferWrite(true);
-                                                  return ArgumentParser.Status.CONTINUE;
-                                              }));
-
-        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "timeout", "",
-                                            "set I/O timeout in seconds",
-                                            option -> {
-                                                int timeout = (int) option.getValue();
-                                                if (timeout < 0) {
-                                                    throw new ArgumentParsingError(String.format(
-                                                            "invalid timeout %d - must be " +
-                                                            "greater than or equal to 0", timeout));
-                                                }
-                                                _timeout = timeout * 1000;
-                                                // Timeout socket operations depend on
-                                                // ByteBuffer.array and ByteBuffer.arrayOffset.
-                                                // Disable direct allocation if the resulting
-                                                // ByteBuffer won't have an array.
-                                                if (timeout > 0 &&
-                                                    !Environment.hasAllocateDirectArray())
-                                                {
-                                                    Environment.setAllocateDirect(false);
-                                                }
-                                                return ArgumentParser.Status.CONTINUE;
-                                            }));
-
-        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "",
-                                              String.format("tunnel all data over TLS/SSL " +
-                                                            "(default %s)", _isTLS),
-                                              option -> {
-                                                  _isTLS = true;
-                                                  // SSLChannel.read and SSLChannel.write depends on
-                                                  // ByteBuffer.array and ByteBuffer.arrayOffset.
-                                                  // Disable direct allocation if the resulting
-                                                  // ByteBuffer won't have an array.
-                                                  if (!Environment.hasAllocateDirectArray()) {
-                                                      Environment.setAllocateDirect(false);
-                                                  }
-                                                  return ArgumentParser.Status.CONTINUE;
-                                              }));
-
-        return options;
-    }
-
-    private Callable<Boolean> createCallable(final RsyncServer server,
-                                             final DuplexByteChannel sock,
-                                             final boolean isInterruptible)
-    {
+    
+    private Callable<Boolean> createCallable(final RsyncServer server, final DuplexByteChannel sock, final boolean isInterruptible) {
         return new Callable<Boolean>() {
             @Override
             public Boolean call() {
@@ -216,33 +80,24 @@ public final class YajsyncServer
                     Modules modules;
                     if (sock.peerPrincipal().isPresent()) {
                         if (_log.isLoggable(Level.FINE)) {
-                            _log.fine(String.format("%s connected from %s",
-                                                    sock.peerPrincipal().get(),
-                                                    sock.peerAddress()));
+                            _log.fine(String.format("%s connected from %s", sock.peerPrincipal().get(), sock.peerAddress()));
                         }
-                        modules = _moduleProvider.newAuthenticated(
-                                                        sock.peerAddress(),
-                                                        sock.peerPrincipal().get());
+                        modules = YajsyncServer.this._moduleProvider.newAuthenticated(sock.peerAddress(), sock.peerPrincipal().get());
                     } else {
                         if (_log.isLoggable(Level.FINE)) {
-                            _log.fine("got anonymous connection from " +
-                                      sock.peerAddress());
+                            _log.fine("got anonymous connection from " + sock.peerAddress());
                         }
-                        modules = _moduleProvider.newAnonymous(
-                                                        sock.peerAddress());
+                        modules = YajsyncServer.this._moduleProvider.newAnonymous(sock.peerAddress());
                     }
                     isOK = server.serve(modules, sock, sock, isInterruptible);
                 } catch (ModuleException e) {
                     if (_log.isLoggable(Level.SEVERE)) {
-                        _log.severe(String.format(
-                            "Error: failed to initialise modules for " +
-                            "principal %s using ModuleProvider %s: %s%n",
-                                sock.peerPrincipal().get(), _moduleProvider, e));
+                        _log.severe(String.format("Error: failed to initialise modules for " + "principal %s using ModuleProvider %s: %s%n", sock.peerPrincipal().get(),
+                                YajsyncServer.this._moduleProvider, e));
                     }
                 } catch (ChannelException e) {
                     if (_log.isLoggable(Level.SEVERE)) {
-                        _log.severe("Error: communication closed with peer: " +
-                                    e.getMessage());
+                        _log.severe("Error: communication closed with peer: " + e.getMessage());
                     }
                 } catch (Throwable t) {
                     if (_log.isLoggable(Level.SEVERE)) {
@@ -253,13 +108,11 @@ public final class YajsyncServer
                         sock.close();
                     } catch (IOException e) {
                         if (_log.isLoggable(Level.SEVERE)) {
-                            _log.severe(String.format(
-                                "Got error during close of socket %s: %s",
-                                sock, e.getMessage()));
+                            _log.severe(String.format("Got error during close of socket %s: %s", sock, e.getMessage()));
                         }
                     }
                 }
-
+                
                 if (_log.isLoggable(Level.FINE)) {
                     _log.fine("Thread exit status: " + (isOK ? "OK" : "ERROR"));
                 }
@@ -267,61 +120,151 @@ public final class YajsyncServer
             }
         };
     }
-
-    public int start(String[] args) throws IOException, InterruptedException
-    {
-        ArgumentParser argsParser = ArgumentParser.newNoUnnamed(getClass().getSimpleName());
+    
+    private Iterable<Option> options() {
+        List<Option> options = new LinkedList<>();
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "charset", "", "which charset to use (default UTF-8)", option -> {
+            String charsetName = (String) option.getValue();
+            try {
+                Charset charset = Charset.forName(charsetName);
+                this._serverBuilder.charset(charset);
+                return ArgumentParser.Status.CONTINUE;
+            } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+                throw new ArgumentParsingError(String.format("failed to set character set to %s: %s", charsetName, e));
+            }
+        }));
+        
+        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", String.format("output verbosity (default %d)", this._verbosity), option -> {
+            this._verbosity++;
+            return ArgumentParser.Status.CONTINUE;
+        }));
+        
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "address", "", String.format("address to bind to (default %s)", this._address), option -> {
+            try {
+                String name = (String) option.getValue();
+                this._address = InetAddress.getByName(name);
+                return ArgumentParser.Status.CONTINUE;
+            } catch (UnknownHostException e) {
+                throw new ArgumentParsingError(e);
+            }
+        }));
+        
+        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "port", "", String.format("port number to listen on (default %d)", this._port), option -> {
+            this._port = (int) option.getValue();
+            return ArgumentParser.Status.CONTINUE;
+        }));
+        
+        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "threads", "", String.format("size of thread pool (default %d)", this._numThreads), option -> {
+            this._numThreads = (int) option.getValue();
+            return ArgumentParser.Status.CONTINUE;
+        }));
+        
+        String deferredWriteHelp = "receiver defers writing into target tempfile as long as " + "possible to reduce I/O, at the cost of highly increased risk "
+                + "of the file being modified by a process already having it " + "opened (default false)";
+        
+        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "defer-write", "", deferredWriteHelp, option -> {
+            this._serverBuilder.isDeferWrite(true);
+            return ArgumentParser.Status.CONTINUE;
+        }));
+        
+        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "timeout", "", "set I/O timeout in seconds", option -> {
+            int timeout = (int) option.getValue();
+            if (timeout < 0) {
+                throw new ArgumentParsingError(String.format("invalid timeout %d - must be " + "greater than or equal to 0", timeout));
+            }
+            this._timeout = timeout * 1000;
+            // Timeout socket operations depend on
+            // ByteBuffer.array and ByteBuffer.arrayOffset.
+            // Disable direct allocation if the resulting
+            // ByteBuffer won't have an array.
+            if (timeout > 0 && !Environment.hasAllocateDirectArray()) {
+                Environment.setAllocateDirect(false);
+            }
+            return ArgumentParser.Status.CONTINUE;
+        }));
+        
+        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "", String.format("tunnel all data over TLS/SSL " + "(default %s)", this._isTLS), option -> {
+            this._isTLS = true;
+            // SSLChannel.read and SSLChannel.write depends on
+            // ByteBuffer.array and ByteBuffer.arrayOffset.
+            // Disable direct allocation if the resulting
+            // ByteBuffer won't have an array.
+            if (!Environment.hasAllocateDirectArray()) {
+                Environment.setAllocateDirect(false);
+            }
+            return ArgumentParser.Status.CONTINUE;
+        }));
+        
+        return options;
+    }
+    
+    public YajsyncServer setIsListeningLatch(CountDownLatch isListeningLatch) {
+        this._isListeningLatch = isListeningLatch;
+        return this;
+    }
+    
+    public void setModuleProvider(ModuleProvider moduleProvider) {
+        this._moduleProvider = moduleProvider;
+    }
+    
+    public YajsyncServer setStandardErr(PrintStream err) {
+        this._err = err;
+        return this;
+    }
+    
+    public YajsyncServer setStandardOut(PrintStream out) {
+        this._out = out;
+        return this;
+    }
+    
+    public int start(String[] args) throws IOException, InterruptedException {
+        ArgumentParser argsParser = ArgumentParser.newNoUnnamed(this.getClass().getSimpleName());
         try {
-            argsParser.addHelpTextDestination(_out);
-            for (Option o : options()) {
+            argsParser.addHelpTextDestination(this._out);
+            for (Option o : this.options()) {
                 argsParser.add(o);
             }
-            for (Option o : _moduleProvider.options()) {
+            for (Option o : this._moduleProvider.options()) {
                 argsParser.add(o);
             }
-            ArgumentParser.Status rc = argsParser.parse(Arrays.asList(args));   // throws ArgumentParsingError
+            ArgumentParser.Status rc = argsParser.parse(Arrays.asList(args)); // throws ArgumentParsingError
             if (rc != ArgumentParser.Status.CONTINUE) {
                 return rc == ArgumentParser.Status.EXIT_OK ? 0 : 1;
             }
         } catch (ArgumentParsingError e) {
-            _err.println(e.getMessage());
-            _err.println(argsParser.toUsageString());
+            this._err.println(e.getMessage());
+            this._err.println(argsParser.toUsageString());
             return -1;
         }
-
-        Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM +
-                                                   _verbosity);
+        
+        Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM + this._verbosity);
         Util.setRootLogLevel(logLevel);
-
-        ServerChannelFactory socketFactory =
-            _isTLS ? new SSLServerChannelFactory().setWantClientAuth(true)
-                   : new StandardServerChannelFactory();
-
+        
+        ServerChannelFactory socketFactory = this._isTLS ? new SSLServerChannelFactory().setWantClientAuth(true) : new StandardServerChannelFactory();
+        
         socketFactory.setReuseAddress(true);
-        //socketFactory.setKeepAlive(true);
-        boolean isInterruptible = !_isTLS;
-        ExecutorService executor = Executors.newFixedThreadPool(_numThreads);
-        RsyncServer server = _serverBuilder.build(executor);
-
-        try (ServerChannel listenSock = socketFactory.open(_address, _port, _timeout)) {  // throws IOException
-            if (_isListeningLatch != null) {
-                _isListeningLatch.countDown();
+        // socketFactory.setKeepAlive(true);
+        boolean isInterruptible = !this._isTLS;
+        ExecutorService executor = Executors.newFixedThreadPool(this._numThreads);
+        RsyncServer server = this._serverBuilder.build(executor);
+        
+        try (ServerChannel listenSock = socketFactory.open(this._address, this._port, this._timeout)) { // throws IOException
+            if (this._isListeningLatch != null) {
+                this._isListeningLatch.countDown();
             }
             while (true) {
-                DuplexByteChannel sock = listenSock.accept();                   // throws IOException
-                Callable<Boolean> c = createCallable(server, sock,
-                                                     isInterruptible);
-                executor.submit(c);                                             // NOTE: result discarded
+                DuplexByteChannel sock = listenSock.accept(); // throws IOException
+                Callable<Boolean> c = this.createCallable(server, sock, isInterruptible);
+                executor.submit(c); // NOTE: result discarded
             }
         } finally {
             if (_log.isLoggable(Level.INFO)) {
                 _log.info("shutting down...");
             }
             executor.shutdown();
-            _moduleProvider.close();
+            this._moduleProvider.close();
             while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
-                _log.info("some sessions are still running, waiting for them " +
-                          "to finish before exiting");
+                _log.info("some sessions are still running, waiting for them " + "to finish before exiting");
             }
             if (_log.isLoggable(Level.INFO)) {
                 _log.info("done");

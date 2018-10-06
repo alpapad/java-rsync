@@ -21,84 +21,72 @@ package com.github.perlundq.yajsync.internal.session;
 
 import com.github.perlundq.yajsync.Statistics;
 
-public class SessionStatistics implements Statistics
-{
+public class SessionStatistics implements Statistics {
+    long _fileListBuildTime;
+    long _fileListTransferTime;
     // NOTE: package private fields
     int _numFiles;
     int _numTransferredFiles;
-    long _totalFileListSize;
-    long _totalTransferredSize;
-    long _totalLiteralSize;
-    long _totalMatchedSize;
-    long _totalFileSize;
     long _totalBytesRead;
     long _totalBytesWritten;
-    long _fileListBuildTime;
-    long _fileListTransferTime;
-
+    long _totalFileListSize;
+    long _totalFileSize;
+    long _totalLiteralSize;
+    long _totalMatchedSize;
+    long _totalTransferredSize;
+    
     @Override
-    public int numFiles()
-    {
-        return _numFiles;
+    public long fileListBuildTime() {
+        return this._fileListBuildTime;
     }
-
+    
     @Override
-    public int numTransferredFiles()
-    {
-        return _numTransferredFiles;
+    public long fileListTransferTime() {
+        return this._fileListTransferTime;
     }
-
+    
     @Override
-    public long totalBytesRead()
-    {
-        return _totalBytesRead;
+    public int numFiles() {
+        return this._numFiles;
     }
-
+    
     @Override
-    public long totalBytesWritten()
-    {
-        return _totalBytesWritten;
+    public int numTransferredFiles() {
+        return this._numTransferredFiles;
     }
-
+    
     @Override
-    public long totalFileSize()
-    {
-        return _totalFileSize;
+    public long totalBytesRead() {
+        return this._totalBytesRead;
     }
-
+    
     @Override
-    public long totalTransferredSize()
-    {
-        return _totalTransferredSize;
+    public long totalBytesWritten() {
+        return this._totalBytesWritten;
     }
-
+    
     @Override
-    public long totalLiteralSize()
-    {
-        return _totalLiteralSize;
+    public long totalFileListSize() {
+        return this._totalFileListSize;
     }
-
+    
     @Override
-    public long totalMatchedSize()
-    {
-        return _totalMatchedSize;
+    public long totalFileSize() {
+        return this._totalFileSize;
     }
-
+    
     @Override
-    public long totalFileListSize()
-    {
-        return _totalFileListSize;
+    public long totalLiteralSize() {
+        return this._totalLiteralSize;
     }
-
+    
     @Override
-    public long fileListBuildTime()
-    {
-        return _fileListBuildTime;
+    public long totalMatchedSize() {
+        return this._totalMatchedSize;
     }
-
+    
     @Override
-    public long fileListTransferTime()
-    {
-        return _fileListTransferTime;
+    public long totalTransferredSize() {
+        return this._totalTransferredSize;
     }
 }

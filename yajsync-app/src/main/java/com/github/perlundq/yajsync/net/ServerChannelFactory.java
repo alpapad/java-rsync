@@ -19,9 +19,8 @@ package com.github.perlundq.yajsync.net;
 import java.io.IOException;
 import java.net.InetAddress;
 
-public interface ServerChannelFactory
-{
+public interface ServerChannelFactory {
+    ServerChannel open(InetAddress address, int port, int timeout) throws IOException;
+    
     ServerChannelFactory setReuseAddress(boolean isReuseAddress);
-    ServerChannel open(InetAddress address, int port, int timeout)
-            throws IOException;
 }

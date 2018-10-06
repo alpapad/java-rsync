@@ -21,26 +21,22 @@ import java.io.IOException;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 
-public class SSLServerChannel implements ServerChannel
-{
+public class SSLServerChannel implements ServerChannel {
     private final SSLServerSocket _sslSocket;
     private final int _timeout;
-
-    public SSLServerChannel(SSLServerSocket sock, int timeout)
-    {
-        _sslSocket = sock;
-        _timeout = timeout;
+    
+    public SSLServerChannel(SSLServerSocket sock, int timeout) {
+        this._sslSocket = sock;
+        this._timeout = timeout;
     }
-
+    
     @Override
-    public void close() throws IOException
-    {
-        _sslSocket.close();
+    public SSLChannel accept() throws IOException {
+        return new SSLChannel((SSLSocket) this._sslSocket.accept(), this._timeout);
     }
-
+    
     @Override
-    public SSLChannel accept() throws IOException
-    {
-        return new SSLChannel((SSLSocket) _sslSocket.accept(), _timeout);
+    public void close() throws IOException {
+        this._sslSocket.close();
     }
 }

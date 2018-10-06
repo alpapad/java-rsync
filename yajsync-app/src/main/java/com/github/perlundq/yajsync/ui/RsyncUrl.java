@@ -23,95 +23,27 @@ import java.util.regex.Pattern;
 import com.github.perlundq.yajsync.internal.text.Text;
 import com.github.perlundq.yajsync.internal.util.PathOps;
 
-final class RsyncUrl
-{
-    /*
-      [USER@]HOST::SRC...
-      rsync://[USER@]HOST[:PORT]/SRC
-    */
-    private static final String USER_REGEX = "[^@: ]+@";
+final class RsyncUrl {
     private static final String HOST_REGEX = "[^:/]+";
-    private static final String PORT_REGEX = ":[0-9]+";
     private static final String MODULE_REGEX = "[^/]+";
     private static final String PATH_REGEX = "/.*";
-    private static final Pattern MODULE =
-            Pattern.compile(String.format("^(%s)?(%s)::(%s)?(%s)?$",
-                                          USER_REGEX, HOST_REGEX,
-                                          MODULE_REGEX, PATH_REGEX));
-    private static final Pattern URL =
-            Pattern.compile(String.format("^rsync://(%s)?(%s)(%s)?(/%s)?(%s)?$",
-                                          USER_REGEX, HOST_REGEX, PORT_REGEX,
-                                          MODULE_REGEX, PATH_REGEX));
-
-    private final ConnInfo _connInfo;
-    private final String _moduleName;
-    private final String _pathName;
-
-    public RsyncUrl(Path cwd, ConnInfo connInfo, String moduleName,
-                    String pathName) throws IllegalUrlException
-    {
-        assert pathName != null;
-        assert moduleName != null;
-        assert connInfo != null || moduleName.isEmpty() : connInfo + " " + moduleName;
-        if (connInfo != null && moduleName.isEmpty() && !pathName.isEmpty()) {
-            throw new IllegalUrlException(String.format(
-                    "remote path %s specified without a module", pathName));
-        }
-        _connInfo = connInfo;
-        _moduleName = moduleName;
-        if (connInfo == null) {
-            _pathName = toLocalPathName(cwd, pathName);
-        } else {
-            _pathName = toRemotePathName(pathName);
-        }
-    }
-
-    private static RsyncUrl local(Path cwd, String pathName)
-    {
+    private static final String PORT_REGEX = ":[0-9]+";
+    /*
+     * [USER@]HOST::SRC... rsync://[USER@]HOST[:PORT]/SRC
+     */
+    private static final String USER_REGEX = "[^@: ]+@";
+    private static final Pattern MODULE = Pattern.compile(String.format("^(%s)?(%s)::(%s)?(%s)?$", USER_REGEX, HOST_REGEX, MODULE_REGEX, PATH_REGEX));
+    private static final Pattern URL = Pattern.compile(String.format("^rsync://(%s)?(%s)(%s)?(/%s)?(%s)?$", USER_REGEX, HOST_REGEX, PORT_REGEX, MODULE_REGEX, PATH_REGEX));
+    
+    private static RsyncUrl local(Path cwd, String pathName) {
         try {
             return new RsyncUrl(cwd, null, "", pathName);
         } catch (IllegalUrlException e) {
             throw new RuntimeException(e);
         }
     }
-
-    public boolean isRemote()
-    {
-        return _connInfo != null;
-    }
-
-    public boolean isLocal()
-    {
-        return !isRemote();
-    }
-
-    public ConnInfo connInfoOrNull()
-    {
-        return _connInfo;
-    }
-
-    public String moduleName()
-    {
-        return _moduleName;
-    }
-
-    public String pathName()
-    {
-        return _pathName;
-    }
-
-    @Override
-    public String toString()
-    {
-        if (_connInfo != null) {
-            return String.format("%s/%s%s", _connInfo, _moduleName, _pathName);
-        }
-        return _pathName;
-    }
-
-    private static RsyncUrl matchModule(Path cwd, String arg)
-            throws IllegalUrlException
-    {
+    
+    private static RsyncUrl matchModule(Path cwd, String arg) throws IllegalUrlException {
         Matcher mod = MODULE.matcher(arg);
         if (!mod.matches()) {
             return null;
@@ -120,14 +52,11 @@ final class RsyncUrl
         String address = mod.group(2);
         String moduleName = Text.nullToEmptyStr(mod.group(3));
         String pathName = Text.nullToEmptyStr(mod.group(4));
-        ConnInfo connInfo = new ConnInfo.Builder(address).
-                userName(userName).build();
+        ConnInfo connInfo = new ConnInfo.Builder(address).userName(userName).build();
         return new RsyncUrl(cwd, connInfo, moduleName, pathName);
     }
-
-    private static RsyncUrl matchUrl(Path cwd, String arg)
-            throws IllegalUrlException
-    {
+    
+    private static RsyncUrl matchUrl(Path cwd, String arg) throws IllegalUrlException {
         Matcher url = URL.matcher(arg);
         if (!url.matches()) {
             return null;
@@ -135,8 +64,7 @@ final class RsyncUrl
         String userName = Text.stripLast(Text.nullToEmptyStr(url.group(1)));
         String address = url.group(2);
         String moduleName = Text.stripFirst(Text.nullToEmptyStr(url.group(4)));
-        ConnInfo.Builder connInfoBuilder =
-                new ConnInfo.Builder(address).userName(userName);
+        ConnInfo.Builder connInfoBuilder = new ConnInfo.Builder(address).userName(userName);
         if (url.group(3) != null) {
             int portNumber = Integer.parseInt(Text.stripFirst(url.group(3)));
             connInfoBuilder.portNumber(portNumber);
@@ -144,9 +72,8 @@ final class RsyncUrl
         String pathName = Text.nullToEmptyStr(url.group(5));
         return new RsyncUrl(cwd, connInfoBuilder.build(), moduleName, pathName);
     }
-
-    public static RsyncUrl parse(Path cwd, String arg) throws IllegalUrlException
-    {
+    
+    public static RsyncUrl parse(Path cwd, String arg) throws IllegalUrlException {
         assert arg != null;
         if (arg.isEmpty()) {
             throw new IllegalUrlException("empty string");
@@ -161,19 +88,67 @@ final class RsyncUrl
         }
         return RsyncUrl.local(cwd, arg);
     }
-
-    private String toLocalPathName(Path cwd, String pathName)
-    {
-        Path p = PathOps.get(cwd.getFileSystem(), pathName);
-        return cwd.resolve(p).toString();
-    }
-
-    private static String toRemotePathName(String pathName)
-    {
+    
+    private static String toRemotePathName(String pathName) {
         if (pathName.isEmpty()) {
             return Text.SLASH;
         } else {
             return pathName;
         }
+    }
+    
+    private final ConnInfo _connInfo;
+    
+    private final String _moduleName;
+    
+    private final String _pathName;
+    
+    public RsyncUrl(Path cwd, ConnInfo connInfo, String moduleName, String pathName) throws IllegalUrlException {
+        assert pathName != null;
+        assert moduleName != null;
+        assert connInfo != null || moduleName.isEmpty() : connInfo + " " + moduleName;
+        if (connInfo != null && moduleName.isEmpty() && !pathName.isEmpty()) {
+            throw new IllegalUrlException(String.format("remote path %s specified without a module", pathName));
+        }
+        this._connInfo = connInfo;
+        this._moduleName = moduleName;
+        if (connInfo == null) {
+            this._pathName = this.toLocalPathName(cwd, pathName);
+        } else {
+            this._pathName = toRemotePathName(pathName);
+        }
+    }
+    
+    public ConnInfo connInfoOrNull() {
+        return this._connInfo;
+    }
+    
+    public boolean isLocal() {
+        return !this.isRemote();
+    }
+    
+    public boolean isRemote() {
+        return this._connInfo != null;
+    }
+    
+    public String moduleName() {
+        return this._moduleName;
+    }
+    
+    public String pathName() {
+        return this._pathName;
+    }
+    
+    private String toLocalPathName(Path cwd, String pathName) {
+        Path p = PathOps.get(cwd.getFileSystem(), pathName);
+        return cwd.resolve(p).toString();
+    }
+    
+    @Override
+    public String toString() {
+        if (this._connInfo != null) {
+            return String.format("%s/%s%s", this._connInfo, this._moduleName, this._pathName);
+        }
+        return this._pathName;
     }
 }

@@ -22,9 +22,8 @@ import java.nio.channels.WritableByteChannel;
 import java.security.Principal;
 import java.util.Optional;
 
-public interface DuplexByteChannel extends ReadableByteChannel,
-                                           WritableByteChannel
-{
+public interface DuplexByteChannel extends ReadableByteChannel, WritableByteChannel {
     InetAddress peerAddress();
+    
     Optional<Principal> peerPrincipal();
 }

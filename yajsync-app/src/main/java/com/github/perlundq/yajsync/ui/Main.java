@@ -21,17 +21,13 @@ package com.github.perlundq.yajsync.ui;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class Main
-{
-    public static void main(String args[]) throws IOException,
-                                                  InterruptedException
-    {
-        String helpText = "the first argument should be either \"client\" or " +
-                          "\"server\"";
+public class Main {
+    public static void main(String args[]) throws IOException, InterruptedException {
+        String helpText = "the first argument should be either \"client\" or " + "\"server\"";
         if (args.length == 0) {
             throw new IllegalArgumentException(helpText);
         }
-
+        
         String[] args2 = Arrays.copyOfRange(args, 1, args.length);
         if (args[0].equals("client")) {
             int rc = new YajsyncClient().start(args2);

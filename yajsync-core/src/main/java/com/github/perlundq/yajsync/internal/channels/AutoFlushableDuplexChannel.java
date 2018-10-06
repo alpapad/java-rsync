@@ -20,38 +20,32 @@ package com.github.perlundq.yajsync.internal.channels;
 
 import java.nio.ByteBuffer;
 
-public class AutoFlushableDuplexChannel extends BufferedDuplexChannel
-{
-    public AutoFlushableDuplexChannel(Readable readable, Bufferable writable)
-    {
+public class AutoFlushableDuplexChannel extends BufferedDuplexChannel {
+    public AutoFlushableDuplexChannel(Readable readable, Bufferable writable) {
         super(readable, writable);
     }
-
+    
     @Override
-    public ByteBuffer get(int numBytes) throws ChannelException
-    {
-        flush();
+    public ByteBuffer get(int numBytes) throws ChannelException {
+        this.flush();
         return super.get(numBytes);
     }
-
+    
     @Override
-    public byte getByte() throws ChannelException
-    {
-        flush();
+    public byte getByte() throws ChannelException {
+        this.flush();
         return super.getByte();
     }
-
+    
     @Override
-    public char getChar() throws ChannelException
-    {
-        flush();
+    public char getChar() throws ChannelException {
+        this.flush();
         return super.getChar();
     }
-
+    
     @Override
-    public int getInt() throws ChannelException
-    {
-        flush();
+    public int getInt() throws ChannelException {
+        this.flush();
         return super.getInt();
     }
 }
