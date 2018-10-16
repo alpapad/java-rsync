@@ -60,6 +60,7 @@ import com.github.perlundq.yajsync.attr.User;
 import com.github.perlundq.yajsync.internal.channels.ChannelException;
 import com.github.perlundq.yajsync.internal.session.FileAttributeManager;
 import com.github.perlundq.yajsync.internal.session.FileAttributeManagerFactory;
+import com.github.perlundq.yajsync.internal.session.FilterRuleConfiguration;
 import com.github.perlundq.yajsync.internal.session.SessionStatistics;
 import com.github.perlundq.yajsync.internal.util.ArgumentParser;
 import com.github.perlundq.yajsync.internal.util.ArgumentParsingError;
@@ -170,6 +171,7 @@ public class YajsyncClient {
     private PrintStream _stdout = System.out;
     private final SimpleDateFormat _timeFormatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     private int _timeout = 0;
+    private final List<String> _inputFilterRules = new LinkedList<>();
     
     private String _userName;
     
@@ -381,7 +383,34 @@ public class YajsyncClient {
                 throw new ArgumentParsingError(e);
             }
         }));
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "filter", "f", "add a file-filtering RULE", option -> {
+            this._inputFilterRules.add((String) option.getValue());
+            return ArgumentParser.Status.CONTINUE;
+        }));
         
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "exclude", "", "exclude files matching PATTERN", option -> {
+            
+            this._inputFilterRules.add("- " + (String) option.getValue());
+            return ArgumentParser.Status.CONTINUE;
+        }));
+        
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "exclude-from", "", "read exclude patterns from FILE", option -> {
+            this._inputFilterRules.add("merge,- " + (String) option.getValue());
+            return ArgumentParser.Status.CONTINUE;
+        }));
+        
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "include", "", "don't exclude files matching PATTERN", option -> {
+            
+            this._inputFilterRules.add("+ " + (String) option.getValue());
+            return ArgumentParser.Status.CONTINUE;
+            
+        }));
+        
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "include-from", "", "read list of source-file names from FILE", option -> {
+            this._inputFilterRules.add("merge,+ " + (String) option.getValue());
+            return ArgumentParser.Status.CONTINUE;
+            
+        }));
         return options;
     }
     
@@ -538,7 +567,8 @@ public class YajsyncClient {
             if (_log.isLoggable(Level.FINE)) {
                 _log.fine(String.format("%s src: %s, dst: %s", mode, srcArgs, dstArgOrNull));
             }
-            
+            this._clientBuilder.filterRuleConfiguration( new FilterRuleConfiguration(this._inputFilterRules));
+
             RsyncClient.Result result;
             if (mode.isRemote()) {
                 result = this.remoteTransfer(mode, srcArgs, dstArgOrNull);

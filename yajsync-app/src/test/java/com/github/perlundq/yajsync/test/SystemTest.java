@@ -411,14 +411,14 @@ public class SystemTest
     private YajsyncClient newClient()
     {
         return new YajsyncClient().
-            setStandardOut(_nullOut).
-            setStandardErr(_nullOut);
+            setStandardOut(System.err).
+            setStandardErr(System.err);
     }
 
     private YajsyncServer newServer(Modules modules)
     {
-        YajsyncServer server = new YajsyncServer().setStandardOut(_nullOut).
-                                                   setStandardErr(_nullOut);
+        YajsyncServer server = new YajsyncServer().setStandardOut(System.err).
+                                                   setStandardErr(System.err);
         server.setModuleProvider(new TestModuleProvider(modules));
         return server;
     }

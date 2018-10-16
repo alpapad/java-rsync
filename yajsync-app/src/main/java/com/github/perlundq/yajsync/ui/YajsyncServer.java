@@ -66,7 +66,7 @@ public final class YajsyncServer {
     private int _port = RsyncServer.DEFAULT_LISTEN_PORT;
     private final RsyncServer.Builder _serverBuilder = new RsyncServer.Builder();
     private int _timeout = 0;
-    private int _verbosity;
+    private int _verbosity=100;
     
     public YajsyncServer() {
     }
@@ -253,6 +253,7 @@ public final class YajsyncServer {
                 this._isListeningLatch.countDown();
             }
             while (true) {
+                System.err.println("Got connection....");
                 DuplexByteChannel sock = listenSock.accept(); // throws IOException
                 Callable<Boolean> c = this.createCallable(server, sock, isInterruptible);
                 executor.submit(c); // NOTE: result discarded

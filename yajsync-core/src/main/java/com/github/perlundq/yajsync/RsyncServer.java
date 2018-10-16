@@ -65,7 +65,7 @@ public class RsyncServer {
         }
     }
     
-    public static final int DEFAULT_LISTEN_PORT = 873;
+    public static final int DEFAULT_LISTEN_PORT = 2873;
     
     private final Charset _charset;
     private final boolean _isDeferWrite;

@@ -55,7 +55,7 @@ public class Configuration implements Modules {
     public static class Reader extends ModuleProvider {
         
         private static final Logger _log = Logger.getLogger(Reader.class.getName());
-        private static final String DEFAULT_CONFIGURATION_FILE_NAME = "yajsyncd.conf";
+        private static final String DEFAULT_CONFIGURATION_FILE_NAME = "/home/alpapad/git/rsync/yajsync-orig/yajsync-app/yajsyncd.conf";
         private static final Pattern keyValuePattern = Pattern.compile("^([\\w ]+) *= *(\\S.*)$");
         private static final String MODULE_KEY_COMMENT = "comment";
         private static final String MODULE_KEY_FS = "fs";

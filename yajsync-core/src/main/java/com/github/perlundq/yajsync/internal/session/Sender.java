@@ -35,6 +35,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,6 +69,7 @@ import com.github.perlundq.yajsync.internal.text.Text;
 import com.github.perlundq.yajsync.internal.text.TextConversionException;
 import com.github.perlundq.yajsync.internal.text.TextDecoder;
 import com.github.perlundq.yajsync.internal.text.TextEncoder;
+import com.github.perlundq.yajsync.internal.util.ArgumentParsingError;
 import com.github.perlundq.yajsync.internal.util.Environment;
 import com.github.perlundq.yajsync.internal.util.FileOps;
 import com.github.perlundq.yajsync.internal.util.MD5;
@@ -103,6 +105,7 @@ public final class Sender implements RsyncTask, MessageHandler {
         public User _defaultUser = User.NOBODY;
         private FileSelection _fileSelection = FileSelection.EXACT;
         private FilterMode _filterMode = FilterMode.NONE;
+        private FilterRuleConfiguration _filterRuleConfiguration;
         private final ReadableByteChannel _in;
         private boolean _isExitAfterEOF;
         private boolean _isExitEarlyIfEmptyList;
@@ -217,6 +220,11 @@ public final class Sender implements RsyncTask, MessageHandler {
             this._isSafeFileList = isSafeFileList;
             return this;
         }
+        
+        public Builder filterRuleConfiguration(FilterRuleConfiguration filterRuleConfiguration) {
+            this._filterRuleConfiguration = filterRuleConfiguration;
+            return this;
+        }
     }
     
     private static final Logger _log = Logger.getLogger(Sender.class.getName());
@@ -250,6 +258,7 @@ public final class Sender implements RsyncTask, MessageHandler {
     private final FileInfoCache _fileInfoCache = new FileInfoCache();
     private final FileSelection _fileSelection;
     private final FilterMode _filterMode;
+    private final FilterRuleConfiguration _filterRuleConfiguration;
     private int _ioError;
     private final boolean _isExitAfterEOF;
     private final boolean _isExitEarlyIfEmptyList;
@@ -287,6 +296,7 @@ public final class Sender implements RsyncTask, MessageHandler {
         this._checksumSeed = builder._checksumSeed;
         this._fileSelection = builder._fileSelection;
         this._filterMode = builder._filterMode;
+        this._filterRuleConfiguration = builder._filterRuleConfiguration;
         this._sourceFiles = builder._sourceFiles;
         this._characterDecoder = TextDecoder.newStrict(builder._charset);
         this._characterEncoder = TextEncoder.newStrict(builder._charset);
@@ -299,23 +309,33 @@ public final class Sender implements RsyncTask, MessageHandler {
     @Override
     public Boolean call() throws ChannelException, InterruptedException, RsyncProtocolException {
         Filelist fileList = new Filelist(this._fileSelection == FileSelection.RECURSE, false);
+        FilterRuleConfiguration filterRuleConfiguration;
         try {
             if (_log.isLoggable(Level.FINE)) {
                 _log.fine(this.toString());
             }
             
             if (this._filterMode == FilterMode.RECEIVE) {
-                String rules = this.receiveFilterRules();
-                if (rules.length() > 0) {
-                    throw new RsyncProtocolException(String.format("Received a list of filter rules of length %d " + "from peer, this is not yet supported (%s)", rules.length(), rules));
+                // read remote filter rules if server
+                try {
+                    filterRuleConfiguration = new FilterRuleConfiguration(this.receiveFilterRules());
+                } catch (ArgumentParsingError e) {
+                    throw new RsyncProtocolException(e);
                 }
             } else if (this._filterMode == FilterMode.SEND) {
-                this.sendEmptyFilterRules();
+                filterRuleConfiguration = this._filterRuleConfiguration;
+                this.sendFilterRules();
+            } else {
+                try {
+                    filterRuleConfiguration = new FilterRuleConfiguration(Collections.emptyList());
+                } catch (ArgumentParsingError e) {
+                    throw new RsyncProtocolException(e);
+                }
             }
             
             long t1 = System.currentTimeMillis();
             
-            StatusResult<List<FileInfo>> expandResult = this.initialExpand(this._sourceFiles);
+            StatusResult<List<FileInfo>> expandResult = this.initialExpand(this._sourceFiles, filterRuleConfiguration);
             boolean isInitialListOK = expandResult.isOK();
             Filelist.SegmentBuilder builder = new Filelist.SegmentBuilder(null);
             builder.addAll(expandResult.value());
@@ -364,7 +384,7 @@ public final class Sender implements RsyncTask, MessageHandler {
                 return isInitialListOK && this._ioError == 0;
             }
             
-            int ioError = this.sendFiles(fileList);
+            int ioError = this.sendFiles(fileList, filterRuleConfiguration);
             if (ioError != 0) {
                 this.sendIntMessage(MessageCode.IO_ERROR, ioError);
             }
@@ -403,13 +423,26 @@ public final class Sender implements RsyncTask, MessageHandler {
         this._duplexChannel.close();
     }
     
-    private StatusResult<List<FileInfo>> expand(LocatableFileInfo directory) throws ChannelException {
+    private StatusResult<List<FileInfo>> expand(LocatableFileInfo directory, FilterRuleConfiguration parentFilterRuleConfiguration) throws ChannelException {
         assert directory != null;
         
         List<FileInfo> fileset = new ArrayList<>();
         boolean isOK = true;
         final Path dir = directory.path();
         final Path localDir = this.localPathTo(directory);
+        // that should never happen
+        
+        FilterRuleConfiguration localFilterRuleConfiguration;
+        try {
+            localFilterRuleConfiguration = new FilterRuleConfiguration(parentFilterRuleConfiguration, directory.path());
+        } catch (ArgumentParsingError e) {
+            if (_log.isLoggable(Level.WARNING)) {
+                _log.warning(String.format("Got argument parsing error " + "at %s: %s", directory.path(), e.getMessage()));
+            }
+            isOK = false;
+            return new StatusResult<>(isOK, fileset);
+        }
+        boolean filterByRules = localFilterRuleConfiguration.isFilterAvailable();
         
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path entry : stream) {
@@ -440,6 +473,17 @@ public final class Sender implements RsyncTask, MessageHandler {
                 String relativePathName = Text.withSlashAsPathSepator(relativePath);
                 byte[] pathNameBytes = this._characterEncoder.encodeOrNull(relativePathName);
                 if (pathNameBytes != null) {
+                    // use filter
+                    if (filterByRules) {
+                        boolean isDirectory = attrs.isDirectory();
+                        if (localFilterRuleConfiguration.exclude(relativePathName, isDirectory)) {
+                            continue;
+                        }
+                        if (localFilterRuleConfiguration.hide(relativePathName, isDirectory)) {
+                            continue;
+                        }
+                    }
+                    
                     LocatableFileInfo f;
                     if (this._isPreserveLinks && attrs.isSymbolicLink()) {
                         Path symlinkTarget = FileOps.readLinkTarget(entry);
@@ -465,6 +509,7 @@ public final class Sender implements RsyncTask, MessageHandler {
                         // happen here
                         f = new LocatableFileInfoImpl(relativePathName, pathNameBytes, attrs, entry);
                     }
+                    
                     if (_log.isLoggable(Level.FINE)) {
                         _log.fine(String.format("adding %s to segment", f));
                     }
@@ -494,7 +539,7 @@ public final class Sender implements RsyncTask, MessageHandler {
         return new StatusResult<>(isOK, fileset);
     }
     
-    private StatusResult<Integer> expandAndSendSegments(Filelist fileList, int limit) throws ChannelException {
+    private StatusResult<Integer> expandAndSendSegments(Filelist fileList, int limit, FilterRuleConfiguration parentFilterRuleConfiguration) throws ChannelException {
         boolean isOK = true;
         int numFilesSent = 0;
         int numSegmentsSent = 0;
@@ -515,7 +560,7 @@ public final class Sender implements RsyncTask, MessageHandler {
             assert directory != null;
             this._duplexChannel.encodeIndex(Filelist.OFFSET - this._curSegmentIndex);
             
-            StatusResult<List<FileInfo>> expandResult = this.expand(directory);
+            StatusResult<List<FileInfo>> expandResult = this.expand(directory, parentFilterRuleConfiguration);
             boolean isExpandOK = expandResult.isOK();
             if (!isExpandOK && _log.isLoggable(Level.WARNING)) {
                 _log.warning("initial file list expansion returned an error");
@@ -586,7 +631,7 @@ public final class Sender implements RsyncTask, MessageHandler {
         }
     }
     
-    private StatusResult<List<FileInfo>> initialExpand(Iterable<Path> files) throws ChannelException {
+    private StatusResult<List<FileInfo>> initialExpand(Iterable<Path> files, FilterRuleConfiguration parentFilterRuleConfiguration) throws ChannelException {
         boolean isOK = true;
         List<FileInfo> fileset = new LinkedList<>();
         
@@ -615,7 +660,7 @@ public final class Sender implements RsyncTask, MessageHandler {
                         if (_log.isLoggable(Level.FINE)) {
                             _log.fine("expanding dot dir " + fileInfo);
                         }
-                        StatusResult<List<FileInfo>> expandResult = this.expand(fileInfo);
+                        StatusResult<List<FileInfo>> expandResult = this.expand(fileInfo, parentFilterRuleConfiguration);
                         isOK = isOK && expandResult.isOK();
                         for (FileInfo f2 : expandResult.value()) {
                             fileset.add(f2);
@@ -709,6 +754,7 @@ public final class Sender implements RsyncTask, MessageHandler {
     private Checksum.Header receiveChecksumHeader() throws ChannelException, RsyncProtocolException {
         return Connection.receiveChecksumHeader(this._duplexChannel);
     }
+
     
     private Checksum receiveChecksumsFor(Checksum.Header header) throws ChannelException {
         Checksum checksum = new Checksum(header);
@@ -724,12 +770,19 @@ public final class Sender implements RsyncTask, MessageHandler {
     /**
      * @throws RsyncProtocolException if failing to decode the filter rules
      */
-    private String receiveFilterRules() throws ChannelException, RsyncProtocolException {
+    private List<String> receiveFilterRules() throws ChannelException, RsyncProtocolException {
+        int numBytesToRead;
+        List<String> list = new ArrayList<>();
+        
         try {
-            int numBytesToRead = this._duplexChannel.getInt();
-            ByteBuffer buf = this._duplexChannel.get(numBytesToRead);
-            String filterRules = this._characterDecoder.decode(buf);
-            return filterRules;
+            
+            while ((numBytesToRead = this._duplexChannel.getInt()) > 0) {
+                ByteBuffer buf = this._duplexChannel.get(numBytesToRead);
+                list.add(this._characterDecoder.decode(buf));
+            }
+            
+            return list;
+            
         } catch (TextConversionException e) {
             throw new RsyncProtocolException(e);
         }
@@ -755,13 +808,13 @@ public final class Sender implements RsyncTask, MessageHandler {
             currentOffset += len;
         }
     }
-    
-    private void sendEmptyFilterRules() throws ChannelException {
-        ByteBuffer buf = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(0);
-        buf.flip();
-        this._duplexChannel.put(buf);
-    }
+//    
+//    private void sendEmptyFilterRules() throws ChannelException {
+//        ByteBuffer buf = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
+//        buf.putInt(0);
+//        buf.flip();
+//        this._duplexChannel.put(buf);
+//    }
     
     private void sendEncodedInt(int i) throws ChannelException {
         this.sendEncodedLong(i, 1);
@@ -923,7 +976,7 @@ public final class Sender implements RsyncTask, MessageHandler {
         }
     }
     
-    private int sendFiles(Filelist fileList) throws ChannelException, RsyncProtocolException {
+    private int sendFiles(Filelist fileList, FilterRuleConfiguration parentFilterRuleConfiguration) throws ChannelException, RsyncProtocolException {
         boolean sentEOF = false;
         TransferPhase phase = TransferPhase.TRANSFER;
         int ioError = 0;
@@ -938,7 +991,7 @@ public final class Sender implements RsyncTask, MessageHandler {
                     _log.fine(String.format("expanding file list. In transit: %d files, " + "%d segments", numFilesInTransit, fileList.expandedSegments()));
                 }
                 int lim = Math.max(1, PARTIAL_FILE_LIST_SIZE - numFilesInTransit);
-                StatusResult<Integer> res = this.expandAndSendSegments(fileList, lim);
+                StatusResult<Integer> res = this.expandAndSendSegments(fileList, lim, parentFilterRuleConfiguration);
                 numFilesInTransit += res.value();
                 if (!res.isOK()) {
                     if (_log.isLoggable(Level.WARNING)) {
@@ -1115,6 +1168,26 @@ public final class Sender implements RsyncTask, MessageHandler {
         }
         
         return ioError;
+    }
+    
+    private void sendFilterRules() throws InterruptedException, ChannelException {
+        if (this._filterRuleConfiguration != null) {
+            for (FilterRuleList.FilterRule rule : this._filterRuleConfiguration.getFilterRuleListForSending()._rules) {
+                byte[] encodedRule = this._characterEncoder.encode(rule.toString());
+                
+                ByteBuffer buf = ByteBuffer.allocate(4 + encodedRule.length).order(ByteOrder.LITTLE_ENDIAN);
+                buf.putInt(encodedRule.length);
+                buf.put(encodedRule);
+                buf.flip();
+                this._duplexChannel.put(buf);
+            }
+        }
+        
+        // send stop signal
+        ByteBuffer buf = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
+        buf.putInt(0);
+        buf.flip();
+        this._duplexChannel.put(buf);
     }
     
     private void sendGroupId(int gid) throws ChannelException {

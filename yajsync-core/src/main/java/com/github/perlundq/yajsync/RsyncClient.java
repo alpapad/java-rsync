@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 import com.github.perlundq.yajsync.attr.FileInfo;
 import com.github.perlundq.yajsync.internal.session.ClientSessionConfig;
 import com.github.perlundq.yajsync.internal.session.FilterMode;
+import com.github.perlundq.yajsync.internal.session.FilterRuleConfiguration;
 import com.github.perlundq.yajsync.internal.session.Generator;
 import com.github.perlundq.yajsync.internal.session.Receiver;
 import com.github.perlundq.yajsync.internal.session.RsyncTaskExecutor;
@@ -73,6 +74,7 @@ public final class RsyncClient {
         private boolean _isPreserveUser;
         private PrintStream _stderr = System.err;
         private int _verbosity;
+        private FilterRuleConfiguration _filterRuleConfiguration;
         
         public Builder authProvider(AuthProvider authProvider) {
             this._authProvider = authProvider;
@@ -174,6 +176,11 @@ public final class RsyncClient {
         
         public Builder verbosity(int verbosity) {
             this._verbosity = verbosity;
+            return this;
+        }
+        
+        public Builder filterRuleConfiguration(FilterRuleConfiguration filterRuleConfiguration) {
+            this._filterRuleConfiguration = filterRuleConfiguration;
             return this;
         }
     }
@@ -358,16 +365,36 @@ public final class RsyncClient {
             Pipe toReceiver = pipePair[1];
             FileSelection fileSelection = Util.defaultIfNull(RsyncClient.this._fileSelectionOrNull, FileSelection.EXACT);
             byte[] seed = BitOps.toLittleEndianBuf((int) System.currentTimeMillis());
-            Sender sender = new Sender.Builder(toSender.source(), toReceiver.sink(), srcPaths, seed).isExitEarlyIfEmptyList(true).charset(RsyncClient.this._charset)
-                    .isPreserveDevices(RsyncClient.this._isPreserveDevices).isPreserveSpecials(RsyncClient.this._isPreserveSpecials).isPreserveLinks(RsyncClient.this._isPreserveLinks)
-                    .isPreserveUser(RsyncClient.this._isPreserveUser).isPreserveGroup(RsyncClient.this._isPreserveGroup).isNumericIds(RsyncClient.this._isNumericIds).fileSelection(fileSelection)
-                    .build();
-            Generator generator = new Generator.Builder(toSender.sink(), seed).charset(RsyncClient.this._charset).fileSelection(fileSelection).isDelete(RsyncClient.this._isDelete)
-                    .isPreserveDevices(RsyncClient.this._isPreserveDevices).isPreserveSpecials(RsyncClient.this._isPreserveSpecials).isPreserveLinks(RsyncClient.this._isPreserveLinks)
-                    .isPreservePermissions(RsyncClient.this._isPreservePermissions).isPreserveTimes(RsyncClient.this._isPreserveTimes).isPreserveUser(RsyncClient.this._isPreserveUser)
-                    .isPreserveGroup(RsyncClient.this._isPreserveGroup).isNumericIds(RsyncClient.this._isNumericIds).isIgnoreTimes(RsyncClient.this._isIgnoreTimes)
-                    .isAlwaysItemize(RsyncClient.this._isAlwaysItemize).build();
-            Receiver receiver = new Receiver.Builder(generator, toReceiver.source(), dstPath).isExitEarlyIfEmptyList(true).isDeferWrite(RsyncClient.this._isDeferWrite).build();
+            Sender sender = new Sender//
+                    .Builder(toSender.source(), toReceiver.sink(), srcPaths, seed)//
+                            .isExitEarlyIfEmptyList(true).charset(RsyncClient.this._charset)//
+                            .isPreserveDevices(RsyncClient.this._isPreserveDevices)//
+                            .isPreserveSpecials(RsyncClient.this._isPreserveSpecials)//
+                            .isPreserveLinks(RsyncClient.this._isPreserveLinks)//
+                            .isPreserveUser(RsyncClient.this._isPreserveUser)//
+                            .isPreserveGroup(RsyncClient.this._isPreserveGroup)//
+                            .isNumericIds(RsyncClient.this._isNumericIds)//
+                            .fileSelection(fileSelection).build();
+            Generator generator = new Generator//
+                    .Builder(toSender.sink(), seed)//
+                            .charset(RsyncClient.this._charset)//
+                            .fileSelection(fileSelection)//
+                            .isDelete(RsyncClient.this._isDelete)//
+                            .isPreserveDevices(RsyncClient.this._isPreserveDevices)//
+                            .isPreserveSpecials(RsyncClient.this._isPreserveSpecials)//
+                            .isPreserveLinks(RsyncClient.this._isPreserveLinks)//
+                            .isPreservePermissions(RsyncClient.this._isPreservePermissions)//
+                            .isPreserveTimes(RsyncClient.this._isPreserveTimes)//
+                            .isPreserveUser(RsyncClient.this._isPreserveUser)//
+                            .isPreserveGroup(RsyncClient.this._isPreserveGroup)//
+                            .isNumericIds(RsyncClient.this._isNumericIds)//
+                            .isIgnoreTimes(RsyncClient.this._isIgnoreTimes)//
+                            .isAlwaysItemize(RsyncClient.this._isAlwaysItemize).build();
+            Receiver receiver = new Receiver//
+                    .Builder(generator, toReceiver.source(), dstPath)//
+                            .isExitEarlyIfEmptyList(true)//
+                            .isDeferWrite(RsyncClient.this._isDeferWrite)//
+                            .build();
             try {
                 boolean isOK = RsyncClient.this._rsyncTaskExecutor.exec(sender, generator, receiver);
                 return new Result(isOK, receiver.statistics());
@@ -483,12 +510,30 @@ public final class RsyncClient {
                 }
                 
                 try {
-                    Generator generator = new Generator.Builder(Remote.this._out, cfg.checksumSeed()).charset(cfg.charset()).fileSelection(fileSelection).isDelete(RsyncClient.this._isDelete)
-                            .isPreserveLinks(RsyncClient.this._isPreserveLinks).isPreservePermissions(RsyncClient.this._isPreservePermissions).isPreserveTimes(RsyncClient.this._isPreserveTimes)
-                            .isPreserveUser(RsyncClient.this._isPreserveUser).isPreserveGroup(RsyncClient.this._isPreserveGroup).isNumericIds(RsyncClient.this._isNumericIds)
-                            .isIgnoreTimes(RsyncClient.this._isIgnoreTimes).isAlwaysItemize(RsyncClient.this._verbosity > 1).isInterruptible(Remote.this._isInterruptible).build();
-                    Receiver receiver = new Receiver.Builder(generator, Remote.this._in, dstPath).filterMode(FilterMode.SEND).isDeferWrite(RsyncClient.this._isDeferWrite).isExitAfterEOF(true)
-                            .isExitEarlyIfEmptyList(true).isReceiveStatistics(true).isSafeFileList(cfg.isSafeFileList()).build();
+                    Generator generator = new Generator//
+                            .Builder(Remote.this._out, cfg.checksumSeed())//
+                                    .charset(cfg.charset())//
+                                    .fileSelection(fileSelection)//
+                                    .isDelete(RsyncClient.this._isDelete)//
+                                    .isPreserveLinks(RsyncClient.this._isPreserveLinks)//
+                                    .isPreservePermissions(RsyncClient.this._isPreservePermissions)//
+                                    .isPreserveTimes(RsyncClient.this._isPreserveTimes)//
+                                    .isPreserveUser(RsyncClient.this._isPreserveUser)//
+                                    .isPreserveGroup(RsyncClient.this._isPreserveGroup)//
+                                    .isNumericIds(RsyncClient.this._isNumericIds)//
+                                    .isIgnoreTimes(RsyncClient.this._isIgnoreTimes)//
+                                    .isAlwaysItemize(RsyncClient.this._verbosity > 1)//
+                                    .isInterruptible(Remote.this._isInterruptible)//
+                                    .build();
+                    Receiver receiver = new Receiver//
+                            .Builder(generator, Remote.this._in, dstPath)//
+                                    .filterMode(FilterMode.SEND)//
+                                    .isDeferWrite(RsyncClient.this._isDeferWrite)//
+                                    .isExitAfterEOF(true)//
+                                    .isExitEarlyIfEmptyList(true)//
+                                    .isReceiveStatistics(true)//
+                                    .isSafeFileList(cfg.isSafeFileList())//
+                                    .build();
                     boolean isOK = RsyncClient.this._rsyncTaskExecutor.exec(generator, receiver);
                     return new Result(isOK, receiver.statistics());
                 } finally {
@@ -538,6 +583,7 @@ public final class RsyncClient {
                 try {
                     Sender sender = Sender.Builder.newClient(Remote.this._in, Remote.this._out, this._srcPaths, cfg.checksumSeed())
                             .filterMode(RsyncClient.this._isDelete ? FilterMode.SEND : FilterMode.NONE).charset(RsyncClient.this._charset).fileSelection(fileSelection)
+                            .filterRuleConfiguration(RsyncClient.this._filterRuleConfiguration)//
                             .isPreserveLinks(RsyncClient.this._isPreserveLinks).isPreserveUser(RsyncClient.this._isPreserveUser).isPreserveGroup(RsyncClient.this._isPreserveGroup)
                             .isNumericIds(RsyncClient.this._isNumericIds).isInterruptible(Remote.this._isInterruptible).isSafeFileList(cfg.isSafeFileList()).build();
                     boolean isOK = RsyncClient.this._rsyncTaskExecutor.exec(sender);
@@ -760,6 +806,7 @@ public final class RsyncClient {
     private final RsyncTaskExecutor _rsyncTaskExecutor;
     private final PrintStream _stderr;
     private final int _verbosity;
+    private FilterRuleConfiguration _filterRuleConfiguration;
     
     private RsyncClient(Builder builder) {
         assert builder != null;
@@ -777,6 +824,8 @@ public final class RsyncClient {
         this._isPreservePermissions = builder._isPreservePermissions;
         this._isPreserveTimes = builder._isPreserveTimes;
         this._charset = builder._charset;
+        this._filterRuleConfiguration = builder._filterRuleConfiguration;
+        
         if (builder._executorService == null) {
             this._executorService = Executors.newCachedThreadPool();
             this._isOwnerOfExecutorService = true;

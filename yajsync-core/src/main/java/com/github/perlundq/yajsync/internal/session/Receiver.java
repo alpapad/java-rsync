@@ -61,6 +61,8 @@ import com.github.perlundq.yajsync.internal.io.AutoDeletable;
 import com.github.perlundq.yajsync.internal.text.Text;
 import com.github.perlundq.yajsync.internal.text.TextConversionException;
 import com.github.perlundq.yajsync.internal.text.TextDecoder;
+import com.github.perlundq.yajsync.internal.text.TextEncoder;
+import com.github.perlundq.yajsync.internal.util.ArgumentParsingError;
 import com.github.perlundq.yajsync.internal.util.Environment;
 import com.github.perlundq.yajsync.internal.util.FileOps;
 import com.github.perlundq.yajsync.internal.util.MD5;
@@ -87,6 +89,8 @@ public class Receiver implements RsyncTask, MessageHandler {
         public Group _defaultGroup = Group.NOBODY;
         public User _defaultUser = User.NOBODY;
         private FilterMode _filterMode = FilterMode.NONE;
+        private FilterRuleConfiguration _filterRuleConfiguration;
+        
         private final Generator _generator;
         
         private final ReadableByteChannel _in;
@@ -139,6 +143,12 @@ public class Receiver implements RsyncTask, MessageHandler {
             return this;
         }
         
+        public Builder filterRuleConfiguration(FilterRuleConfiguration filterRuleConfiguration) {
+            assert _filterRuleConfiguration != null;
+            this._filterRuleConfiguration = filterRuleConfiguration;
+            return this;
+        }
+        
         public Builder isDeferWrite(boolean isDeferWrite) {
             this._isDeferWrite = isDeferWrite;
             return this;
@@ -185,6 +195,8 @@ public class Receiver implements RsyncTask, MessageHandler {
          */
         Path fullPathOf(Path relativePath) throws RsyncSecurityException;
         
+        Path relativePathOf(Path fullPath) throws RsyncSecurityException;
+        
         /**
          * @throws InvalidPathException
          * @throws RsyncSecurityException
@@ -228,11 +240,14 @@ public class Receiver implements RsyncTask, MessageHandler {
     }
     
     private final TextDecoder _characterDecoder;
+    private final TextEncoder _characterEncoder;
     private final FileAttributeManager _fileAttributeManager;
     private final FileInfoCache _fileInfoCache = new FileInfoCache();
     private final Filelist _fileList;
     private final FileSelection _fileSelection;
     private final FilterMode _filterMode;
+    private FilterRuleConfiguration _filterRuleConfiguration;
+    
     private final Generator _generator;
     private final RsyncInChannel _in;
     private int _ioError;
@@ -280,10 +295,13 @@ public class Receiver implements RsyncTask, MessageHandler {
         this._isNumericIds = this._generator.isNumericIds();
         this._fileSelection = this._generator.fileSelection();
         this._filterMode = builder._filterMode;
+        this._filterRuleConfiguration = builder._filterRuleConfiguration;
         this._in = new RsyncInChannel(builder._in, this, INPUT_CHANNEL_BUF_SIZE);
+        
         this._targetPath = builder._targetPath;
         this._isListOnly = this._targetPath == null;
         this._characterDecoder = TextDecoder.newStrict(this._generator.charset());
+        this._characterEncoder = TextEncoder.newStrict(this._generator.charset());
         
         if (!this._isListOnly) {
             this._fileAttributeManager = FileAttributeManagerFactory.getMostPerformant(this._targetPath.getFileSystem(), this._isPreserveUser, this._isPreserveGroup, this._isPreserveDevices,
@@ -347,11 +365,13 @@ public class Receiver implements RsyncTask, MessageHandler {
                 _log.fine(this.toString());
             }
             if (this._filterMode == FilterMode.SEND) {
-                this.sendEmptyFilterRules();
+                this.sendFilterRules();
             } else if (this._filterMode == FilterMode.RECEIVE) {
-                String rules = this.receiveFilterRules();
-                if (rules.length() > 0) {
-                    throw new RsyncProtocolException(String.format("Received a list of filter rules of length %d " + "from peer, this is not yet supported (%s)", rules.length(), rules));
+                // receive filter rules if server
+                try {
+                    this._filterRuleConfiguration = new FilterRuleConfiguration(this.receiveFilterRules());
+                } catch (ArgumentParsingError e) {
+                    throw new RsyncProtocolException(e);
                 }
             }
             
@@ -387,8 +407,11 @@ public class Receiver implements RsyncTask, MessageHandler {
             if (this._isListOnly) {
                 this._generator.listSegment(initialSegment);
             } else {
-                this._generator.generateSegment(initialSegment);
+                this._generator.generateSegment(this._targetPath, initialSegment, this._filterRuleConfiguration);
+                //Path targetPath = PathOps.get(this._targetPath); // throws InvalidPathException
+                
             }
+            
             this._ioError |= this.receiveFiles();
             this._stats._numFiles = this._fileList.numFiles();
             if (this._isReceiveStatistics) {
@@ -592,7 +615,7 @@ public class Receiver implements RsyncTask, MessageHandler {
         this._stats._totalLiteralSize += sizeLiteral;
         this._stats._totalMatchedSize += sizeMatch;
     }
-    
+
     /**
      * file -> non_existing == non_existing file -> existing_file == existing_file *
      * -> existing_dir == existing_dir/* * -> non_existing == non_existing/* * ->
@@ -646,6 +669,15 @@ public class Receiver implements RsyncTask, MessageHandler {
                 }
                 
                 @Override
+                public Path relativePathOf(Path fullPath) {
+                    Path relativePath = Receiver.this._targetPath.relativize(fullPath);
+                    if (!relativePath.toString().equals(Text.EMPTY)) {
+                        return relativePath.normalize();
+                    }
+                    return relativePath;
+                }
+
+                @Override
                 public Path relativePathOf(String pathName) {
                     FileSystem fs = Receiver.this._targetPath.getFileSystem();
                     return fs.getPath(stubs.get(0)._pathNameOrNull);
@@ -670,6 +702,7 @@ public class Receiver implements RsyncTask, MessageHandler {
                 }
             }
             return new PathResolver() {
+                
                 @Override
                 public Path fullPathOf(Path relativePath) throws RsyncSecurityException {
                     Path fullPath = Receiver.this._targetPath.resolve(relativePath).normalize();
@@ -677,6 +710,18 @@ public class Receiver implements RsyncTask, MessageHandler {
                         throw new RsyncSecurityException(String.format("%s is outside of receiver destination dir %s", fullPath, Receiver.this._targetPath));
                     }
                     return fullPath;
+                }
+                @Override
+                public Path relativePathOf(Path fullPath) throws RsyncSecurityException {
+                    try {
+                        Path relativePath = Receiver.this._targetPath.relativize(fullPath);
+                        if (!relativePath.toString().equals(Text.EMPTY)) {
+                            return relativePath.normalize();
+                        }
+                        return relativePath;
+                    } catch (Exception e) {
+                        throw new RsyncSecurityException(Receiver.this._targetPath + " vs. " + fullPath);
+                    }
                 }
                 
                 @Override
@@ -695,6 +740,7 @@ public class Receiver implements RsyncTask, MessageHandler {
                 public String toString() {
                     return "PathResolver(Complex)";
                 }
+                
             };
         }
         
@@ -1165,7 +1211,7 @@ public class Receiver implements RsyncTask, MessageHandler {
                 if (this._isListOnly) {
                     this._generator.listSegment(segment);
                 } else {
-                    this._generator.generateSegment(segment);
+                    this._generator.generateSegment(this._targetPath, segment, this._filterRuleConfiguration);
                 }
                 numSegmentsInProgress++;
             } else if (index >= 0) {
@@ -1248,12 +1294,19 @@ public class Receiver implements RsyncTask, MessageHandler {
     /**
      * @throws RsyncProtocolException if failing to decode the filter rules
      */
-    private String receiveFilterRules() throws ChannelException, RsyncProtocolException {
+    private List<String> receiveFilterRules() throws ChannelException, RsyncProtocolException {
+        int numBytesToRead;
+        List<String> list = new ArrayList<>();
+
         try {
-            int numBytesToRead = this._in.getInt();
-            ByteBuffer buf = this._in.get(numBytesToRead);
-            String filterRules = this._characterDecoder.decode(buf);
-            return filterRules;
+            
+            while ((numBytesToRead = this._in.getInt()) > 0) {
+                ByteBuffer buf = this._in.get(numBytesToRead);
+                list.add(this._characterDecoder.decode(buf));
+            }
+            
+            return list;
+            
         } catch (TextConversionException e) {
             throw new RsyncProtocolException(e);
         }
@@ -1513,7 +1566,7 @@ public class Receiver implements RsyncTask, MessageHandler {
         this._stats._fileListBuildTime = this.receiveAndDecodeLong(3);
         this._stats._fileListTransferTime = this.receiveAndDecodeLong(3);
     }
-    
+
     /**
      *
      * @throws TextConversionException
@@ -1601,8 +1654,22 @@ public class Receiver implements RsyncTask, MessageHandler {
         this._ioError |= IoError.GENERAL;
         return null;
     }
-    
-    private void sendEmptyFilterRules() throws InterruptedException {
+
+    private void sendFilterRules() throws InterruptedException {
+        
+        if (this._filterRuleConfiguration != null) {
+            for (FilterRuleList.FilterRule rule : this._filterRuleConfiguration.getFilterRuleListForSending()._rules) {
+                byte[] encodedRule = this._characterEncoder.encode(rule.toString());
+                
+                ByteBuffer buf = ByteBuffer.allocate(4 + encodedRule.length).order(ByteOrder.LITTLE_ENDIAN);
+                buf.putInt(encodedRule.length);
+                buf.put(encodedRule);
+                buf.flip();
+                this._generator.sendBytes(buf);
+            }
+        }
+        
+        // send stop signal
         ByteBuffer buf = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
         buf.putInt(0);
         buf.flip();

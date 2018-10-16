@@ -407,13 +407,13 @@ public class Generator implements RsyncTask {
         this.appendJob(j);
     }
     
-    void generateSegment(final Filelist.Segment segment) throws InterruptedException {
+    void generateSegment(final Path targetPath, final Filelist.Segment segment, FilterRuleConfiguration filterRuleConfiguration) throws InterruptedException {
         assert segment != null;
         
         Job j = new Job() {
             @Override
             public void process() throws ChannelException {
-                Generator.this.sendChecksumForSegment(segment);
+                Generator.this.sendChecksumForSegment(targetPath, segment, filterRuleConfiguration);
                 Generator.this._generated.add(segment);
                 Generator.this.removeAllFinishedSegmentsAndNotifySender();
             }
@@ -803,7 +803,7 @@ public class Generator implements RsyncTask {
         this.appendJob(j);
     }
     
-    private void sendChecksumForSegment(Filelist.Segment segment) throws ChannelException {
+    private void sendChecksumForSegment(final Path targetPath, Filelist.Segment segment, FilterRuleConfiguration filterRuleConfiguration) throws ChannelException {
         assert segment != null;
         
         final int dirIndex = segment.directoryIndex();
@@ -828,7 +828,7 @@ public class Generator implements RsyncTask {
         }
         if (this._isDelete && this._isDeletionsEnabled) {
             try {
-                this.unlinkFilesInDirNotAtSender(dir.path(), segment.files());
+                this.unlinkFilesInDirNotAtSender(targetPath, dir.path(), segment.files(), filterRuleConfiguration);
             } catch (IOException e) {
                 if (Files.exists(dir.path(), LinkOption.NOFOLLOW_LINKS)) {
                     String msg = String.format("failed to delete %s and all " + "its files: %s", dir, e);
@@ -1029,12 +1029,24 @@ public class Generator implements RsyncTask {
                 this._isPreservePermissions, this._isPreserveSpecials, this._isPreserveTimes, this._isPreserveUser, this._isPreserveGroup, Text.bytesToString(this._checksumSeed), this._fileSelection);
     }
     
-    private void unlinkFilesInDirNotAtSender(Path dir, Collection<FileInfo> files) throws IOException, ChannelException {
+    private void unlinkFilesInDirNotAtSender(final Path targetPath, Path dir, Collection<FileInfo> files, FilterRuleConfiguration cfg) throws IOException, ChannelException {
         assert this._isDelete && this._isDeletionsEnabled;
+//        boolean isDirectory = Files.isDirectory(entry);
+//        String filename = "./" + relativePathName;
+//        
+//        // detect protection
+//        if (cfg.protect(filename, isDirectory)) {
+//            return;
+//        }
+//        
+//        // detect exclusion, TODO: check path conversion
+//        boolean isEntryExcluded = cfg.exclude(filename, isDirectory);
+        
         Set<Path> senderPaths = new HashSet<>(files.size());
         for (FileInfo f : files) {
             if (f instanceof LocatableFileInfo) {
                 LocatableFileInfo lf = (LocatableFileInfo) f;
+                System.err.println("Deleting:" + lf.pathName() + "------>" + lf.path().toAbsolutePath().toString());
                 senderPaths.add(lf.path());
             }
         }
@@ -1042,19 +1054,33 @@ public class Generator implements RsyncTask {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path entry : stream) {
                 if (!senderPaths.contains(entry)) {
-                    try {
-                        if (_log.isLoggable(Level.INFO)) {
-                            _log.info("deleting extraneous " + entry);
+                    boolean isDirectory = Files.isDirectory(entry);
+                    // detect protection
+                    String filename = "./" + targetPath.relativize(entry).normalize().toString();
+                    if (cfg.protect(filename, isDirectory)) {
+                        System.err.println("Entry is proteced from deletion...");
+                        continue;
+                    }
+                    // detect exclusion, TODO: check path conversion
+                    boolean isEntryExcluded = cfg.exclude(filename, isDirectory);
+                    
+                    if (!isEntryExcluded) {
+                        try {
+                            if (_log.isLoggable(Level.INFO)) {
+                                _log.info("deleting extraneous " + entry);
+                            }
+                            FileOps.unlink(entry);
+                        } catch (IOException e) {
+                            String msg = String.format("failed to delete %s: %s", entry, e);
+                            if (_log.isLoggable(Level.WARNING)) {
+                                _log.warning(msg);
+                            }
+                            this._out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                            this._returnStatus++;
+                            
                         }
-                        FileOps.unlink(entry);
-                    } catch (IOException e) {
-                        String msg = String.format("failed to delete %s: %s", entry, e);
-                        if (_log.isLoggable(Level.WARNING)) {
-                            _log.warning(msg);
-                        }
-                        this._out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
-                        this._returnStatus++;
-                        
+                    } else {
+                        System.err.println("Entry is excluded from deletion...");
                     }
                 }
             }
