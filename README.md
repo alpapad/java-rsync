@@ -1,3 +1,13 @@
+java-rsync
+=======
+
+Java rsync is a fork of yajsync.
+
+Differences with yajsync:
+- Follows java coding rules/style
+- Adds support for filters (needs testing) which never made it to the yajsync tree
+
+
 yajsync
 =======
 
