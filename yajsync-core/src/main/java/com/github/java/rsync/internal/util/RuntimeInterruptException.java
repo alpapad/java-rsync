@@ -20,7 +20,7 @@ package com.github.java.rsync.internal.util;
 
 public class RuntimeInterruptException extends RuntimeException {
     private static final long serialVersionUID = 1L;
-    
+
     public RuntimeInterruptException(Exception e) {
         super(e);
     }

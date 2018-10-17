@@ -46,33 +46,33 @@ public abstract class SessionConfig {
     private static final Logger LOG = Logger.getLogger(SessionConfig.class.getName());
     private static final Pattern PROTOCOL_VERSION_REGEX = Pattern.compile("@RSYNCD: (\\d+)\\.(\\d+)$");
     private static final ProtocolVersion VERSION = new ProtocolVersion(30, 0);
-    
+
     protected TextDecoder characterDecoder;
     protected TextEncoder characterEncoder;
     private Charset charset;
     protected byte[] checksumSeed; // always stored in little endian
     protected final AutoFlushableDuplexChannel peerConnection;
-    
+
     protected SessionStatus status;
-    
+
     /**
      * @throws IllegalArgumentException if charset is not supported
      */
     protected SessionConfig(ReadableByteChannel in, WritableByteChannel out, Charset charset) {
-        this.peerConnection = new AutoFlushableDuplexChannel(new SimpleInputChannel(in), new BufferedOutputChannel(out));
-        this.setCharset(charset);
+        peerConnection = new AutoFlushableDuplexChannel(new SimpleInputChannel(in), new BufferedOutputChannel(out));
+        setCharset(charset);
     }
-    
+
     public Charset getCharset() {
-        assert this.charset != null;
-        return this.charset;
+        assert charset != null;
+        return charset;
     }
-    
+
     public byte[] getChecksumSeed() {
-        assert this.checksumSeed != null;
-        return this.checksumSeed;
+        assert checksumSeed != null;
+        return checksumSeed;
     }
-    
+
     /**
      * @throws RsyncProtocolException if peer sent a version less than ours
      * @throws RsyncProtocolException if protocol version is invalid
@@ -83,13 +83,18 @@ public abstract class SessionConfig {
      *                                current character set
      */
     protected void getExchangeProtocolVersion() throws ChannelException, RsyncProtocolException {
-        this.sendVersion(VERSION);
-        ProtocolVersion peerVersion = this.receivePeerVersion();
+        sendVersion(VERSION);
+        ProtocolVersion peerVersion = receivePeerVersion();
         if (peerVersion.compareTo(VERSION) < 0) {
             throw new RsyncProtocolException(String.format("Error: peer version is less than our version (%s < %s)", peerVersion, VERSION));
         }
     }
-    
+
+    public SessionStatus getStatus() {
+        assert status != null;
+        return status;
+    }
+
     /**
      * @throws RsyncProtocolException if failing to decode input characters from
      *                                peer using current character set
@@ -101,20 +106,20 @@ public abstract class SessionConfig {
         ByteBuffer buf = ByteBuffer.allocate(64);
         String result = null;
         while (result == null) {
-            byte lastByte = this.peerConnection.getByte();
+            byte lastByte = peerConnection.getByte();
             switch (lastByte) {
                 case Text.ASCII_CR:
                     break;
                 case Text.ASCII_NEWLINE:
                     buf.flip();
                     try {
-                        result = this.characterDecoder.decode(buf);
+                        result = characterDecoder.decode(buf);
                     } catch (TextConversionException e) {
                         throw new RsyncProtocolException(e);
                     }
                     break;
                 case Text.ASCII_NULL:
-                    throw new RsyncProtocolException(String.format("got a null-terminated input string without a newline: " + "\"%s\"", this.characterDecoder.decode(buf)));
+                    throw new RsyncProtocolException(String.format("got a null-terminated input string without a newline: " + "\"%s\"", characterDecoder.decode(buf)));
                 default:
                     if (!buf.hasRemaining()) {
                         try {
@@ -126,13 +131,13 @@ public abstract class SessionConfig {
                     buf.put(lastByte);
             }
         }
-        
+
         if (LOG.isLoggable(Level.FINER)) {
             LOG.finer("< " + result);
         }
         return result;
     }
-    
+
     /**
      * @throws RsyncProtocolException if protocol version is invalid
      * @throws RsyncProtocolException if failing to decode input characters using
@@ -142,7 +147,7 @@ public abstract class SessionConfig {
      * @throws ChannelException       if there is a communication failure with peer
      */
     private ProtocolVersion receivePeerVersion() throws ChannelException, RsyncProtocolException {
-        String versionResponse = this.readLine();
+        String versionResponse = readLine();
         Matcher m = PROTOCOL_VERSION_REGEX.matcher(versionResponse);
         if (m.matches()) {
             return new ProtocolVersion(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
@@ -150,16 +155,16 @@ public abstract class SessionConfig {
             throw new RsyncProtocolException(String.format("Invalid protocol version: %s", versionResponse));
         }
     }
-    
+
     /**
      * @throws IllegalStateException if failing to encode output characters using
      *                               current character set
      * @throws ChannelException      if there is a communication failure with peer
      */
     private void sendVersion(ProtocolVersion version) throws ChannelException {
-        this.writeString(String.format("@RSYNCD: %d.%d\n", version.getMajor(), version.getMinor()));
+        writeString(String.format("@RSYNCD: %d.%d\n", version.getMajor(), version.getMinor()));
     }
-    
+
     /**
      * @throws IllegalArgumentException if charset is not supported
      */
@@ -171,15 +176,10 @@ public abstract class SessionConfig {
                     charset));
         }
         this.charset = charset;
-        this.characterEncoder = TextEncoder.newStrict(this.charset);
-        this.characterDecoder = TextDecoder.newStrict(this.charset);
+        characterEncoder = TextEncoder.newStrict(this.charset);
+        characterDecoder = TextDecoder.newStrict(this.charset);
     }
-    
-    public SessionStatus getStatus() {
-        assert this.status != null;
-        return this.status;
-    }
-    
+
     /**
      * @throws IllegalStateException if failing to encode output characters using
      *                               current character set
@@ -189,8 +189,8 @@ public abstract class SessionConfig {
             if (LOG.isLoggable(Level.FINER)) {
                 LOG.finer("> " + text);
             }
-            byte[] textEncoded = this.characterEncoder.encode(text);
-            this.peerConnection.put(textEncoded, 0, textEncoded.length);
+            byte[] textEncoded = characterEncoder.encode(text);
+            peerConnection.put(textEncoded, 0, textEncoded.length);
         } catch (TextConversionException e) {
             throw new IllegalStateException(e);
         }

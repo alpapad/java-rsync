@@ -41,28 +41,28 @@ public abstract class RestrictedModule implements Module {
      *         authContext.response()
      */
     abstract public String authenticate(RsyncAuthContext authContext, String userName) throws ModuleSecurityException;
-    
+
     @Override
     abstract public String getComment();
-    
-    @Override
-    public final boolean isReadable() {
-        throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public final boolean isWritable() {
-        throw new UnsupportedOperationException();
-    }
-    
+
     @Override
     abstract public String getName();
-    
+
     @Override
     public final RestrictedPath getRestrictedPath() {
         throw new UnsupportedOperationException();
     }
-    
+
+    @Override
+    public final boolean isReadable() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public final boolean isWritable() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * @return the corresponding regular, unrestricted Module of this instance.
      */

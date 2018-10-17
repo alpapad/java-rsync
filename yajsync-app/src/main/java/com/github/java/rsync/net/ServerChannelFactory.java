@@ -21,6 +21,6 @@ import java.net.InetAddress;
 
 public interface ServerChannelFactory {
     ServerChannel open(InetAddress address, int port, int timeout) throws IOException;
-
+    
     ServerChannelFactory setReuseAddress(boolean isReuseAddress);
 }

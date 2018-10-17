@@ -20,7 +20,7 @@ package com.github.java.rsync.internal.io;
 
 public class FileViewNotFound extends FileViewOpenFailed {
     private static final long serialVersionUID = 1L;
-    
+
     FileViewNotFound(String message) {
         super(message);
     }

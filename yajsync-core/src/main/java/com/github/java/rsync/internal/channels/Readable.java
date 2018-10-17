@@ -22,17 +22,17 @@ import java.nio.ByteBuffer;
 
 public interface Readable {
     void get(byte[] dst, int offset, int length) throws ChannelException;
-    
+
     // NOTE: ByteBuffer.position() might very well be > 0, so calling rewind may
     // lead to
     // unexpected behavior. Use mark and reset instead
     ByteBuffer get(int numBytes) throws ChannelException;
-    
+
     byte getByte() throws ChannelException;
-    
+
     char getChar() throws ChannelException;
-    
+
     int getInt() throws ChannelException;
-    
+
     void skip(int numBytes) throws ChannelException;
 }

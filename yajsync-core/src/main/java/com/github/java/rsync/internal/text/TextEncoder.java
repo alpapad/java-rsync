@@ -38,57 +38,57 @@ public class TextEncoder {
         TextEncoder instance = new TextEncoder(encoder);
         return instance;
     }
-    
+
     public static TextEncoder newStrict(Charset charset) {
         CharsetEncoder encoder = charset.newEncoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT);
         TextEncoder instance = new TextEncoder(encoder);
         return instance;
     }
-    
+
     private final CharsetEncoder encoder;
-    
+
     private TextEncoder(CharsetEncoder encoder) {
         this.encoder = encoder;
     }
-    
+
     public Charset charset() {
-        return this.encoder.charset();
+        return encoder.charset();
     }
-    
+
     /**
      * @throws TextConversionException
      */
     private byte[] encode(CharBuffer input, ErrorPolicy errorPolicy, MemoryPolicy memoryPolicy) {
-        this.encoder.reset();
-        ByteBuffer output = ByteBuffer.allocate((int) Math.ceil(input.capacity() * this.encoder.averageBytesPerChar()));
+        encoder.reset();
+        ByteBuffer output = ByteBuffer.allocate((int) Math.ceil(input.capacity() * encoder.averageBytesPerChar()));
         try {
             CoderResult result;
             while (true) {
-                result = this.encoder.encode(input, output, true);
+                result = encoder.encode(input, output, true);
                 if (result.isOverflow()) {
                     output = Util.enlargeByteBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE);
                 } else {
                     break;
                 }
             }
-            
+
             while (!result.isError()) {
-                result = this.encoder.flush(output);
+                result = encoder.flush(output);
                 if (result.isOverflow()) {
                     output = Util.enlargeByteBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE);
                 } else {
                     break;
                 }
             }
-            
+
             if (result.isUnderflow()) {
                 return Arrays.copyOfRange(output.array(), output.arrayOffset(), output.position());
             }
-            
+
             if (errorPolicy == ErrorPolicy.THROW) { // NOTE: in some circumstances we should avoid printing the contents
                 input.limit(input.position() + result.length());
-                throw new TextConversionException(String.format("failed to encode %d bytes after %s (using %s): %s -> %s", result.length(), output.flip().toString(), this.encoder.charset(),
-                        Text.charBufferToString(input), result));
+                throw new TextConversionException(
+                        String.format("failed to encode %d bytes after %s (using %s): %s -> %s", result.length(), output.flip().toString(), encoder.charset(), Text.charBufferToString(input), result));
             }
             return null;
         } catch (OverflowException e) {
@@ -102,7 +102,7 @@ public class TextEncoder {
             }
         }
     }
-    
+
     /**
      * @throws TextConversionException
      */
@@ -111,13 +111,13 @@ public class TextEncoder {
         CharBuffer input = CharBuffer.wrap(inputChars);
         return this.encode(input, ErrorPolicy.THROW, MemoryPolicy.IGNORE);
     }
-    
+
     public byte[] encodeOrNull(String string) {
         char[] inputChars = string.toCharArray();
         CharBuffer input = CharBuffer.wrap(inputChars);
         return this.encode(input, ErrorPolicy.RETURN_NULL, MemoryPolicy.IGNORE);
     }
-    
+
     public byte[] secureEncodeOrNull(char[] inputChars) {
         CharBuffer input = CharBuffer.wrap(inputChars);
         return this.encode(input, ErrorPolicy.RETURN_NULL, MemoryPolicy.ZERO);

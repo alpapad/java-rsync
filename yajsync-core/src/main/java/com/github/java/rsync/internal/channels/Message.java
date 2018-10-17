@@ -29,7 +29,7 @@ import com.github.java.rsync.internal.text.Text;
 public class Message {
     private final MessageHeader header;
     private final ByteBuffer payload;
-    
+
     /**
      * @throws IllegalArgumentException
      * @throws IllegalStateException
@@ -37,7 +37,7 @@ public class Message {
     public Message(MessageCode code, ByteBuffer payload) {
         this(new MessageHeader(code, payload.remaining()), payload);
     }
-    
+
     /**
      * @throws IllegalArgumentException if type is IO_ERROR or NO_SEND and length of
      *                                  message header is not 4 bytes
@@ -64,7 +64,7 @@ public class Message {
         this.header = header;
         this.payload = payload;
     }
-    
+
     /**
      * Note: Message.payload() changes state when being read
      */
@@ -72,27 +72,31 @@ public class Message {
     public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
             Message other = (Message) obj;
-            if (this.getHeader().equals(other.getHeader())) {
-                return this.payload.equals(other.payload);
+            if (getHeader().equals(other.getHeader())) {
+                return payload.equals(other.payload);
             }
         }
         return false;
     }
-    
+
+    public MessageHeader getHeader() {
+        return header;
+    }
+
+    public ByteBuffer getPayload() {
+        return payload;
+    }
+
     /**
      * Note: Message.payload() changes state when being read
      */
     @Override
     public int hashCode() {
-        return Objects.hash(this.header, this.payload);
+        return Objects.hash(header, payload);
     }
-    
-    public MessageHeader getHeader() {
-        return this.header;
-    }
-    
+
     public boolean isText() {
-        switch (this.header.getMessageType()) {
+        switch (header.getMessageType()) {
             case LOG:
             case INFO:
             case WARNING:
@@ -103,10 +107,10 @@ public class Message {
                 return false;
         }
     }
-    
+
     public Level logLevelOrNull() {
-        assert this.isText();
-        switch (this.header.getMessageType()) {
+        assert isText();
+        switch (header.getMessageType()) {
             case LOG:
                 return Level.FINE;
             case INFO:
@@ -120,13 +124,9 @@ public class Message {
                 return null;
         }
     }
-    
-    public ByteBuffer getPayload() {
-        return this.payload;
-    }
-    
+
     @Override
     public String toString() {
-        return String.format("%s %s %s %s", this.getClass().getSimpleName(), this.header, this.payload, Text.byteBufferToString(this.payload));
+        return String.format("%s %s %s %s", this.getClass().getSimpleName(), header, payload, Text.byteBufferToString(payload));
     }
 }

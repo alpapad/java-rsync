@@ -27,11 +27,11 @@ import java.util.Map;
 public final class Multimap<K, V> {
     private final Map<K, List<V>> map;
     private int size;
-    
+
     public Multimap(int size) {
         this.map = new HashMap<>((int) Math.ceil(size / 0.75));
     }
-    
+
     // we trust the caller to not modify the returned collection
     public List<V> get(K key) {
         List<V> values = this.map.get(key);
@@ -41,7 +41,7 @@ public final class Multimap<K, V> {
             return values;
         }
     }
-    
+
     public boolean put(K key, V value) {
         List<V> existing = this.get(key);
         if (existing.isEmpty()) {
@@ -54,7 +54,7 @@ public final class Multimap<K, V> {
         }
         return isAdded;
     }
-    
+
     public int size() {
         return this.size;
     }

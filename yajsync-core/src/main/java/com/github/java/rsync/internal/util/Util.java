@@ -40,11 +40,11 @@ public final class Util {
     public final static int ERROR_LOG_LEVEL_NUM = 0;
     public final static int INFO_LOG_LEVEL_NUM = 2;
     public final static int WARNING_LOG_LEVEL_NUM = 1;
-    
+
     public static <T> T defaultIfNull(T arg, T defaultValue) {
         return arg != null ? arg : defaultValue;
     }
-    
+
     /**
      * @throws OverflowException if enlarged buffer would be greater than maxSize
      */
@@ -53,7 +53,7 @@ public final class Util {
         if (nextSize <= 0 || nextSize > maxSize) {
             throw new OverflowException(String.format("allocation limit exceeded max is %d", maxSize));
         }
-        
+
         ByteBuffer result = ByteBuffer.allocate(nextSize);
         src.flip();
         result.put(src);
@@ -63,7 +63,7 @@ public final class Util {
         }
         return result;
     }
-    
+
     /**
      * @throws OverflowException if enlarged buffer would be greater than maxSize
      */
@@ -72,7 +72,7 @@ public final class Util {
         if (nextSize <= 0 || nextSize > maxSize) {
             throw new OverflowException(String.format("allocation limit exceeded max is %d", maxSize));
         }
-        
+
         CharBuffer result = CharBuffer.allocate(nextSize);
         src.flip();
         result.put(src);
@@ -82,14 +82,14 @@ public final class Util {
         }
         return result;
     }
-    
+
     public static <T> T firstOf(Iterable<T> list) {
         for (T val : list) {
             return val;
         }
         return null;
     }
-    
+
     /**
      * NOTE: we don't use Level.CONFIG at all
      */
@@ -97,7 +97,7 @@ public final class Util {
         Level[] logLevels = { Level.SEVERE, Level.WARNING, Level.INFO, Level.FINE, Level.FINER, Level.FINEST };
         return logLevels[Math.min(logLevels.length - 1, level)];
     }
-    
+
     /**
      * @returns false if chosen character set cannot encode SLASH (/), DOT (.),
      *          NEWLINE (\n), CARRIAGE RETURN (\r) and NULL (\0) to their ASCII
@@ -107,39 +107,39 @@ public final class Util {
         assert charset != null;
         TextEncoder encoder = TextEncoder.newFallback(charset);
         TextDecoder decoder = TextDecoder.newFallback(charset);
-        
+
         // TODO: add '.' also
         final String testString = Text.SLASH + Text.DOT + '\n' + '\r' + '\0';
         final byte[] expected = { Text.ASCII_SLASH, Text.ASCII_DOT, Text.ASCII_NEWLINE, Text.ASCII_CR, Text.ASCII_NULL };
-        
+
         byte[] encodeResult = encoder.encodeOrNull(testString);
         if (!Arrays.equals(encodeResult, expected)) { // NOTE: returns false if encodeResult is null
             return false;
         }
-        
+
         String decodeResult = decoder.decodeOrNull(ByteBuffer.wrap(encodeResult));
         if (decodeResult == null || !decodeResult.equals(testString)) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     public static double log2(double n) {
         return Math.log(n) / Math.log(2);
     }
-    
+
     public static int randInt(int low, int high) {
         int r = Math.abs(new Random().nextInt());
         int range = high - low + 1;
         return r % range + low;
     }
-    
+
     public static boolean randomChance(double percentage) {
         assert percentage >= 0 && percentage <= 1;
         return randInt(0, 100) / 100.0 < percentage;
     }
-    
+
     public static void setRootLogLevel(Level level) {
         Logger rootLogger = Logger.getLogger("");
         for (Handler handler : rootLogger.getHandlers()) {
@@ -147,7 +147,7 @@ public final class Util {
         }
         rootLogger.setLevel(level);
     }
-    
+
     public static void sleep(long millis) {
         try {
             Thread.sleep(millis);
@@ -155,7 +155,7 @@ public final class Util {
             throw new RuntimeInterruptException(e);
         }
     }
-    
+
     public static ByteBuffer slice(ByteBuffer src, int start, int end) {
         assert src != null;
         assert start <= end;
@@ -164,22 +164,22 @@ public final class Util {
         slice.limit(end);
         return slice;
     }
-    
+
     public static void validateCharset(Charset charset) {
         if (!Util.isValidCharset(charset)) {
             throw new UnsupportedCharsetException(String.format("character set %s is not supported. The charset must be " + "able to encode SLASH (/), DOT (.), NEWLINE (\n), "
                     + "CARRIAGE RETURN (\r) and NULL (\0) to their ASCII " + "counterparts and vice versa", charset));
         }
     }
-    
+
     public static void zeroByteBuffer(ByteBuffer buf) {
         Arrays.fill(buf.array(), buf.arrayOffset(), buf.arrayOffset() + buf.limit(), (byte) 0);
     }
-    
+
     public static void zeroCharBuffer(CharBuffer buf) {
         Arrays.fill(buf.array(), buf.arrayOffset(), buf.arrayOffset() + buf.limit(), (char) 0);
     }
-    
+
     private Util() {
     }
 }

@@ -20,12 +20,12 @@ package com.github.java.rsync.server.module;
 
 public interface Module {
     String getComment();
-    
-    boolean isReadable();
-    
-    boolean isWritable();
-    
+
     String getName();
-    
+
     RestrictedPath getRestrictedPath();
+
+    boolean isReadable();
+
+    boolean isWritable();
 }

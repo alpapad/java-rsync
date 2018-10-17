@@ -55,7 +55,7 @@ import com.github.java.rsync.server.module.RsyncAuthContext;
 
 public class ServerSessionConfig extends SessionConfig {
     private static final Logger LOG = Logger.getLogger(ServerSessionConfig.class.getName());
-    
+
     /**
      * @throws RsyncSecurityException
      * @throws IllegalArgumentException if charset is not supported
@@ -70,12 +70,12 @@ public class ServerSessionConfig extends SessionConfig {
         assert in != null;
         assert out != null;
         assert modules != null;
-        
+
         ServerSessionConfig instance = new ServerSessionConfig(in, out, charset);
         try {
             instance.getExchangeProtocolVersion();
             String moduleName = instance.receiveModule();
-            
+
             if (moduleName.isEmpty()) {
                 if (LOG.isLoggable(Level.FINE)) {
                     LOG.fine("sending module listing and exiting");
@@ -85,7 +85,7 @@ public class ServerSessionConfig extends SessionConfig {
                 instance.status = SessionStatus.EXIT; // FIXME: create separate status type instead
                 return instance;
             }
-            
+
             Module module = modules.get(moduleName); // throws ModuleException
             if (module instanceof RestrictedModule) {
                 RestrictedModule restrictedModule = (RestrictedModule) module;
@@ -94,7 +94,7 @@ public class ServerSessionConfig extends SessionConfig {
             instance.setModule(module);
             instance.sendStatus(SessionStatus.OK);
             instance.status = SessionStatus.OK;
-            
+
             Collection<String> args = instance.receiveArguments();
             if (LOG.isLoggable(Level.FINE)) {
                 LOG.fine("parsing arguments: " + args);
@@ -116,11 +116,12 @@ public class ServerSessionConfig extends SessionConfig {
             instance.flush();
         }
     }
-    
-    private FileSelection fileSelection = FileSelection.EXACT;
+
     private boolean delete = false;
+    private FileSelection fileSelection = FileSelection.EXACT;
     private boolean ignoreTimes = false;
     private boolean incrementalRecurse = false;
+    private Module module;
     private boolean numericIds = false;
     private boolean preserveDevices = false;
     private boolean preserveGroup = false;
@@ -129,194 +130,201 @@ public class ServerSessionConfig extends SessionConfig {
     private boolean preserveSpecials = false;
     private boolean preserveTimes = false;
     private boolean preserveUser = false;
+    private Path receiverDestination;
     private boolean safeFileList;
     private boolean sender = false;
-    private Module module;
-    private Path receiverDestination;
     private final List<Path> sourceFiles = new LinkedList<>();
-    
+
     private int verbosity = 0;
-    
+
     /**
      * @throws IllegalArgumentException if charset is not supported
      */
     private ServerSessionConfig(ReadableByteChannel in, WritableByteChannel out, Charset charset) {
         super(in, out, charset);
         int seedValue = (int) System.currentTimeMillis();
-        this.checksumSeed = BitOps.toLittleEndianBuf(seedValue);
+        checksumSeed = BitOps.toLittleEndianBuf(seedValue);
     }
-    
+
     public FileSelection fileSelection() {
-        return this.fileSelection;
+        return fileSelection;
     }
-    
+
     private void flush() throws ChannelException {
-        this.peerConnection.flush();
+        peerConnection.flush();
     }
-    
+
     public Path getReceiverDestination() {
-        assert this.receiverDestination != null;
-        return this.receiverDestination;
+        assert receiverDestination != null;
+        return receiverDestination;
     }
-    
+
+    public List<Path> getSourceFiles() {
+        return sourceFiles;
+    }
+
+    public int getVerbosity() {
+        return verbosity;
+    }
+
     public boolean isDelete() {
-        return this.delete;
+        return delete;
     }
-    
+
     public boolean isIgnoreTimes() {
-        return this.ignoreTimes;
+        return ignoreTimes;
     }
-    
+
     public boolean isNumericIds() {
-        return this.numericIds;
+        return numericIds;
     }
-    
+
     public boolean isPreserveDevices() {
-        return this.preserveDevices;
+        return preserveDevices;
     }
-    
+
     public boolean isPreserveGroup() {
-        return this.preserveGroup;
+        return preserveGroup;
     }
-    
+
     public boolean isPreserveLinks() {
-        return this.preserveLinks;
+        return preserveLinks;
     }
-    
+
     public boolean isPreservePermissions() {
-        return this.preservePermissions;
+        return preservePermissions;
     }
-    
+
     public boolean isPreserveSpecials() {
-        return this.preserveSpecials;
+        return preserveSpecials;
     }
-    
+
     public boolean isPreserveTimes() {
-        return this.preserveTimes;
+        return preserveTimes;
     }
-    
+
     public boolean isPreserveUser() {
-        return this.preserveUser;
+        return preserveUser;
     }
-    
+
     public boolean isSafeFileList() {
-        return this.safeFileList;
+        return safeFileList;
     }
-    
+
     public boolean isSender() {
-        return this.sender;
+        return sender;
     }
-    
+
     private void parseArguments(Collection<String> receivedArguments) throws ArgumentParsingError, RsyncProtocolException, RsyncSecurityException {
         ArgumentParser argsParser = ArgumentParser.newWithUnnamed("", "files...");
         // NOTE: has no argument handler
         argsParser.add(Option.newWithoutArgument(Option.Policy.REQUIRED, "server", "", "", null));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "sender", "", "", option -> {
-            this.sender = true;
+            sender = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "recursive", "r", "", option -> {
-            this.fileSelection = FileSelection.RECURSE;
+            fileSelection = FileSelection.RECURSE;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "no-r", "", "", option -> {
             // is sent when transfer dirs and delete
-            if (this.fileSelection == FileSelection.RECURSE) {
-                this.fileSelection = FileSelection.EXACT;
+            if (fileSelection == FileSelection.RECURSE) {
+                fileSelection = FileSelection.EXACT;
             }
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newStringOption(Option.Policy.REQUIRED, "rsh", "e", "", option -> {
             try {
                 String val = (String) option.getValue();
-                this.parsePeerCompatibilites(val);
+                parsePeerCompatibilites(val);
                 return ArgumentParser.Status.CONTINUE;
             } catch (RsyncProtocolException e) {
                 throw new ArgumentParsingError(e);
             }
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "ignore-times", "I", "", option -> {
-            this.ignoreTimes = true;
+            ignoreTimes = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", "", option -> {
-            this.verbosity++;
+            verbosity++;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "delete", "", "", option -> {
-            this.delete = true;
+            delete = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "", "D", "", option -> {
-            this.preserveDevices = true;
-            this.preserveSpecials = true;
+            preserveDevices = true;
+            preserveSpecials = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "specials", "", "", option -> {
-            this.preserveSpecials = true;
+            preserveSpecials = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "no-specials", "", "", option -> {
-            this.preserveSpecials = false;
+            preserveSpecials = false;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "links", "l", "", option -> {
-            this.preserveLinks = true;
+            preserveLinks = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "owner", "o", "", option -> {
-            this.preserveUser = true;
+            preserveUser = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "group", "g", "", option -> {
-            this.preserveGroup = true;
+            preserveGroup = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "numeric-ids", "", "", option -> {
-            this.numericIds = true;
+            numericIds = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "perms", "p", "", option -> {
-            this.preservePermissions = true;
+            preservePermissions = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "times", "t", "", option -> {
-            this.preserveTimes = true;
+            preserveTimes = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "dirs", "d", "", option -> {
-            this.fileSelection = FileSelection.TRANSFER_DIRS;
+            fileSelection = FileSelection.TRANSFER_DIRS;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         // FIXME: let ModuleProvider mutate this argsParser instance before
         // calling parse (e.g. adding specific options or removing options)
-        
+
         ArgumentParser.Status rc = argsParser.parse(receivedArguments);
         assert rc == ArgumentParser.Status.CONTINUE;
-        assert this.fileSelection != FileSelection.RECURSE || this.incrementalRecurse : "We support only incremental recursive transfers for now";
-        
-        if (!this.isSender() && !this.module.isWritable()) {
-            throw new RsyncProtocolException(String.format("Error: module %s is not writable", this.module));
+        assert fileSelection != FileSelection.RECURSE || incrementalRecurse : "We support only incremental recursive transfers for now";
+
+        if (!isSender() && !module.isWritable()) {
+            throw new RsyncProtocolException(String.format("Error: module %s is not writable", module));
         }
-        
+
         List<String> unnamed = argsParser.getUnnamedArguments();
         if (unnamed.size() < 2) {
             throw new RsyncProtocolException(String.format("Got too few unnamed arguments from peer " + "(%d), expected \".\" and more", unnamed.size()));
@@ -325,58 +333,60 @@ public class ServerSessionConfig extends SessionConfig {
         if (!dotSeparator.equals(Text.DOT)) {
             throw new RsyncProtocolException(String.format("Expected first non option-argument to be " + "\".\", received \"%s\"", dotSeparator));
         }
-        
-        if (this.isSender()) {
+
+        if (isSender()) {
             Pattern wildcardsPattern = Pattern.compile(".*[\\[*?].*"); // matches literal [, * or ?
             for (String fileName : unnamed) {
                 if (wildcardsPattern.matcher(fileName).matches()) {
                     // FIXME: Do we need this?
-                    // public static DirectoryStream<Path> java.nio.file.Files.newDirectoryStream(Path dir,   String glob)  throws IOException
+                    // public static DirectoryStream<Path>
+                    // java.nio.file.Files.newDirectoryStream(Path dir, String glob) throws
+                    // IOException
                     throw new RsyncProtocolException(String.format("wildcards are not supported (%s)", fileName));
                 }
-                Path safePath = this.module.getRestrictedPath().resolve(fileName);
-                this.sourceFiles.add(safePath);
+                Path safePath = module.getRestrictedPath().resolve(fileName);
+                sourceFiles.add(safePath);
             }
             if (LOG.isLoggable(Level.FINE)) {
-                LOG.fine("sender source files: " + this.sourceFiles);
+                LOG.fine("sender source files: " + sourceFiles);
             }
         } else {
             if (unnamed.size() != 1) {
                 throw new RsyncProtocolException(String.format("Error: expected exactly one file argument: %s contains %d", unnamed, unnamed.size()));
             }
             String fileName = unnamed.get(0);
-            Path safePath = this.module.getRestrictedPath().resolve(fileName);
-            this.receiverDestination = safePath.normalize();
-            
+            Path safePath = module.getRestrictedPath().resolve(fileName);
+            receiverDestination = safePath.normalize();
+
             if (LOG.isLoggable(Level.FINE)) {
-                LOG.fine("receiver destination: " + this.receiverDestination);
+                LOG.fine("receiver destination: " + receiverDestination);
             }
         }
     }
-    
+
     // @throws RsyncProtocolException
     private void parsePeerCompatibilites(String str) throws RsyncProtocolException {
         if (str.startsWith(Text.DOT)) {
             if (str.contains("i")) { // CF_INC_RECURSE
-                assert this.fileSelection == FileSelection.RECURSE;
-                this.incrementalRecurse = true; // only set by client on --recursive or -r, but can also be disabled, we require
-                                                   // it however (as a start)
+                assert fileSelection == FileSelection.RECURSE;
+                incrementalRecurse = true; // only set by client on --recursive or -r, but can also be disabled, we require
+                                           // it however (as a start)
             }
             if (str.contains("L")) { // CF_SYMLINK_TIMES
             }
             if (str.contains("s")) { // CF_SYMLINK_ICONV
             }
-            this.safeFileList = str.contains("f");
+            safeFileList = str.contains("f");
         } else {
             throw new RsyncProtocolException(String.format("Protocol not supported - got %s from peer", str));
         }
     }
-    
+
     private String readStringUntilNullOrEof() throws ChannelException, RsyncProtocolException {
         ByteBuffer buf = ByteBuffer.allocate(64);
         try {
             while (true) {
-                byte b = this.peerConnection.getByte();
+                byte b = peerConnection.getByte();
                 if (b == Text.ASCII_NULL) {
                     break;
                 } else if (!buf.hasRemaining()) {
@@ -391,12 +401,12 @@ public class ServerSessionConfig extends SessionConfig {
         }
         buf.flip();
         try {
-            return this.characterDecoder.decode(buf);
+            return characterDecoder.decode(buf);
         } catch (TextConversionException e) {
             throw new RsyncProtocolException(e);
         }
     }
-    
+
     /**
      *
      * @ @throws ChannelException
@@ -405,7 +415,7 @@ public class ServerSessionConfig extends SessionConfig {
     private Collection<String> receiveArguments() throws ChannelException, RsyncProtocolException {
         Collection<String> list = new LinkedList<>();
         while (true) {
-            String arg = this.readStringUntilNullOrEof();
+            String arg = readStringUntilNullOrEof();
             if (arg.isEmpty()) {
                 break;
             }
@@ -413,7 +423,7 @@ public class ServerSessionConfig extends SessionConfig {
         }
         return list;
     }
-    
+
     /**
      * @throws RsyncProtocolException if failing to decode input characters using
      *                                current character set
@@ -421,35 +431,35 @@ public class ServerSessionConfig extends SessionConfig {
      * @throws RsyncProtocolException if peer sent too large amount of characters
      */
     private String receiveModule() throws ChannelException, RsyncProtocolException {
-        return this.readLine();
+        return readLine();
     }
-    
+
     private void sendChecksumSeed() throws ChannelException {
-        assert this.checksumSeed != null;
+        assert checksumSeed != null;
         if (LOG.isLoggable(Level.FINER)) {
-            LOG.finer("> (checksum seed) " + BitOps.toBigEndianInt(this.checksumSeed));
+            LOG.finer("> (checksum seed) " + BitOps.toBigEndianInt(checksumSeed));
         }
-        this.peerConnection.putInt(BitOps.toBigEndianInt(this.checksumSeed));
+        peerConnection.putInt(BitOps.toBigEndianInt(checksumSeed));
     }
-    
+
     private void sendCompatibilities() throws ChannelException {
         byte flags = 0;
-        if (this.safeFileList) {
+        if (safeFileList) {
             flags |= RsyncCompatibilities.CF_SAFE_FLIST;
         }
-        if (this.incrementalRecurse) {
+        if (incrementalRecurse) {
             flags |= RsyncCompatibilities.CF_INC_RECURSE;
         }
         if (LOG.isLoggable(Level.FINER)) {
             LOG.finer("> (we support) " + flags);
         }
-        this.peerConnection.putByte(flags);
+        peerConnection.putByte(flags);
     }
-    
+
     private void sendErrorStatus(String msg) throws ChannelException {
-        this.writeString(String.format("%s: %s\n", SessionStatus.ERROR.toString(), msg));
+        writeString(String.format("%s: %s\n", SessionStatus.ERROR.toString(), msg));
     }
-    
+
     /**
      * @throws TextConversionException
      */
@@ -457,25 +467,21 @@ public class ServerSessionConfig extends SessionConfig {
         for (Module module : modules) {
             assert !module.getName().isEmpty();
             if (module.getComment().isEmpty()) {
-                this.writeString(String.format("%-15s\n", module.getName()));
+                writeString(String.format("%-15s\n", module.getName()));
             } else {
-                this.writeString(String.format("%-15s\t%s\n", module.getName(), module.getComment()));
+                writeString(String.format("%-15s\t%s\n", module.getName(), module.getComment()));
             }
         }
     }
-    
+
     private void sendStatus(SessionStatus status) throws ChannelException {
-        this.writeString(status.toString() + "\n");
+        writeString(status.toString() + "\n");
     }
-    
+
     private void setModule(Module module) {
         this.module = module;
     }
-    
-    public List<Path> getSourceFiles() {
-        return this.sourceFiles;
-    }
-    
+
     /**
      * @throws RsyncProtocolException if failing to decode input characters using
      *                                current character set
@@ -483,15 +489,15 @@ public class ServerSessionConfig extends SessionConfig {
      * @throws RsyncProtocolException if peer sent too large amount of characters
      */
     private Module unlockModule(RestrictedModule restrictedModule) throws ModuleSecurityException, ChannelException, RsyncProtocolException {
-        RsyncAuthContext authContext = new RsyncAuthContext(this.characterEncoder);
-        this.writeString(SessionStatus.AUTHREQ + authContext.getChallenge() + '\n');
-        
-        String userResponse = this.readLine();
+        RsyncAuthContext authContext = new RsyncAuthContext(characterEncoder);
+        writeString(SessionStatus.AUTHREQ + authContext.getChallenge() + '\n');
+
+        String userResponse = readLine();
         String[] userResponseTuple = userResponse.split(" ", 2);
         if (userResponseTuple.length != 2) {
             throw new RsyncProtocolException("invalid challenge " + "response " + userResponse);
         }
-        
+
         String userName = userResponseTuple[0];
         String correctResponse = restrictedModule.authenticate(authContext, userName);
         String response = userResponseTuple[1];
@@ -500,9 +506,5 @@ public class ServerSessionConfig extends SessionConfig {
         } else {
             throw new ModuleSecurityException("failed to authenticate " + userName);
         }
-    }
-    
-    public int getVerbosity() {
-        return this.verbosity;
     }
 }

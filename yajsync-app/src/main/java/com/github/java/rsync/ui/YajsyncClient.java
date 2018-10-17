@@ -79,16 +79,16 @@ import com.github.java.rsync.net.StandardChannelFactory;
 public class YajsyncClient {
     private enum Mode {
         LOCAL_COPY, LOCAL_LIST, REMOTE_LIST, REMOTE_RECEIVE, REMOTE_SEND;
-
+        
         public boolean isRemote() {
             return this == REMOTE_SEND || this == REMOTE_RECEIVE || this == REMOTE_LIST;
         }
     }
-
+    
     private static final Logger LOG = Logger.getLogger(YajsyncClient.class.getName());
-
+    
     private static final int PORT_UNDEFINED = -1;
-
+    
     private static List<String> readLinesFromStdin() throws IOException {
         List<String> lines = new LinkedList<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
@@ -101,7 +101,7 @@ public class YajsyncClient {
             }
         }
     }
-
+    
     private static Pair<RsyncUrls, RsyncUrl> updateRemotePort(Path cwd, int newPortNumber, RsyncUrls srcArgs, RsyncUrl dstArgOrNull) throws ArgumentParsingError {
         try {
             ConnectionInfo connInfo = srcArgs.isRemote() ? srcArgs.getConnectionInfo() : dstArgOrNull.getConnectionInfo();
@@ -119,43 +119,43 @@ public class YajsyncClient {
             throw new RuntimeException(e);
         }
     }
-
+    
     private final AuthProvider authProvider = new AuthProvider() {
         @Override
         public char[] getPassword() throws IOException {
-            if (YajsyncClient.this.passwordFile != null) {
-                if (!YajsyncClient.this.passwordFile.equals("-")) {
-                    Path p = Paths.get(YajsyncClient.this.passwordFile);
+            if (passwordFile != null) {
+                if (!passwordFile.equals("-")) {
+                    Path p = Paths.get(passwordFile);
                     FileAttributeManager fileManager = FileAttributeManagerFactory.newMostAble(p.getFileSystem(), User.NOBODY, Group.NOBODY, Environment.DEFAULT_FILE_PERMS,
                             Environment.DEFAULT_DIR_PERMS);
                     RsyncFileAttributes attrs = fileManager.stat(p);
                     if ((attrs.getMode() & (FileOps.S_IROTH | FileOps.S_IWOTH)) != 0) {
-                        throw new IOException(String.format("insecure permissions on %s: %s", YajsyncClient.this.passwordFile, attrs));
+                        throw new IOException(String.format("insecure permissions on %s: %s", passwordFile, attrs));
                     }
                 }
-                try (BufferedReader br = new BufferedReader(YajsyncClient.this.passwordFile.equals("-") ? new InputStreamReader(System.in) : new FileReader(YajsyncClient.this.passwordFile))) {
+                try (BufferedReader br = new BufferedReader(passwordFile.equals("-") ? new InputStreamReader(System.in) : new FileReader(passwordFile))) {
                     return br.readLine().toCharArray();
                 }
             }
-
+            
             String passwordStr = Environment.getRsyncPasswordOrNull();
             if (passwordStr != null) {
                 return passwordStr.toCharArray();
             }
-
+            
             Console console = System.console();
             if (console == null) {
                 throw new IOException("no console available");
             }
             return console.readPassword("Password: ");
         }
-
+        
         @Override
         public String getUser() {
-            return YajsyncClient.this.userName;
+            return userName;
         }
     };
-    private final RsyncClient.Builder clientBuilder = new RsyncClient.Builder().authProvider(this.authProvider);
+    private final RsyncClient.Builder clientBuilder = new RsyncClient.Builder().authProvider(authProvider);
     private int contimeout = 0;
     private Path cwd;
     private String cwdName = Environment.getWorkingDirectoryName();
@@ -172,164 +172,164 @@ public class YajsyncClient {
     private final SimpleDateFormat timeFormatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     private int timeout = 0;
     private String userName;
-
+    
     private boolean useTLS;
-
+    
     private int verbosity;
-
+    
     private String fileInfoToListingString(FileInfo f) {
         RsyncFileAttributes attrs = f.getAttributes();
         Date t = new Date(FileTime.from(attrs.lastModifiedTime(), TimeUnit.SECONDS).toMillis());
         if (f instanceof SymlinkInfo) {
-            return String.format("%s %11d %s %s -> %s", FileOps.modeToString(attrs.getMode()), attrs.getSize(), this.timeFormatter.format(t), f.getPathName(), ((SymlinkInfo) f).getTargetPathName());
+            return String.format("%s %11d %s %s -> %s", FileOps.modeToString(attrs.getMode()), attrs.getSize(), timeFormatter.format(t), f.getPathName(), ((SymlinkInfo) f).getTargetPathName());
         } else if (f instanceof DeviceInfo) {
             DeviceInfo d = (DeviceInfo) f;
-            return String.format("%s %11d %d,%d %s %s", FileOps.modeToString(attrs.getMode()), attrs.getSize(), d.getMajor(), d.getMinor(), this.timeFormatter.format(t), d.getPathName());
+            return String.format("%s %11d %d,%d %s %s", FileOps.modeToString(attrs.getMode()), attrs.getSize(), d.getMajor(), d.getMinor(), timeFormatter.format(t), d.getPathName());
         }
-        return String.format("%s %11d %s %s", FileOps.modeToString(attrs.getMode()), attrs.getSize(), this.timeFormatter.format(t), f.getPathName());
+        return String.format("%s %11d %s %s", FileOps.modeToString(attrs.getMode()), attrs.getSize(), timeFormatter.format(t), f.getPathName());
     }
-
+    
     private Iterable<Path> getPaths(Iterable<String> pathNames) {
         List<Path> paths = new LinkedList<>();
         for (String pathName : pathNames) {
-            Path p = PathOps.get(this.cwd.getFileSystem(), pathName);
+            Path p = PathOps.get(cwd.getFileSystem(), pathName);
             paths.add(p);
         }
         return paths;
     }
-
+    
     private List<Option> options() {
         List<Option> options = new LinkedList<>();
-
+        
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "charset", "", "which charset to use (default UTF-8)", option -> {
             String charsetName = (String) option.getValue();
             try {
                 Charset charset = Charset.forName(charsetName);
-                this.clientBuilder.charset(charset);
+                clientBuilder.charset(charset);
                 return ArgumentParser.Status.CONTINUE;
             } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
                 throw new ArgumentParsingError(String.format("failed to set character set to %s: %s", charsetName, e));
             }
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "dirs", "d", "transfer directories without recursing (default " + "false unless listing files)", option -> {
-            if (this.fileSelection == FileSelection.RECURSE) {
+            if (fileSelection == FileSelection.RECURSE) {
                 throw new ArgumentParsingError("--recursive and --dirs are " + "incompatible options");
             }
-            this.fileSelection = FileSelection.TRANSFER_DIRS;
-            this.clientBuilder.fileSelection(this.fileSelection);
+            fileSelection = FileSelection.TRANSFER_DIRS;
+            clientBuilder.fileSelection(fileSelection);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "recursive", "r", "recurse into directories (default false)", option -> {
-            if (this.fileSelection == FileSelection.TRANSFER_DIRS) {
+            if (fileSelection == FileSelection.TRANSFER_DIRS) {
                 throw new ArgumentParsingError("--recursive and --dirs are " + "incompatible options");
             }
-            this.fileSelection = FileSelection.RECURSE;
-            this.clientBuilder.fileSelection(this.fileSelection);
+            fileSelection = FileSelection.RECURSE;
+            clientBuilder.fileSelection(fileSelection);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", "increase output verbosity (default quiet)", option -> {
-            this.clientBuilder.verbosity(this.verbosity++);
+            clientBuilder.verbosity(verbosity++);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "devices", "", "_simulate_ preserve character device files and " + "block device files (default false)", option -> {
-            this.clientBuilder.isPreserveDevices(true);
+            clientBuilder.isPreserveDevices(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "specials", "", "_simulate_ preserve special device files - named " + "sockets and named pipes (default false)", option -> {
-            this.clientBuilder.isPreserveSpecials(true);
+            clientBuilder.isPreserveSpecials(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "", "D", "same as --devices and --specials (default false)", option -> {
-            this.clientBuilder.isPreserveDevices(true);
-            this.clientBuilder.isPreserveSpecials(true);
+            clientBuilder.isPreserveDevices(true);
+            clientBuilder.isPreserveSpecials(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "links", "l", "preserve symlinks (default false)", option -> {
-            this.clientBuilder.isPreserveLinks(true);
+            clientBuilder.isPreserveLinks(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "perms", "p", "preserve file permissions (default false)", option -> {
-            this.clientBuilder.isPreservePermissions(true);
+            clientBuilder.isPreservePermissions(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "times", "t", "preserve last modification time (default false)", option -> {
-            this.clientBuilder.isPreserveTimes(true);
+            clientBuilder.isPreserveTimes(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "owner", "o", "preserve owner (default false)", option -> {
-            this.clientBuilder.isPreserveUser(true);
+            clientBuilder.isPreserveUser(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "group", "g", "preserve group (default false)", option -> {
-            this.clientBuilder.isPreserveGroup(true);
+            clientBuilder.isPreserveGroup(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "archive", "a", "archive mode - same as -rlptgoD (default false)", option -> {
-            this.clientBuilder.fileSelection(FileSelection.RECURSE).isPreserveLinks(true).isPreservePermissions(true).isPreserveTimes(true).isPreserveGroup(true).isPreserveUser(true)
+            clientBuilder.fileSelection(FileSelection.RECURSE).isPreserveLinks(true).isPreservePermissions(true).isPreserveTimes(true).isPreserveGroup(true).isPreserveUser(true)
                     .isPreserveDevices(true).isPreserveSpecials(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "delete", "", "delete extraneous files (default false)", option -> {
-            this.clientBuilder.isDelete(true);
+            clientBuilder.isDelete(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "numeric-ids", "", "don't map uid/gid values by user/group name " + "(default false)", option -> {
-            this.clientBuilder.isNumericIds(true);
+            clientBuilder.isNumericIds(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "ignore-times", "I", "transfer files that match both size and time " + "(default false)", option -> {
-            this.clientBuilder.isIgnoreTimes(true);
+            clientBuilder.isIgnoreTimes(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "stats", "", "show file transfer statistics", option -> {
-            this.showStatistics = true;
+            showStatistics = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "password-file", "", "read daemon-access password from specified file " + "(where `-' is stdin)", option -> {
-            this.passwordFile = (String) option.getValue();
+            passwordFile = (String) option.getValue();
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "port", "", String.format("server port number (default %d)", RsyncServer.DEFAULT_LISTEN_PORT), option -> {
             int port = (int) option.getValue();
             if (ConnectionInfo.isValidPortNumber(port)) {
-                this.remotePort = port;
+                remotePort = port;
                 return ArgumentParser.Status.CONTINUE;
             } else {
                 throw new ArgumentParsingError(String.format("illegal port %d - must be within " + "the range [%d, %d]", port, ConnectionInfo.PORT_MIN, ConnectionInfo.PORT_MAX));
             }
         }));
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "stdin", "", "read list of source files from stdin", option -> {
-            this.readStdin = true;
+            readStdin = true;
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         String deferredWriteHelp = "(receiver only) receiver defers writing into target tempfile as " + "long as possible to possibly eliminate all I/O writes for "
                 + "identical files. This comes at the cost of a highly increased " + "risk of the file being modified by a process already having it " + "opened (default false)";
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "defer-write", "", deferredWriteHelp, option -> {
-            this.clientBuilder.isDeferWrite(true);
+            clientBuilder.isDeferWrite(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "timeout", "", "set I/O read timeout in seconds (default 0 - " + "disabled)", option -> {
             int timeout = (int) option.getValue();
             if (timeout < 0) {
@@ -345,7 +345,7 @@ public class YajsyncClient {
             }
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "contimeout", "", "set daemon connection timeout in seconds (default " + "0 - disabled)", option -> {
             int contimeout = (int) option.getValue();
             if (contimeout >= 0) {
@@ -355,9 +355,9 @@ public class YajsyncClient {
                 throw new ArgumentParsingError(String.format("invalid connection timeout %d - " + "must be greater than or equal to 0", contimeout));
             }
         }));
-
-        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "", String.format("tunnel all data over TLS/SSL " + "(default %s)", this.useTLS), option -> {
-            this.useTLS = true;
+        
+        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "", String.format("tunnel all data over TLS/SSL " + "(default %s)", useTLS), option -> {
+            useTLS = true;
             // SSLChannel.read and SSLChannel.write depends on
             // ByteBuffer.array and ByteBuffer.arrayOffset.
             // Disable direct allocation if the resulting
@@ -367,53 +367,53 @@ public class YajsyncClient {
             }
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "cwd", "", "change current working directory (usable in " + "combination with --fs)", option -> {
-            this.cwdName = (String) option.getValue();
+            cwdName = (String) option.getValue();
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "fs", "", "use a non-default Java nio FileSystem implementation " + "(see also --cwd)", option -> {
             try {
                 String fsName = (String) option.getValue();
-                this.fs = PathOps.fileSystemOf(fsName);
-                this.cwdName = Util.firstOf(this.fs.getRootDirectories()).toString();
+                fs = PathOps.fileSystemOf(fsName);
+                cwdName = Util.firstOf(fs.getRootDirectories()).toString();
                 return ArgumentParser.Status.CONTINUE;
             } catch (IOException | URISyntaxException e) {
                 throw new ArgumentParsingError(e);
             }
         }));
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "filter", "f", "add a file-filtering RULE", option -> {
-            this.inputFilterRules.add((String) option.getValue());
+            inputFilterRules.add((String) option.getValue());
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "exclude", "", "exclude files matching PATTERN", option -> {
-
-            this.inputFilterRules.add("- " + (String) option.getValue());
+            
+            inputFilterRules.add("- " + (String) option.getValue());
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "exclude-from", "", "read exclude patterns from FILE", option -> {
-            this.inputFilterRules.add("merge,- " + (String) option.getValue());
+            inputFilterRules.add("merge,- " + (String) option.getValue());
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "include", "", "don't exclude files matching PATTERN", option -> {
-
-            this.inputFilterRules.add("+ " + (String) option.getValue());
+            
+            inputFilterRules.add("+ " + (String) option.getValue());
             return ArgumentParser.Status.CONTINUE;
-
+            
         }));
-
+        
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "include-from", "", "read list of source-file names from FILE", option -> {
-            this.inputFilterRules.add("merge,+ " + (String) option.getValue());
+            inputFilterRules.add("merge,+ " + (String) option.getValue());
             return ArgumentParser.Status.CONTINUE;
-
+            
         }));
         return options;
     }
-
+    
     private Triple<Mode, RsyncUrls, RsyncUrl> parseUnnamedArgs(List<String> unnamed) throws ArgumentParsingError {
         try {
             int len = unnamed.size();
@@ -423,17 +423,17 @@ public class YajsyncClient {
             }
             int numSrcArgs = len == 1 ? 1 : len - 1;
             List<String> srcFileNames = unnamed.subList(0, numSrcArgs);
-            RsyncUrls srcUrls = new RsyncUrls(this.cwd, srcFileNames);
+            RsyncUrls srcUrls = new RsyncUrls(cwd, srcFileNames);
             if (len == 1) {
                 if (srcUrls.isRemote()) {
                     return new Triple<>(Mode.REMOTE_LIST, srcUrls, null);
                 }
                 return new Triple<>(Mode.LOCAL_LIST, srcUrls, null);
             }
-
+            
             int indexOfLast = len - 1;
             String dstFileName = unnamed.get(indexOfLast);
-            RsyncUrl dstUrl = RsyncUrl.parse(this.cwd, dstFileName);
+            RsyncUrl dstUrl = RsyncUrl.parse(cwd, dstFileName);
             if (srcUrls.isRemote() && dstUrl.isRemote()) {
                 throw new ArgumentParsingError(String.format("source arguments %s and destination argument %s must" + " not both be remote", srcUrls, dstUrl));
             } else if (srcUrls.isRemote()) {
@@ -447,28 +447,28 @@ public class YajsyncClient {
             throw new ArgumentParsingError(e);
         }
     }
-
+    
     private RsyncClient.Result remoteTransfer(Mode mode, RsyncUrls srcArgs, RsyncUrl dstArgOrNull) throws RsyncException, InterruptedException {
         ConnectionInfo connInfo = srcArgs.isRemote() ? srcArgs.getConnectionInfo() : dstArgOrNull.getConnectionInfo();
-        ChannelFactory socketFactory = this.useTLS ? new SSLChannelFactory() : new StandardChannelFactory();
-
+        ChannelFactory socketFactory = useTLS ? new SSLChannelFactory() : new StandardChannelFactory();
+        
         if (LOG.isLoggable(Level.FINE)) {
-            LOG.fine(String.format("connecting to %s (TLS=%b)", connInfo, this.useTLS));
+            LOG.fine(String.format("connecting to %s (TLS=%b)", connInfo, useTLS));
         }
-
-        try (DuplexByteChannel sock = socketFactory.open(connInfo.getAddress(), connInfo.getPortNumber(), this.contimeout, this.timeout)) { // throws IOException
+        
+        try (DuplexByteChannel sock = socketFactory.open(connInfo.getAddress(), connInfo.getPortNumber(), contimeout, timeout)) { // throws IOException
             if (LOG.isLoggable(Level.FINE)) {
                 LOG.fine("connected to " + sock);
             }
-            this.userName = connInfo.getUserName();
-
-            boolean isInterruptible = !this.useTLS;
-            RsyncClient.Remote client = this.clientBuilder.buildRemote(sock /* in */, sock /* out */, isInterruptible);
+            userName = connInfo.getUserName();
+            
+            boolean isInterruptible = !useTLS;
+            RsyncClient.Remote client = clientBuilder.buildRemote(sock /* in */, sock /* out */, isInterruptible);
             switch (mode) {
                 case REMOTE_SEND:
-                    return client.send(this.getPaths(srcArgs.getPathNames())).to(dstArgOrNull.getModuleName(), dstArgOrNull.getPathName());
+                    return client.send(getPaths(srcArgs.getPathNames())).to(dstArgOrNull.getModuleName(), dstArgOrNull.getPathName());
                 case REMOTE_RECEIVE:
-                    return client.receive(srcArgs.getModuleName(), srcArgs.getPathNames()).to(PathOps.get(this.cwd.getFileSystem(), dstArgOrNull.getPathName()));
+                    return client.receive(srcArgs.getModuleName(), srcArgs.getPathNames()).to(PathOps.get(cwd.getFileSystem(), dstArgOrNull.getPathName()));
                 case REMOTE_LIST:
                     if (srcArgs.getModuleName().isEmpty()) {
                         RsyncClient.ModuleListing listing = client.listModules();
@@ -488,7 +488,7 @@ public class YajsyncClient {
                             if (isDone) {
                                 return listing.get();
                             }
-                            String ls = this.fileInfoToListingString(f);
+                            String ls = fileInfoToListingString(f);
                             System.out.println(ls);
                         }
                     }
@@ -510,76 +510,76 @@ public class YajsyncClient {
         }
         return RsyncClient.Result.failure();
     }
-
+    
     public YajsyncClient setStandardErr(PrintStream err) {
-        this.stderr = err;
-        this.clientBuilder.stderr(this.stderr);
+        stderr = err;
+        clientBuilder.stderr(stderr);
         return this;
     }
-
+    
     public YajsyncClient setStandardOut(PrintStream out) {
-        this.stdout = out;
+        stdout = out;
         return this;
     }
-
+    
     private void showStatistics(Statistics stats) {
-        this.stdout.format(
+        stdout.format(
                 "Number of files: %d%n" + "Number of files transferred: %d%n" + "Total file size: %d bytes%n" + "Total transferred file size: %d bytes%n" + "Literal data: %d bytes%n"
                         + "Matched data: %d bytes%n" + "File list size: %d%n" + "File list generation time: %.3f seconds%n" + "File list transfer time: %.3f seconds%n" + "Total bytes sent: %d%n"
                         + "Total bytes received: %d%n",
                 stats.getNumFiles(), stats.getNumTransferredFiles(), stats.getTotalFileSize(), stats.getTotalTransferredSize(), stats.getTotalLiteralSize(), stats.getTotalMatchedSize(),
                 stats.getTotalFileListSize(), stats.getFileListBuildTime() / 1000.0, stats.getFileListTransferTime() / 1000.0, stats.getTotalBytesWritten(), stats.getTotalBytesRead());
     }
-
+    
     public int start(String[] args) {
         ArgumentParser argsParser = ArgumentParser.newWithUnnamed(this.getClass().getSimpleName(), "files...");
-        argsParser.addHelpTextDestination(this.stdout);
-
+        argsParser.addHelpTextDestination(stdout);
+        
         try {
-            for (Option o : this.options()) {
+            for (Option o : options()) {
                 argsParser.add(o);
             }
             ArgumentParser.Status rc = argsParser.parse(Arrays.asList(args));
             if (rc != ArgumentParser.Status.CONTINUE) {
                 return rc == ArgumentParser.Status.EXIT_OK ? 0 : 1;
             }
-            this.cwd = this.fs.getPath(this.cwdName);
-
+            cwd = fs.getPath(cwdName);
+            
             List<String> unnamed = new LinkedList<>();
-            if (this.readStdin) {
+            if (readStdin) {
                 unnamed.addAll(readLinesFromStdin());
             }
             unnamed.addAll(argsParser.getUnnamedArguments());
-
-            Triple<Mode, RsyncUrls, RsyncUrl> res = this.parseUnnamedArgs(unnamed);
+            
+            Triple<Mode, RsyncUrls, RsyncUrl> res = parseUnnamedArgs(unnamed);
             Mode mode = res.getFirst();
             RsyncUrls srcArgs = res.getSecond();
             RsyncUrl dstArgOrNull = res.getThird();
-
-            if (this.remotePort != PORT_UNDEFINED && mode.isRemote()) {
-                Pair<RsyncUrls, RsyncUrl> res2 = updateRemotePort(this.cwd, this.remotePort, srcArgs, dstArgOrNull);
+            
+            if (remotePort != PORT_UNDEFINED && mode.isRemote()) {
+                Pair<RsyncUrls, RsyncUrl> res2 = updateRemotePort(cwd, remotePort, srcArgs, dstArgOrNull);
                 srcArgs = res2.getFirst();
                 dstArgOrNull = res2.getSecond();
             }
-
-            Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM + this.verbosity);
+            
+            Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM + verbosity);
             Util.setRootLogLevel(logLevel);
             if (LOG.isLoggable(Level.FINE)) {
                 LOG.fine(String.format("%s src: %s, dst: %s", mode, srcArgs, dstArgOrNull));
             }
-            this.clientBuilder.filterRuleConfiguration(new FilterRuleConfiguration(this.inputFilterRules));
-            
+            clientBuilder.filterRuleConfiguration(new FilterRuleConfiguration(inputFilterRules));
+
             RsyncClient.Result result;
             if (mode.isRemote()) {
-                result = this.remoteTransfer(mode, srcArgs, dstArgOrNull);
+                result = remoteTransfer(mode, srcArgs, dstArgOrNull);
             } else if (mode == Mode.LOCAL_COPY) {
                 if (LOG.isLoggable(Level.FINE)) {
                     LOG.fine("starting local transfer (using rsync's delta " + "transfer algorithm - i.e. will not run with a " + "--whole-file option, so performance is most "
                             + "probably lower than rsync)");
                 }
-                result = this.clientBuilder.buildLocal().copy(this.getPaths(srcArgs.getPathNames())).to(PathOps.get(this.cwd.getFileSystem(), dstArgOrNull.getPathName()));
+                result = clientBuilder.buildLocal().copy(getPaths(srcArgs.getPathNames())).to(PathOps.get(cwd.getFileSystem(), dstArgOrNull.getPathName()));
             } else if (mode == Mode.LOCAL_LIST) {
-                RsyncClient.FileListing listing = this.clientBuilder.buildLocal().list(this.getPaths(srcArgs.getPathNames()));
+                RsyncClient.FileListing listing = clientBuilder.buildLocal().list(getPaths(srcArgs.getPathNames()));
                 while (true) {
                     FileInfo f = listing.take();
                     boolean isDone = f == null;
@@ -587,25 +587,25 @@ public class YajsyncClient {
                         result = listing.get();
                         break;
                     }
-                    System.out.println(this.fileInfoToListingString(f));
+                    System.out.println(fileInfoToListingString(f));
                 }
             } else {
                 throw new AssertionError();
             }
-            this.statistics = result.statistics();
-            if (this.showStatistics) {
-                this.showStatistics(result.statistics());
+            statistics = result.statistics();
+            if (showStatistics) {
+                showStatistics(result.statistics());
             }
             if (LOG.isLoggable(Level.INFO)) {
                 LOG.info("exit status: " + (result.isOK() ? "OK" : "ERROR"));
             }
             return result.isOK() ? 0 : -1;
-
+            
         } catch (ArgumentParsingError e) {
-            this.stderr.println(e.getMessage());
-            this.stderr.println(argsParser.toUsageString());
+            stderr.println(e.getMessage());
+            stderr.println(argsParser.toUsageString());
         } catch (IOException e) { // reading from stdinp
-            this.stderr.println(e.getMessage());
+            stderr.println(e.getMessage());
         } catch (RsyncException e) {
             if (LOG.isLoggable(Level.SEVERE)) {
                 LOG.severe(e.getMessage());
@@ -617,8 +617,8 @@ public class YajsyncClient {
         }
         return -1;
     }
-
+    
     public Statistics statistics() {
-        return this.statistics;
+        return statistics;
     }
 }

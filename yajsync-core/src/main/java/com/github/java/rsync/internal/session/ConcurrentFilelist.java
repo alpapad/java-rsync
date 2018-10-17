@@ -28,30 +28,30 @@ public class ConcurrentFilelist extends Filelist {
     public ConcurrentFilelist(boolean isRecursive, boolean isPruneDuplicates) {
         super(isRecursive, isPruneDuplicates, Collections.synchronizedList(new ArrayList<Segment>()));
     }
-    
+
     @Override
     public Segment deleteFirstSegment() {
-        synchronized (this.segments) {
+        synchronized (segments) {
             return super.deleteFirstSegment();
         }
     }
-    
+
     @Override
     public Segment getSegmentWith(int fileIndex) {
         assert fileIndex >= 0;
-        synchronized (this.segments) {
+        synchronized (segments) {
             return super.getSegmentWith(fileIndex);
         }
     }
-    
+
     @Override
     public Segment newSegment(SegmentBuilder builder) {
         return super.newSegment(builder, new ConcurrentSkipListMap<Integer, FileInfo>());
     }
-    
+
     @Override
     public String toString() {
-        synchronized (this.segments) {
+        synchronized (segments) {
             return super.toString();
         }
     }

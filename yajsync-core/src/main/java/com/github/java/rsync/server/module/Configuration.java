@@ -51,9 +51,9 @@ public class Configuration implements Modules {
     private static class IllegalValueException extends Exception {
         private static final long serialVersionUID = 1L;
     }
-    
+
     public static class Reader extends ModuleProvider {
-        
+
         private static final Logger _log = Logger.getLogger(Reader.class.getName());
         private static final String DEFAULT_CONFIGURATION_FILE_NAME = "/home/alpapad/git/rsync/yajsync-orig/yajsync-app/yajsyncd.conf";
         private static final Pattern keyValuePattern = Pattern.compile("^([\\w ]+) *= *(\\S.*)$");
@@ -63,37 +63,37 @@ public class Configuration implements Modules {
         private static final String MODULE_KEY_IS_WRITABLE = "is_writable";
         private static final String MODULE_KEY_PATH = "path";
         private static final Pattern modulePattern = Pattern.compile("^\\[\\s*([\\w ]+)\\s*\\]$");
-        
+
         private static boolean isCommentLine(String line) {
             return line.startsWith("#") || line.startsWith(";");
         }
-        
+
         private static Map<String, Map<String, String>> parse(BufferedReader reader) throws IOException {
             String prevLine = "";
             Map<String, Map<String, String>> modules = new TreeMap<>(); // { 'moduleName1' : { 'key1' : 'val1', ..., 'keyN' : 'valN'}, ... }
             Map<String, String> currentModule = new TreeMap<>(); // { 'key1' : 'val1', ..., 'keyN' : 'valN'}
             modules.put("", currentModule); // { 'key1' : 'val1', ..., 'keyN' : 'valN'}
             boolean isEOF = false;
-            
+
             while (!isEOF) {
                 String line = reader.readLine();
                 isEOF = line == null;
                 if (line == null) {
                     line = "";
                 }
-                
+
                 String trimmedLine = prevLine + line.trim(); // prevLine is non-empty only if previous line ended with a backslash
                 if (trimmedLine.isEmpty() || isCommentLine(trimmedLine)) {
                     continue;
                 }
-                
+
                 String sep = FileSystems.getDefault().getSeparator();
                 if (!sep.equals(Text.BACK_SLASH) && trimmedLine.endsWith(Text.BACK_SLASH)) {
                     prevLine = Text.stripLast(trimmedLine);
                 } else {
                     prevLine = "";
                 }
-                
+
                 Matcher moduleMatcher = modulePattern.matcher(trimmedLine);
                 if (moduleMatcher.matches()) {
                     String moduleName = moduleMatcher.group(1).trim(); // TODO: remove consecutive white space in module name
@@ -113,7 +113,7 @@ public class Configuration implements Modules {
             }
             return modules;
         }
-        
+
         private static boolean toBoolean(String val) throws IllegalValueException {
             if (val == null) {
                 throw new IllegalValueException();
@@ -124,17 +124,17 @@ public class Configuration implements Modules {
             }
             throw new IllegalValueException();
         }
-        
+
         private String cfgFileName = Environment.getServerConfig(DEFAULT_CONFIGURATION_FILE_NAME);
-        
+
         public Reader() {
         }
-        
+
         @Override
         public void close() {
             // NOP
         }
-        
+
         private Map<String, Module> getModules(String fileName) throws ModuleException {
             Map<String, Map<String, String>> modules;
             try (BufferedReader reader = Files.newBufferedReader(Paths.get(fileName), Charset.defaultCharset())) {
@@ -142,19 +142,19 @@ public class Configuration implements Modules {
             } catch (IOException e) {
                 throw new ModuleException(e);
             }
-            
+
             Map<String, Module> result = new TreeMap<>();
-            
+
             for (Map.Entry<String, Map<String, String>> keyVal : modules.entrySet()) {
-                
+
                 String moduleName = keyVal.getKey();
                 Map<String, String> moduleContent = keyVal.getValue();
-                
+
                 boolean isGlobalModule = moduleName.isEmpty();
                 if (isGlobalModule) {
                     continue; // Not currently used
                 }
-                
+
                 String pathValue = moduleContent.get(MODULE_KEY_PATH);
                 boolean isValidModule = pathValue != null;
                 if (!isValidModule) {
@@ -163,7 +163,7 @@ public class Configuration implements Modules {
                     }
                     continue;
                 }
-                
+
                 try {
                     String fsValue = moduleContent.get(MODULE_KEY_FS);
                     FileSystem fs;
@@ -172,7 +172,7 @@ public class Configuration implements Modules {
                     } else {
                         fs = FileSystems.getDefault();
                     }
-                    
+
                     Path p = PathOps.get(fs, pathValue);
                     RestrictedPath vp = new RestrictedPath(moduleName, p);
                     SimpleModule m = new SimpleModule(moduleName, vp);
@@ -195,84 +195,84 @@ public class Configuration implements Modules {
             }
             return result;
         }
-        
+
         @Override
         public Configuration newAnonymous(InetAddress address) throws ModuleException {
-            Map<String, Module> modules = this.getModules(this.cfgFileName);
+            Map<String, Module> modules = getModules(cfgFileName);
             Configuration cfg = new Configuration(modules);
             return cfg;
         }
-        
+
         @Override
         public Configuration newAuthenticated(InetAddress address, Principal principal) throws ModuleException {
-            return this.newAnonymous(address);
+            return newAnonymous(address);
         }
-        
+
         @Override
         public Collection<Option> options() {
             List<Option> options = new LinkedList<>();
-            options.add(Option.newStringOption(Option.Policy.OPTIONAL, "config", "", String.format("path to configuration file (default " + "%s)", this.cfgFileName), option -> {
-                this.cfgFileName = (String) option.getValue();
+            options.add(Option.newStringOption(Option.Policy.OPTIONAL, "config", "", String.format("path to configuration file (default " + "%s)", cfgFileName), option -> {
+                cfgFileName = (String) option.getValue();
                 return ArgumentParser.Status.CONTINUE;
             }));
             return options;
         }
     }
-    
+
     private static class SimpleModule implements Module {
         private String comment = "";
         private boolean isReadable = true;
         private boolean isWritable = false;
         private final String name;
         private final RestrictedPath restrictedPath;
-        
+
         public SimpleModule(String name, RestrictedPath restrictedPath) {
             assert name != null;
             assert restrictedPath != null;
             this.name = name;
             this.restrictedPath = restrictedPath;
         }
-        
+
         @Override
         public String getComment() {
-            return this.comment;
+            return comment;
         }
-        
-        @Override
-        public boolean isReadable() {
-            return this.isReadable;
-        }
-        
-        @Override
-        public boolean isWritable() {
-            return this.isWritable;
-        }
-        
+
         @Override
         public String getName() {
-            return this.name;
+            return name;
         }
-        
+
         @Override
         public RestrictedPath getRestrictedPath() {
-            return this.restrictedPath;
+            return restrictedPath;
+        }
+
+        @Override
+        public boolean isReadable() {
+            return isReadable;
+        }
+
+        @Override
+        public boolean isWritable() {
+            return isWritable;
         }
     }
-    
+
     private final Map<String, Module> modules;
-    
+
     public Configuration(Map<String, Module> modules) {
         this.modules = modules;
     }
-    
+
     @Override
     public Iterable<Module> all() {
-        return this.modules.values();
+        return modules.values();
     }
-    
+
     @Override
     public Module get(String moduleName) throws ModuleException {
-        Module m = this.modules.get(moduleName);
+        Module m = modules.get(moduleName);
         if (m == null) {
             throw new ModuleNotFoundException(String.format("module %s does not exist", moduleName));
         }

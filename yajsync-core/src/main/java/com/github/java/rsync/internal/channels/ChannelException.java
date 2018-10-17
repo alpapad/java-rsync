@@ -22,11 +22,11 @@ import com.github.java.rsync.RsyncException;
 
 public class ChannelException extends RsyncException {
     private static final long serialVersionUID = 1L;
-    
+
     public ChannelException(Exception e) {
         super(e);
     }
-    
+
     public ChannelException(String message) {
         super(message);
     }

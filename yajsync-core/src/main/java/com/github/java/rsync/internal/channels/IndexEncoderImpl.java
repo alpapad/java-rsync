@@ -25,46 +25,46 @@ public class IndexEncoderImpl implements IndexEncoder {
     private final Writable dst;
     private int prevNegativeWriteIndex = 1;
     private int prevPositiveWriteIndex = -1;
-    
+
     public IndexEncoderImpl(Writable dst) {
         this.dst = dst;
     }
-    
+
     // A diff of 1 - 253 is sent as a one-byte diff; a diff of 254 - 32767
     // or 0 is sent as a 0xFE + a two-byte diff; otherwise send 0xFE
     // and all 4 bytes of the (non-negative) num with the high-bit set.
     @Override
     public void encodeIndex(int index) throws ChannelException {
         if (index == Filelist.DONE) {
-            this.dst.putByte((byte) 0);
+            dst.putByte((byte) 0);
             return;
         }
-        
+
         int indexPositive;
         int diff;
         if (index >= 0) {
             indexPositive = index;
-            diff = indexPositive - this.prevPositiveWriteIndex;
-            this.prevPositiveWriteIndex = indexPositive;
+            diff = indexPositive - prevPositiveWriteIndex;
+            prevPositiveWriteIndex = indexPositive;
         } else {
             indexPositive = -index;
-            diff = indexPositive - this.prevNegativeWriteIndex;
-            this.prevNegativeWriteIndex = indexPositive;
-            this.dst.putByte((byte) 0xFF);
+            diff = indexPositive - prevNegativeWriteIndex;
+            prevNegativeWriteIndex = indexPositive;
+            dst.putByte((byte) 0xFF);
         }
-        
+
         if (diff < 0xFE && diff > 0) {
-            this.dst.putByte((byte) diff);
+            dst.putByte((byte) diff);
         } else if (diff < 0 || diff > 0x7FFF) {
-            this.dst.putByte((byte) 0xFE);
-            this.dst.putByte((byte) (indexPositive >> 24 | 0x80));
-            this.dst.putByte((byte) indexPositive);
-            this.dst.putByte((byte) (indexPositive >> 8));
-            this.dst.putByte((byte) (indexPositive >> 16));
+            dst.putByte((byte) 0xFE);
+            dst.putByte((byte) (indexPositive >> 24 | 0x80));
+            dst.putByte((byte) indexPositive);
+            dst.putByte((byte) (indexPositive >> 8));
+            dst.putByte((byte) (indexPositive >> 16));
         } else {
-            this.dst.putByte((byte) 0xFE);
-            this.dst.putByte((byte) (diff >> 8));
-            this.dst.putByte((byte) diff);
+            dst.putByte((byte) 0xFE);
+            dst.putByte((byte) (diff >> 8));
+            dst.putByte((byte) diff);
         }
     }
 }

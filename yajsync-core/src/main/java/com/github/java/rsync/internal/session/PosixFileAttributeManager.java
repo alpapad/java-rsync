@@ -69,10 +69,10 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
         }
         return result;
     }
-    
+
     private static int toMode(PosixFileAttributes attrs) {
         int mode = 0;
-        
+
         if (attrs.isDirectory()) {
             mode |= FileOps.S_IFDIR;
         } else if (attrs.isRegularFile()) {
@@ -82,7 +82,7 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
         } else {
             mode |= FileOps.S_IFUNK;
         }
-        
+
         Set<PosixFilePermission> perms = attrs.permissions();
         if (perms.contains(PosixFilePermission.OWNER_READ)) {
             mode |= FileOps.S_IRUSR;
@@ -111,50 +111,50 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
         if (perms.contains(PosixFilePermission.OTHERS_EXECUTE)) {
             mode |= FileOps.S_IXOTH;
         }
-        
+
         return mode;
     }
-    
+
     private final int defaultGroupId;
     private final int defaultUserId;
-    
+
     private final Map<String, GroupPrincipal> nameToGroupPrincipal = new HashMap<>();
-    
+
     private final Map<String, UserPrincipal> nameToUserPrincipal = new HashMap<>();
-    
+
     public PosixFileAttributeManager(int defaultUserId, int defaultGroupId) {
         this.defaultUserId = defaultUserId;
         this.defaultGroupId = defaultGroupId;
     }
-    
+
     private GroupPrincipal getGroupPrincipalFrom(String groupName) throws IOException {
         try {
-            GroupPrincipal principal = this.nameToGroupPrincipal.get(groupName);
+            GroupPrincipal principal = nameToGroupPrincipal.get(groupName);
             if (principal == null) {
                 UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
                 principal = service.lookupPrincipalByGroupName(groupName);
-                this.nameToGroupPrincipal.put(groupName, principal);
+                nameToGroupPrincipal.put(groupName, principal);
             }
             return principal;
         } catch (UnsupportedOperationException e) {
             throw new IOException(e);
         }
     }
-    
+
     private UserPrincipal getUserPrincipalFrom(String userName) throws IOException {
         try {
-            UserPrincipal principal = this.nameToUserPrincipal.get(userName);
+            UserPrincipal principal = nameToUserPrincipal.get(userName);
             if (principal == null) {
                 UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
                 principal = service.lookupPrincipalByName(userName);
-                this.nameToUserPrincipal.put(userName, principal);
+                nameToUserPrincipal.put(userName, principal);
             }
             return principal;
         } catch (UnsupportedOperationException e) {
             throw new IOException(e);
         }
     }
-    
+
     @Override
     public void setFileMode(Path path, int mode, LinkOption... linkOption) throws IOException {
         // i.e. (mode & 07000) != 0;
@@ -165,19 +165,19 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
         Set<PosixFilePermission> perms = modeToPosixFilePermissions(mode);
         Files.setAttribute(path, "posix:permissions", perms, linkOption);
     }
-    
+
     @Override
     public void setGroup(Path path, Group group, LinkOption... linkOption) throws IOException {
-        GroupPrincipal principal = this.getGroupPrincipalFrom(group.getName());
+        GroupPrincipal principal = getGroupPrincipalFrom(group.getName());
         Files.setAttribute(path, "posix:group", principal, linkOption);
     }
-    
+
     @Override
     public void setOwner(Path path, User user, LinkOption... linkOption) throws IOException {
-        UserPrincipal principal = this.getUserPrincipalFrom(user.getName());
+        UserPrincipal principal = getUserPrincipalFrom(user.getName());
         Files.setAttribute(path, "posix:owner", principal, linkOption);
     }
-    
+
     @Override
     public RsyncFileAttributes stat(Path path) throws IOException {
         PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
@@ -185,8 +185,8 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
         String userName = userPrincipal.getName();
         GroupPrincipal groupPrincipal = attrs.group();
         String groupName = groupPrincipal.getName();
-        this.nameToUserPrincipal.putIfAbsent(userName, userPrincipal);
-        this.nameToGroupPrincipal.putIfAbsent(groupName, groupPrincipal);
-        return new RsyncFileAttributes(toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), new User(userName, this.defaultUserId), new Group(groupName, this.defaultGroupId));
+        nameToUserPrincipal.putIfAbsent(userName, userPrincipal);
+        nameToGroupPrincipal.putIfAbsent(groupName, groupPrincipal);
+        return new RsyncFileAttributes(toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), new User(userName, defaultUserId), new Group(groupName, defaultGroupId));
     }
 }

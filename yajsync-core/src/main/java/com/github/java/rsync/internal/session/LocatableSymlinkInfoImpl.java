@@ -23,16 +23,16 @@ import com.github.java.rsync.attr.RsyncFileAttributes;
 
 class LocatableSymlinkInfoImpl extends SymlinkInfoImpl implements LocatableSymlinkInfo {
     private final Path path;
-    
+
     LocatableSymlinkInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, String targetPathName, Path path) {
         super(pathName, pathNameBytes, attrs, targetPathName);
         assert path != null;
         assert path.isAbsolute();
         this.path = path;
     }
-    
+
     @Override
     public Path getPath() {
-        return this.path;
+        return path;
     }
 }

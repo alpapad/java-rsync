@@ -23,7 +23,7 @@ import java.security.NoSuchAlgorithmException;
 
 public final class MD5 {
     private static final String MD5_NAME = "MD5";
-    
+
     public static String md5DigestToString(byte[] digestBuf) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < digestBuf.length; i++) {
@@ -31,7 +31,7 @@ public final class MD5 {
         }
         return sb.toString();
     }
-    
+
     public static MessageDigest newInstance() {
         try {
             return MessageDigest.getInstance(MD5_NAME);
@@ -39,7 +39,7 @@ public final class MD5 {
             throw new RuntimeException(e); // support for MD5 is required so this should not happen
         }
     }
-    
+
     private MD5() {
     }
 }

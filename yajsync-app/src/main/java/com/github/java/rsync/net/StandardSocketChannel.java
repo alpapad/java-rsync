@@ -34,12 +34,12 @@ public class StandardSocketChannel implements DuplexByteChannel {
         socketChannel.socket().connect(socketAddress, contimeout);
         return new StandardSocketChannel(socketChannel, timeout);
     }
-
+    
     private final InputStream is;
     private final SocketChannel socketChannel;
-
+    
     private final int timeout;
-
+    
     public StandardSocketChannel(SocketChannel socketChannel, int timeout) throws IOException {
         if (timeout > 0) {
             assert Environment.hasAllocateDirectArray() || !Environment.isAllocateDirect();
@@ -47,25 +47,20 @@ public class StandardSocketChannel implements DuplexByteChannel {
         this.socketChannel = socketChannel;
         this.timeout = timeout;
         this.socketChannel.socket().setSoTimeout(timeout);
-        this.is = this.socketChannel.socket().getInputStream();
+        is = this.socketChannel.socket().getInputStream();
     }
-
+    
     @Override
     public void close() throws IOException {
-        this.socketChannel.close();
+        socketChannel.close();
     }
-
-    @Override
-    public boolean isOpen() {
-        return this.socketChannel.isOpen();
-    }
-
+    
     @Override
     public InetAddress getPeerAddress() {
         try {
-            InetSocketAddress socketAddress = (InetSocketAddress) this.socketChannel.getRemoteAddress();
+            InetSocketAddress socketAddress = (InetSocketAddress) socketChannel.getRemoteAddress();
             if (socketAddress == null) {
-                throw new IllegalStateException(String.format("unable to determine remote address of %s - not connected", this.socketChannel));
+                throw new IllegalStateException(String.format("unable to determine remote address of %s - not connected", socketChannel));
             }
             InetAddress addrOrNull = socketAddress.getAddress();
             if (addrOrNull == null) {
@@ -76,35 +71,40 @@ public class StandardSocketChannel implements DuplexByteChannel {
             throw new IllegalStateException(e);
         }
     }
-
+    
     @Override
     public Optional<Principal> getPeerPrincipal() {
         return Optional.empty();
     }
-
+    
+    @Override
+    public boolean isOpen() {
+        return socketChannel.isOpen();
+    }
+    
     @Override
     public int read(ByteBuffer dst) throws IOException {
-        if (this.timeout == 0) {
-            return this.socketChannel.read(dst);
+        if (timeout == 0) {
+            return socketChannel.read(dst);
         }
-
+        
         byte[] buf = dst.array();
         int offset = dst.arrayOffset() + dst.position();
         int len = dst.remaining();
-        int n = this.is.read(buf, offset, len);
+        int n = is.read(buf, offset, len);
         if (n != -1) {
             dst.position(dst.position() + n);
         }
         return n;
     }
-
+    
     @Override
     public String toString() {
-        return this.socketChannel.toString();
+        return socketChannel.toString();
     }
-
+    
     @Override
     public int write(ByteBuffer src) throws IOException {
-        return this.socketChannel.write(src);
+        return socketChannel.write(src);
     }
 }

@@ -34,6 +34,6 @@ package com.github.java.rsync.attr;
  */
 public interface FileInfo extends Comparable<FileInfo> {
     RsyncFileAttributes getAttributes();
-    
+
     String getPathName();
 }

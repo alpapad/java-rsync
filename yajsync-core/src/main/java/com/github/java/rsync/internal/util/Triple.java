@@ -20,21 +20,21 @@ public final class Triple<S, T, U> {
     private final S first;
     private final T second;
     private final U third;
-    
+
     public Triple(S first, T second, U third) {
         this.first = first;
         this.second = second;
         this.third = third;
     }
-    
+
     public S getFirst() {
         return this.first;
     }
-    
+
     public T getSecond() {
         return this.second;
     }
-    
+
     public U getThird() {
         return this.third;
     }

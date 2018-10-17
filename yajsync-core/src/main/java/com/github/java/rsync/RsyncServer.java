@@ -39,15 +39,15 @@ import com.github.java.rsync.server.module.Modules;
 public class RsyncServer {
     public static class Builder {
         private Charset charset = Charset.forName(Text.UTF8_NAME);
-        private ExecutorService executorService;
         private boolean deferWrite;
-        
+        private ExecutorService executorService;
+
         public RsyncServer build(ExecutorService executorService) {
             assert executorService != null;
             this.executorService = executorService;
             return new RsyncServer(this);
         }
-        
+
         /**
          *
          * @throws UnsupportedCharsetException if charset is not supported
@@ -58,37 +58,37 @@ public class RsyncServer {
             this.charset = charset;
             return this;
         }
-        
+
         public Builder isDeferWrite(boolean isDeferWrite) {
-            this.deferWrite = isDeferWrite;
+            deferWrite = isDeferWrite;
             return this;
         }
     }
-    
+
     public static final int DEFAULT_LISTEN_PORT = 2873;
-    
+
     private final Charset charset;
     private final boolean deferWrite;
     private final RsyncTaskExecutor rsyncTaskExecutor;
-    
+
     private RsyncServer(Builder builder) {
-        this.deferWrite = builder.deferWrite;
-        this.charset = builder.charset;
-        this.rsyncTaskExecutor = new RsyncTaskExecutor(builder.executorService);
+        deferWrite = builder.deferWrite;
+        charset = builder.charset;
+        rsyncTaskExecutor = new RsyncTaskExecutor(builder.executorService);
     }
-    
+
     public boolean serve(Modules modules, ReadableByteChannel in, WritableByteChannel out, boolean isChannelsInterruptible) throws RsyncException, InterruptedException {
         assert modules != null;
         assert in != null;
         assert out != null;
         // throws IllegalArgumentException if charset is not supported
-        ServerSessionConfig cfg = ServerSessionConfig.handshake(this.charset, in, out, modules);
+        ServerSessionConfig cfg = ServerSessionConfig.handshake(charset, in, out, modules);
         if (cfg.getStatus() == SessionStatus.ERROR) {
             return false;
         } else if (cfg.getStatus() == SessionStatus.EXIT) {
             return true;
         }
-        
+
         if (cfg.isSender()) {
             Sender sender = Sender.Builder.newServer(in, out, cfg.getSourceFiles(), cfg.getChecksumSeed())//
                     .filterMode(FilterMode.RECEIVE)//
@@ -103,7 +103,7 @@ public class RsyncServer {
                     .isInterruptible(isChannelsInterruptible)//
                     .isSafeFileList(cfg.isSafeFileList())//
                     .build();
-            return this.rsyncTaskExecutor.exec(sender);
+            return rsyncTaskExecutor.exec(sender);
         } else {
             Generator generator = new Generator.Builder(out, cfg.getChecksumSeed())//
                     .charset(cfg.getCharset())//
@@ -120,13 +120,13 @@ public class RsyncServer {
                     .isAlwaysItemize(cfg.getVerbosity() > 1)//
                     .isInterruptible(isChannelsInterruptible)//
                     .build();
-            
+
             Receiver receiver = Receiver.Builder.newServer(generator, in, cfg.getReceiverDestination())//
                     .filterMode(cfg.isDelete() ? FilterMode.RECEIVE : FilterMode.NONE)//
-                    .isDeferWrite(this.deferWrite)//
+                    .isDeferWrite(deferWrite)//
                     .isSafeFileList(cfg.isSafeFileList())//
                     .build();
-            return this.rsyncTaskExecutor.exec(generator, receiver);
+            return rsyncTaskExecutor.exec(generator, receiver);
         }
     }
 }

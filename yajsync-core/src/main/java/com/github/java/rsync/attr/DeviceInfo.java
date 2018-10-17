@@ -18,6 +18,6 @@ package com.github.java.rsync.attr;
 
 public interface DeviceInfo extends FileInfo {
     int getMajor();
-    
+
     int getMinor();
 }

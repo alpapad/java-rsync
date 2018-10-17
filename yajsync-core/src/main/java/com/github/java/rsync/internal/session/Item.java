@@ -20,7 +20,7 @@
 package com.github.java.rsync.internal.session;
 
 final class Item {
-    
+
     public static final char BASIS_TYPE_FOLLOWS = 1 << 11;
     public static final char IS_NEW = 1 << 13; // used
     public static final char LOCAL_CHANGE = 1 << 14; // used
@@ -38,11 +38,11 @@ final class Item {
     public static final char TRANSFER = 1 << 15; // used
     public static final char XNAME_FOLLOWS = 1 << 12;
     private static final char supported = IS_NEW | LOCAL_CHANGE | REPORT_CHANGE | REPORT_OWNER | REPORT_GROUP | REPORT_PERMS | REPORT_SIZE | REPORT_TIME | TRANSFER;
-    
+
     public static boolean isValidItem(int flags) {
         return (flags | supported) == supported;
     }
-    
+
     private Item() {
     }
 }

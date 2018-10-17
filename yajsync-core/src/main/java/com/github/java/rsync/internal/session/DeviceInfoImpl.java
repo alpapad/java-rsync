@@ -22,7 +22,7 @@ import com.github.java.rsync.attr.RsyncFileAttributes;
 class DeviceInfoImpl extends FileInfoImpl implements DeviceInfo {
     private final int major;
     private final int minor;
-    
+
     DeviceInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, int major, int minor) {
         super(pathName, pathNameBytes, attrs);
         assert attrs.isBlockDevice() || attrs.isCharacterDevice() || attrs.isFifo() || attrs.isSocket();
@@ -31,14 +31,14 @@ class DeviceInfoImpl extends FileInfoImpl implements DeviceInfo {
         this.major = major;
         this.minor = minor;
     }
-    
+
     @Override
     public int getMajor() {
-        return this.major;
+        return major;
     }
-    
+
     @Override
     public int getMinor() {
-        return this.minor;
+        return minor;
     }
 }

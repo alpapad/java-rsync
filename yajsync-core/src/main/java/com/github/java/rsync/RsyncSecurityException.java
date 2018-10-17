@@ -24,11 +24,11 @@ package com.github.java.rsync;
  */
 public class RsyncSecurityException extends RsyncException {
     private static final long serialVersionUID = 1L;
-    
+
     public RsyncSecurityException(Exception e) {
         super(e);
     }
-    
+
     public RsyncSecurityException(String message) {
         super(message);
     }

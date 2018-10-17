@@ -18,7 +18,7 @@ package com.github.java.rsync.server.module;
 
 public class ModuleNotFoundException extends ModuleException {
     private static final long serialVersionUID = 1L;
-    
+
     public ModuleNotFoundException(String message) {
         super(message);
     }

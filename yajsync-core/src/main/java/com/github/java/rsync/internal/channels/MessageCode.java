@@ -38,14 +38,14 @@ public enum MessageCode {
     REDO(9), /* successfully updated indicated flist index */
     SUCCESS(100), /* successfully deleted a file on receiving side */
     WARNING(4); /* sender failed to open a file we wanted */
-    
+
     private static final Map<Integer, MessageCode> map = new HashMap<>();
     static {
         for (MessageCode message : MessageCode.values()) {
             map.put(message.getValue(), message);
         }
     }
-    
+
     /**
      * @throws IllegalArgumentException
      */
@@ -56,14 +56,14 @@ public enum MessageCode {
         }
         return message;
     }
-    
+
     private final int value;
-    
+
     MessageCode(int value) {
         this.value = value;
     }
-    
+
     public int getValue() {
-        return this.value;
+        return value;
     }
 }

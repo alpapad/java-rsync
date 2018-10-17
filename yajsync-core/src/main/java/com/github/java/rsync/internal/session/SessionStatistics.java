@@ -34,59 +34,59 @@ public class SessionStatistics implements Statistics {
     long totalLiteralSize;
     long totalMatchedSize;
     long totalTransferredSize;
-    
+
     @Override
     public long getFileListBuildTime() {
-        return this.fileListBuildTime;
+        return fileListBuildTime;
     }
-    
+
     @Override
     public long getFileListTransferTime() {
-        return this.fileListTransferTime;
+        return fileListTransferTime;
     }
-    
+
     @Override
     public int getNumFiles() {
-        return this.numFiles;
+        return numFiles;
     }
-    
+
     @Override
     public int getNumTransferredFiles() {
-        return this.numTransferredFiles;
+        return numTransferredFiles;
     }
-    
+
     @Override
     public long getTotalBytesRead() {
-        return this.totalBytesRead;
+        return totalBytesRead;
     }
-    
+
     @Override
     public long getTotalBytesWritten() {
-        return this.totalBytesWritten;
+        return totalBytesWritten;
     }
-    
+
     @Override
     public long getTotalFileListSize() {
-        return this.totalFileListSize;
+        return totalFileListSize;
     }
-    
+
     @Override
     public long getTotalFileSize() {
-        return this.totalFileSize;
+        return totalFileSize;
     }
-    
+
     @Override
     public long getTotalLiteralSize() {
-        return this.totalLiteralSize;
+        return totalLiteralSize;
     }
-    
+
     @Override
     public long getTotalMatchedSize() {
-        return this.totalMatchedSize;
+        return totalMatchedSize;
     }
-    
+
     @Override
     public long getTotalTransferredSize() {
-        return this.totalTransferredSize;
+        return totalTransferredSize;
     }
 }

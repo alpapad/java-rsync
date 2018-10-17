@@ -43,71 +43,71 @@ public class SSLChannel implements DuplexByteChannel {
         sock.connect(socketAddress, contimeout);
         return new SSLChannel((SSLSocket) sock, timeout);
     }
-    
+
     private final InputStream is;
     private final OutputStream os;
-    
+
     private final SSLSocket sslSocket;
-    
+
     public SSLChannel(SSLSocket sslSocket, int timeout) throws IOException {
         assert Environment.hasAllocateDirectArray() || !Environment.isAllocateDirect();
         this.sslSocket = sslSocket;
         this.sslSocket.setSoTimeout(timeout);
-        this.is = this.sslSocket.getInputStream();
-        this.os = this.sslSocket.getOutputStream();
+        is = this.sslSocket.getInputStream();
+        os = this.sslSocket.getOutputStream();
     }
-    
+
     @Override
     public void close() throws IOException {
-        this.sslSocket.close(); // will implicitly close is and os also
+        sslSocket.close(); // will implicitly close is and os also
     }
-    
+
     @Override
     public InetAddress getPeerAddress() {
-        InetAddress address = this.sslSocket.getInetAddress();
+        InetAddress address = sslSocket.getInetAddress();
         if (address == null) {
-            throw new IllegalStateException(String.format("unable to determine remote address of %s - not connected", this.sslSocket));
+            throw new IllegalStateException(String.format("unable to determine remote address of %s - not connected", sslSocket));
         }
         return address;
     }
-    
+
     @Override
     public Optional<Principal> getPeerPrincipal() {
         try {
-            return Optional.of(this.sslSocket.getSession().getPeerPrincipal());
+            return Optional.of(sslSocket.getSession().getPeerPrincipal());
         } catch (SSLPeerUnverifiedException e) {
             return Optional.empty();
         }
     }
-    
+
     @Override
     public boolean isOpen() {
-        return !this.sslSocket.isClosed();
+        return !sslSocket.isClosed();
     }
-    
+
     @Override
     public int read(ByteBuffer dst) throws IOException {
         byte[] buf = dst.array();
         int offset = dst.arrayOffset() + dst.position();
         int len = dst.remaining();
-        int n = this.is.read(buf, offset, len);
+        int n = is.read(buf, offset, len);
         if (n != -1) {
             dst.position(dst.position() + n);
         }
         return n;
     }
-    
+
     @Override
     public String toString() {
-        return this.sslSocket.toString();
+        return sslSocket.toString();
     }
-    
+
     @Override
     public int write(ByteBuffer src) throws IOException {
         byte[] buf = src.array();
         int offset = src.arrayOffset() + src.position();
         int len = src.remaining();
-        this.os.write(buf, offset, len);
+        os.write(buf, offset, len);
         src.position(src.position() + len);
         return len;
     }

@@ -20,11 +20,11 @@ package com.github.java.rsync.internal.io;
 
 public class FileViewException extends Exception {
     private static final long serialVersionUID = 1L;
-    
+
     FileViewException(Exception e) {
         super(e);
     }
-    
+
     FileViewException(String message) {
         super(message);
     }

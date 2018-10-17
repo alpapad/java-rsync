@@ -21,10 +21,10 @@ package com.github.java.rsync.internal.session;
 
 final class IoError {
     public static final int GENERAL = 1 << 0;
-    
+
     public static final int TRANSFER = 1 << 31;
     public static final int VANISHED = 1 << 1;
-    
+
     private IoError() {
     }
 }

@@ -24,15 +24,15 @@ import com.github.java.rsync.internal.util.Environment;
 public final class Group {
     public static final int ID_MAX = 65535;
     private static final int ID_NOBODY = ID_MAX - 1;
-    
+
     private static final int MAX_NAME_LENGTH = 255;
     public static final Group NOBODY = new Group("nobody", ID_NOBODY);
     public static final Group ROOT = new Group("root", 0);
     public static final Group JVM_GROUP = new Group(Environment.getGroupName(), Environment.getGroupId());
-    
+
     private final int id;
     private final String name;
-    
+
     public Group(String name, int id) {
         if (name == null) {
             throw new IllegalArgumentException();
@@ -46,33 +46,33 @@ public final class Group {
         this.name = name;
         this.id = id;
     }
-    
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
             return true;
         } else if (other != null && this.getClass() == other.getClass()) {
             Group otherGroup = (Group) other;
-            return this.id == otherGroup.id && this.name.equals(otherGroup.name);
+            return id == otherGroup.id && name.equals(otherGroup.name);
         }
         return false;
     }
-    
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(this.name, this.id);
+        return Objects.hash(name, id);
     }
-    
-    public int getId() {
-        return this.id;
-    }
-    
-    public String getName() {
-        return this.name;
-    }
-    
+
     @Override
     public String toString() {
-        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), this.name, this.id);
+        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), name, id);
     }
 }

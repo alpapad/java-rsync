@@ -27,48 +27,48 @@ public class IndexDecoderImpl implements IndexDecoder {
     private int prevPositiveReadIndex = -1;
     private final byte[] readBuf = new byte[4];
     private final Readable src;
-    
+
     public IndexDecoderImpl(Readable src) {
         this.src = src;
     }
-    
+
     @Override
     public int decodeIndex() throws ChannelException {
-        this.readBuf[0] = this.src.getByte();
-        if (this.readBuf[0] == 0) {
+        readBuf[0] = src.getByte();
+        if (readBuf[0] == 0) {
             return Filelist.DONE;
         }
-        
+
         int prevVal;
         boolean setNegative = false;
-        if ((0xFF & this.readBuf[0]) == 0xFF) {
-            this.readBuf[0] = this.src.getByte();
-            prevVal = this.prevNegativeReadIndex;
+        if ((0xFF & readBuf[0]) == 0xFF) {
+            readBuf[0] = src.getByte();
+            prevVal = prevNegativeReadIndex;
             setNegative = true;
         } else {
-            prevVal = this.prevPositiveReadIndex;
+            prevVal = prevPositiveReadIndex;
         }
-        
+
         int value;
-        if ((0xFF & this.readBuf[0]) == 0xFE) {
-            this.src.get(this.readBuf, 0, 2);
-            if ((0x80 & this.readBuf[0]) != 0) {
-                this.readBuf[3] = (byte) (~0x80 & this.readBuf[0]);
-                this.readBuf[0] = this.readBuf[1];
-                this.src.get(this.readBuf, 1, 2);
-                value = BitOps.toBigEndianInt(this.readBuf, 0);
+        if ((0xFF & readBuf[0]) == 0xFE) {
+            src.get(readBuf, 0, 2);
+            if ((0x80 & readBuf[0]) != 0) {
+                readBuf[3] = (byte) (~0x80 & readBuf[0]);
+                readBuf[0] = readBuf[1];
+                src.get(readBuf, 1, 2);
+                value = BitOps.toBigEndianInt(readBuf, 0);
             } else {
-                value = ((0xFF & this.readBuf[0]) << 8) + (0xFF & this.readBuf[1]) + prevVal;
+                value = ((0xFF & readBuf[0]) << 8) + (0xFF & readBuf[1]) + prevVal;
             }
         } else {
-            value = (0xFF & this.readBuf[0]) + prevVal;
+            value = (0xFF & readBuf[0]) + prevVal;
         }
-        
+
         if (setNegative) {
-            this.prevNegativeReadIndex = value;
+            prevNegativeReadIndex = value;
             return -value;
         } else {
-            this.prevPositiveReadIndex = value;
+            prevPositiveReadIndex = value;
             return value;
         }
     }

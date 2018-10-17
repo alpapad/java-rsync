@@ -24,15 +24,15 @@ import com.github.java.rsync.internal.util.Environment;
 public final class User {
     public static final int ID_MAX = 65535;
     private static final int ID_NOBODY = ID_MAX - 1;
-    
+
     private static final int MAX_NAME_LENGTH = 255;
     public static final User NOBODY = new User("nobody", ID_NOBODY);
     public static final User ROOT = new User("root", 0);
     public static final User JVM_USER = new User(Environment.getUserName(), Environment.getUserId());
-    
+
     private final int id;
     private final String name;
-    
+
     public User(String name, int uid) {
         if (name == null) {
             throw new IllegalArgumentException();
@@ -44,35 +44,35 @@ public final class User {
             throw new IllegalArgumentException();
         }
         this.name = name;
-        this.id = uid;
+        id = uid;
     }
-    
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
             return true;
         } else if (other != null && this.getClass() == other.getClass()) {
             User otherUser = (User) other;
-            return this.id == otherUser.id && this.name.equals(otherUser.name);
+            return id == otherUser.id && name.equals(otherUser.name);
         }
         return false;
     }
-    
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(this.name, this.id);
+        return Objects.hash(name, id);
     }
-    
-    public int getId() {
-        return this.id;
-    }
-    
-    public String getName() {
-        return this.name;
-    }
-    
+
     @Override
     public String toString() {
-        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), this.name, this.id);
+        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), name, id);
     }
 }

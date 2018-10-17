@@ -47,7 +47,7 @@ import com.github.java.rsync.internal.util.Pair;
 
 public final class UnixFileAttributeManager extends FileAttributeManager {
     private static final Pattern ENTRY_PATTERN = Pattern.compile("^([^:]+):[^:]+:(\\d+):.*$");
-    
+
     private static boolean canStatOwnerAndGroup(Path path) {
         try {
             Files.readAttributes(path, "unix:owner,group", LinkOption.NOFOLLOW_LINKS);
@@ -56,7 +56,7 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
             return false;
         }
     }
-    
+
     private static Map<Integer, String> getEntries(BufferedReader reader) throws IOException {
         Map<Integer, String> idToName = new HashMap<>();
         while (true) {
@@ -72,14 +72,14 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
             }
         }
     }
-    
+
     private static Map<Integer, String> getNssEntries(String passwdOrGroup) throws IOException {
         Process p = new ProcessBuilder("getent", passwdOrGroup).start();
         try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
             return getEntries(r);
         }
     }
-    
+
     private static Pair<Map<Integer, String>, Map<Integer, String>> getUserAndGroupCaches() throws IOException {
         Map<Integer, String> userIdToUserName;
         Map<Integer, String> groupIdToGroupName;
@@ -103,7 +103,7 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
         }
         return new Pair<>(userIdToUserName, groupIdToGroupName);
     }
-    
+
     private static Map<String, GroupPrincipal> groupPrincipalsOf(Collection<String> groupNames) {
         UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
         Map<String, GroupPrincipal> res = new HashMap<>(groupNames.size());
@@ -119,17 +119,17 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
         }
         return res;
     }
-    
+
     private static boolean isNssAvailable() {
         return Files.isReadable(Paths.get("/etc/nsswitch.conf")) && Environment.isExecutable("getent");
     }
-    
+
     private static Map<Integer, String> readPasswdOrGroupFile(String passwdOrGroup) throws IOException {
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(passwdOrGroup), Charset.defaultCharset())) {
             return getEntries(reader);
         }
     }
-    
+
     private static Map<String, UserPrincipal> userPrincipalsOf(Collection<String> userNames) {
         UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
         Map<String, UserPrincipal> res = new HashMap<>(userNames.size());
@@ -145,49 +145,49 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
         }
         return res;
     }
-    
-    private final Group defaultGroup;
-    
-    private final User defaultUser;
-    
-    private final Map<Integer, String> groupIdToGroupName;
-    
+
     private final boolean cacheEnabled;
-    
+
+    private final Group defaultGroup;
+
+    private final User defaultUser;
+
+    private final Map<Integer, String> groupIdToGroupName;
+
     private final Map<String, GroupPrincipal> nameToGroupPrincipal;
-    
+
     private final Map<String, UserPrincipal> nameToUserPrincipal;
-    
+
     private final Map<Integer, String> userIdToUserName;
-    
+
     public UnixFileAttributeManager(User defaultUser, Group defaultGroup, boolean isPreserveUser, boolean isPreserveGroup) throws IOException {
         this.defaultUser = defaultUser;
         this.defaultGroup = defaultGroup;
-        
+
         Pair<Map<Integer, String>, Map<Integer, String>> resOrNull = getUserAndGroupCaches();
-        this.cacheEnabled = resOrNull != null;
-        
-        if (this.cacheEnabled) {
-            this.userIdToUserName = resOrNull.getFirst();
-            this.groupIdToGroupName = resOrNull.getSecond();
+        cacheEnabled = resOrNull != null;
+
+        if (cacheEnabled) {
+            userIdToUserName = resOrNull.getFirst();
+            groupIdToGroupName = resOrNull.getSecond();
             if (isPreserveUser) {
-                this.nameToUserPrincipal = userPrincipalsOf(this.userIdToUserName.values());
+                nameToUserPrincipal = userPrincipalsOf(userIdToUserName.values());
             } else {
-                this.nameToUserPrincipal = Collections.emptyMap();
+                nameToUserPrincipal = Collections.emptyMap();
             }
             if (isPreserveGroup) {
-                this.nameToGroupPrincipal = groupPrincipalsOf(this.groupIdToGroupName.values());
+                nameToGroupPrincipal = groupPrincipalsOf(groupIdToGroupName.values());
             } else {
-                this.nameToGroupPrincipal = Collections.emptyMap();
+                nameToGroupPrincipal = Collections.emptyMap();
             }
         } else {
-            this.userIdToUserName = null;
-            this.groupIdToGroupName = null;
-            this.nameToUserPrincipal = null;
-            this.nameToGroupPrincipal = null;
+            userIdToUserName = null;
+            groupIdToGroupName = null;
+            nameToUserPrincipal = null;
+            nameToGroupPrincipal = null;
         }
     }
-    
+
     private RsyncFileAttributes cachedStat(Path path) throws IOException {
         String toStat = "unix:mode,lastModifiedTime,size,uid,gid";
         Map<String, Object> attrs = Files.readAttributes(path, toStat, LinkOption.NOFOLLOW_LINKS);
@@ -196,14 +196,14 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
         long size = (long) attrs.get("size");
         int uid = (int) attrs.get("uid");
         int gid = (int) attrs.get("gid");
-        String userName = this.userIdToUserName.getOrDefault(uid, this.defaultUser.getName());
-        String groupName = this.groupIdToGroupName.getOrDefault(gid, this.defaultGroup.getName());
+        String userName = userIdToUserName.getOrDefault(uid, defaultUser.getName());
+        String groupName = groupIdToGroupName.getOrDefault(gid, defaultGroup.getName());
         User user = new User(userName, uid);
         Group group = new Group(groupName, gid);
-        
+
         return new RsyncFileAttributes(mode, size, mtime, user, group);
     }
-    
+
     private RsyncFileAttributes fullStat(Path path) throws IOException {
         String toStat = "unix:mode,lastModifiedTime,size,uid,gid,owner,group";
         Map<String, Object> attrs = Files.readAttributes(path, toStat, LinkOption.NOFOLLOW_LINKS);
@@ -216,14 +216,14 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
         String groupName = ((GroupPrincipal) attrs.get("group")).getName();
         User user = new User(userName, uid);
         Group group = new Group(groupName, gid);
-        
+
         return new RsyncFileAttributes(mode, size, mtime, user, group);
     }
-    
+
     private GroupPrincipal getGroupPrincipalFrom(String groupName) throws IOException {
         try {
-            if (this.cacheEnabled) {
-                return this.nameToGroupPrincipal.get(groupName);
+            if (cacheEnabled) {
+                return nameToGroupPrincipal.get(groupName);
             }
             UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
             return service.lookupPrincipalByGroupName(groupName);
@@ -231,11 +231,11 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
             return null;
         }
     }
-    
+
     private UserPrincipal getUserPrincipalFrom(String userName) throws IOException {
         try {
-            if (this.cacheEnabled) {
-                return this.nameToUserPrincipal.get(userName);
+            if (cacheEnabled) {
+                return nameToUserPrincipal.get(userName);
             }
             UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
             return service.lookupPrincipalByName(userName);
@@ -243,45 +243,45 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
             return null;
         }
     }
-    
+
     @Override
     public void setFileMode(Path path, int mode, LinkOption... linkOption) throws IOException {
         Files.setAttribute(path, "unix:mode", mode, linkOption);
     }
-    
+
     @Override
     public void setGroup(Path path, Group group, LinkOption... linkOption) throws IOException {
-        GroupPrincipal principal = this.getGroupPrincipalFrom(group.getName());
+        GroupPrincipal principal = getGroupPrincipalFrom(group.getName());
         if (principal == null) {
-            this.setGroupId(path, group.getId(), linkOption);
+            setGroupId(path, group.getId(), linkOption);
         }
         Files.setAttribute(path, "unix:group", principal, linkOption);
     }
-    
+
     @Override
     public void setGroupId(Path path, int gid, LinkOption... linkOption) throws IOException {
         Files.setAttribute(path, "unix:gid", gid, linkOption);
     }
-    
+
     @Override
     public void setOwner(Path path, User user, LinkOption... linkOption) throws IOException {
-        UserPrincipal principal = this.getUserPrincipalFrom(user.getName());
+        UserPrincipal principal = getUserPrincipalFrom(user.getName());
         if (principal == null) {
-            this.setUserId(path, user.getId(), linkOption);
+            setUserId(path, user.getId(), linkOption);
         }
         Files.setAttribute(path, "unix:owner", principal, linkOption);
     }
-    
+
     @Override
     public void setUserId(Path path, int uid, LinkOption... linkOption) throws IOException {
         Files.setAttribute(path, "unix:uid", uid, linkOption);
     }
-    
+
     @Override
     public RsyncFileAttributes stat(Path path) throws IOException {
-        if (this.cacheEnabled) {
-            return this.cachedStat(path);
+        if (cacheEnabled) {
+            return cachedStat(path);
         }
-        return this.fullStat(path);
+        return fullStat(path);
     }
 }

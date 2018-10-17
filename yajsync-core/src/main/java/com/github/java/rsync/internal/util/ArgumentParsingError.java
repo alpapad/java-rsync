@@ -20,11 +20,11 @@ package com.github.java.rsync.internal.util;
 
 public class ArgumentParsingError extends Exception {
     private static final long serialVersionUID = 1L;
-    
+
     public ArgumentParsingError(Exception e) {
         super(e);
     }
-    
+
     public ArgumentParsingError(String string) {
         super(string);
     }

@@ -32,7 +32,7 @@ import com.github.java.rsync.internal.session.FilterRuleList.Result;
 import com.github.java.rsync.internal.util.ArgumentParsingError;
 
 public class FilterRuleConfiguration {
-    
+
     private class Modifier {
         boolean dirMerge;
         boolean exclude;
@@ -44,57 +44,57 @@ public class FilterRuleConfiguration {
         boolean protect;
         boolean risk;
         boolean show;
-        
+
         public void checkValidity(String plainRule) throws ArgumentParsingError {
-            if (this.merge && this.dirMerge || this.include && this.exclude || this.protect && this.risk) {
-                throw new ArgumentParsingError(String.format("invalid combination of modifiers in rule %s (processing %s)", plainRule, FilterRuleConfiguration.this.dirname));
+            if (merge && dirMerge || include && exclude || protect && risk) {
+                throw new ArgumentParsingError(String.format("invalid combination of modifiers in rule %s (processing %s)", plainRule, dirname));
             }
         }
     }
-    
+
     public enum RuleType {
         DELETION, EXCLUSION, HIDING
     }
-    
+
     private final FilterRuleList deletionRuleList = new FilterRuleList();
     private String dirMergeFilename = null;
     private String dirname = null;
     private final FilterRuleList hidingRuleList = new FilterRuleList();
     private boolean inheritance = true;
-    
+
     // FSTODO: CustomFileSystem.getConfigPath( ... )
-    
+
     private FilterRuleList localRuleList = new FilterRuleList();
-    
+
     private FilterRuleConfiguration parentRuleConfiguration = null;
-    
+
+    public FilterRuleConfiguration() {
+
+    }
+
     public FilterRuleConfiguration(FilterRuleConfiguration parentRuleConfiguration, Path directory) throws ArgumentParsingError {
-        
+
         this.parentRuleConfiguration = parentRuleConfiguration;
         if (this.parentRuleConfiguration != null) {
-            this.inheritance = this.parentRuleConfiguration.isInheritance();
-            this.dirMergeFilename = this.parentRuleConfiguration.getDirMergeFilename();
+            inheritance = this.parentRuleConfiguration.isInheritance();
+            dirMergeFilename = this.parentRuleConfiguration.getDirMergeFilename();
         }
-        this.dirname = directory.toString();
-        
-        if (this.dirMergeFilename != null && new File(this.dirname + "/" + this.dirMergeFilename).exists()) {
+        dirname = directory.toString();
+
+        if (dirMergeFilename != null && new File(dirname + "/" + dirMergeFilename).exists()) {
             // merge local filter rule file
-            this.readRule(". " + this.dirname + "/" + this.dirMergeFilename);
+            readRule(". " + dirname + "/" + dirMergeFilename);
         }
     }
-    
-    public FilterRuleConfiguration() {
-        
-    }
-    
+
     public FilterRuleConfiguration(List<String> inputFilterRules) throws ArgumentParsingError {
         for (String inputFilterRule : inputFilterRules) {
-            this.readRule(inputFilterRule);
+            readRule(inputFilterRule);
         }
     }
-    
+
     private String assureDirectoryPathname(String filename, boolean isDirectory) {
-        
+
         if (!isDirectory) {
             return filename;
         }
@@ -103,31 +103,31 @@ public class FilterRuleConfiguration {
         }
         return filename;
     }
-    
+
     public Result check(String filename, boolean isDirectory, RuleType ruleType) {
-        
-        this.assureDirectoryPathname(filename, isDirectory);
-        
+
+        assureDirectoryPathname(filename, isDirectory);
+
         Result result;
-        
+
         switch (ruleType) {
             case EXCLUSION:
-                result = this.localRuleList.check(filename, isDirectory);
+                result = localRuleList.check(filename, isDirectory);
                 break;
             case DELETION:
-                result = this.deletionRuleList.check(filename, isDirectory);
+                result = deletionRuleList.check(filename, isDirectory);
                 break;
             case HIDING:
-                result = this.hidingRuleList.check(filename, isDirectory);
+                result = hidingRuleList.check(filename, isDirectory);
                 break;
             default:
                 throw new RuntimeException("ruleType " + ruleType + " not implemented");
         }
-        
+
         if (result != Result.NEUTRAL) {
             return result;
         }
-        
+
         // search root and check against root only
         FilterRuleConfiguration parent = this;
         while (parent.getParentRuleConfiguration() != null) {
@@ -139,85 +139,85 @@ public class FilterRuleConfiguration {
                 }
             }
         }
-        
+
         return Result.NEUTRAL;
     }
-    
+
     public boolean exclude(String filename, boolean isDirectory) {
-        Result result = this.check(filename, isDirectory, RuleType.EXCLUSION);
+        Result result = check(filename, isDirectory, RuleType.EXCLUSION);
         if (result == Result.EXCLUDED) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     public String getDirMergeFilename() {
-        return this.dirMergeFilename;
+        return dirMergeFilename;
     }
-    
+
     public FilterRuleList getFilterRuleListForSending() {
-        return new FilterRuleList().addList(this.localRuleList).addList(this.deletionRuleList);
+        return new FilterRuleList().addList(localRuleList).addList(deletionRuleList);
     }
-    
+
     public FilterRuleConfiguration getParentRuleConfiguration() {
-        return this.parentRuleConfiguration;
+        return parentRuleConfiguration;
     }
-    
+
     public boolean hide(String filename, boolean isDirectory) {
-        Result result = this.check(filename, isDirectory, RuleType.HIDING);
+        Result result = check(filename, isDirectory, RuleType.HIDING);
         if (result == Result.EXCLUDED) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     public boolean include(String filename, boolean isDirectory) {
-        Result result = this.check(filename, isDirectory, RuleType.EXCLUSION);
+        Result result = check(filename, isDirectory, RuleType.EXCLUSION);
         if (result == Result.EXCLUDED) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     public boolean isFilterAvailable() {
-        boolean result = this.localRuleList._rules.size() > 0 || this.deletionRuleList._rules.size() > 0 || this.hidingRuleList._rules.size() > 0;
-        if (!result && this.inheritance && this.parentRuleConfiguration != null) {
-            result = this.parentRuleConfiguration.isFilterAvailable();
+        boolean result = localRuleList._rules.size() > 0 || deletionRuleList._rules.size() > 0 || hidingRuleList._rules.size() > 0;
+        if (!result && inheritance && parentRuleConfiguration != null) {
+            result = parentRuleConfiguration.isFilterAvailable();
         }
         return result;
     }
-    
+
     public boolean isInheritance() {
-        return this.inheritance;
+        return inheritance;
     }
-    
+
     public boolean protect(String filename, boolean isDirectory) {
-        Result result = this.check(filename, isDirectory, RuleType.DELETION);
+        Result result = check(filename, isDirectory, RuleType.DELETION);
         if (result == Result.EXCLUDED) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     /*
      * public List<MergeRule> getMergeRuleList() { return _mergeRuleList; }
      */
-    
+
     // see http://rsync.samba.org/ftp/rsync/rsync.html --> MERGE-FILE FILTER
     // RULES
     private Modifier readModifiers(String modifier, String plainRule) throws ArgumentParsingError {
-        
+
         Modifier m = new Modifier();
-        
+
         int i = 0;
         while (i < modifier.length()) {
-            
+
             char c = modifier.charAt(i);
-            
+
             if (c == '-') {
                 // exclude rule
                 m.exclude = true;
@@ -229,7 +229,7 @@ public class FilterRuleConfiguration {
                 i++;
                 continue;
             }
-            
+
             if (i > 0) {
                 if (c == 'e') {
                     // exclude the merge-file name from the transfer
@@ -250,7 +250,7 @@ public class FilterRuleConfiguration {
                     continue;
                 }
             }
-            
+
             if (c == '.') {
                 // merge
                 m.merge = true;
@@ -312,150 +312,150 @@ public class FilterRuleConfiguration {
                 i += 4;
                 continue;
             }
-            
+
             throw new ArgumentParsingError(String.format("unknown modifier '%c' in rule %s", c, plainRule));
         }
-        
+
         return m;
     }
-    
+
     public void readRule(String plainRule) throws ArgumentParsingError {
-        
+
         String[] splittedRule = plainRule.split("\\s+");
-        
+
         if (splittedRule.length == 1 && (splittedRule[0].startsWith("!") || splittedRule[0].startsWith("clear"))) {
             // LIST-CLEARING FILTER RULE
-            this.localRuleList = new FilterRuleList();
+            localRuleList = new FilterRuleList();
             // clearing refers to inclusion/exclusion lists only
             // deletionRuleList = new FilterRuleList();
             // hidingRuleList = new FilterRuleList();
-            this.parentRuleConfiguration = null;
+            parentRuleConfiguration = null;
             return;
         }
-        
+
         if (splittedRule.length != 2) {
             throw new ArgumentParsingError(String.format("failed to parse filter rule '%s', invalid format: should be '<+|-|merge|dir-merge>,<modifier> <filename|path-expression>'", plainRule));
         }
-        
-        Modifier m = this.readModifiers(splittedRule[0].trim(), plainRule);
+
+        Modifier m = readModifiers(splittedRule[0].trim(), plainRule);
         m.checkValidity(plainRule);
-        
+
         if (m.merge == true || m.dirMerge == true) {
-            
+
             if (m.noInheritanceOfRules == true) {
-                this.inheritance = false;
+                inheritance = false;
             }
-            
+
             if (m.merge == true) {
-                
+
                 // _mergeRuleList.add(new MergeRule(m, splittedRule[1].trim()));
-                
+
                 // String _mergeFilename = splittedRule[1].trim();
                 Path _mergeFilename = Paths.get(splittedRule[1].trim());
                 Path _absoluteMergeFilename = _mergeFilename;
                 if (!_absoluteMergeFilename.isAbsolute()) {
-                    _absoluteMergeFilename = Paths.get(this.dirname, splittedRule[1].trim());
+                    _absoluteMergeFilename = Paths.get(dirname, splittedRule[1].trim());
                 }
-                
+
                 try (BufferedReader br = new BufferedReader(new FileReader(_absoluteMergeFilename.toString()))) {
                     String line = br.readLine();
                     while (line != null) {
                         line = line.trim();
                         // ignore empty lines or comments
                         if (line.length() != 0 && !line.startsWith("#")) {
-                            
+
                             if (m.exclude == true) {
-                                this.localRuleList.addRule("- " + line);
+                                localRuleList.addRule("- " + line);
                             } else if (m.include == true) {
-                                this.localRuleList.addRule("+ " + line);
+                                localRuleList.addRule("+ " + line);
                             } else {
-                                this.readRule(line);
+                                readRule(line);
                             }
                         }
                         line = br.readLine();
                     }
-                    
+
                     if (m.excludeMergeFilename && _mergeFilename != null) {
-                        this.localRuleList.addRule("- " + _mergeFilename);
+                        localRuleList.addRule("- " + _mergeFilename);
                     }
-                    
+
                 } catch (IOException e) {
                     throw new ArgumentParsingError(String.format("impossible to parse filter file '%s'", _mergeFilename));
                 }
-                
+
                 return;
             }
-            
-            if (this.dirMergeFilename == null && m.dirMerge == true) {
-                this.dirMergeFilename = splittedRule[1].trim();
+
+            if (dirMergeFilename == null && m.dirMerge == true) {
+                dirMergeFilename = splittedRule[1].trim();
             }
-            
-            if (m.excludeMergeFilename && this.dirMergeFilename != null) {
-                this.localRuleList.addRule("- " + this.dirMergeFilename);
+
+            if (m.excludeMergeFilename && dirMergeFilename != null) {
+                localRuleList.addRule("- " + dirMergeFilename);
             }
-            
+
             return;
         }
-        
+
         if (m.exclude == true) {
-            this.localRuleList.addRule("- " + splittedRule[1].trim());
+            localRuleList.addRule("- " + splittedRule[1].trim());
             return;
         } else if (m.include == true) {
-            this.localRuleList.addRule("+ " + splittedRule[1].trim());
+            localRuleList.addRule("+ " + splittedRule[1].trim());
             return;
         } else if (m.protect == true) {
-            this.deletionRuleList.addRule("P " + splittedRule[1].trim());
+            deletionRuleList.addRule("P " + splittedRule[1].trim());
             return;
         } else if (m.risk == true) {
-            this.deletionRuleList.addRule("R " + splittedRule[1].trim());
+            deletionRuleList.addRule("R " + splittedRule[1].trim());
             return;
         } else if (m.hide == true) {
-            this.hidingRuleList.addRule("H " + splittedRule[1].trim());
+            hidingRuleList.addRule("H " + splittedRule[1].trim());
             return;
         } else if (m.show == true) {
-            this.hidingRuleList.addRule("S " + splittedRule[1].trim());
+            hidingRuleList.addRule("S " + splittedRule[1].trim());
             return;
         }
-        
+
         throw new ArgumentParsingError(String.format("invalid rule %s", plainRule));
     }
-    
+
     public boolean risk(String filename, boolean isDirectory) {
-        Result result = this.check(filename, isDirectory, RuleType.DELETION);
+        Result result = check(filename, isDirectory, RuleType.DELETION);
         if (result == Result.EXCLUDED) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     public boolean show(String filename, boolean isDirectory) {
-        Result result = this.check(filename, isDirectory, RuleType.HIDING);
+        Result result = check(filename, isDirectory, RuleType.HIDING);
         if (result == Result.EXCLUDED) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     @Override
     public String toString() {
-        
+
         StringBuilder buf = new StringBuilder();
-        
-        buf.append("dir=").append(this.dirname).append("; ");
-        buf.append("rules=[").append(this.localRuleList.toString()).append("]; ");
-        buf.append("deletion_rules=[").append(this.deletionRuleList.toString()).append("]; ");
-        buf.append("hiding_rules=[").append(this.hidingRuleList.toString()).append("]; ");
-        buf.append("inheritance=").append(new Boolean(this.inheritance).toString()).append("; ");
-        if (this.dirMergeFilename != null) {
-            buf.append("dirMergeFilename=").append(this.dirMergeFilename).append("; ");
+
+        buf.append("dir=").append(dirname).append("; ");
+        buf.append("rules=[").append(localRuleList.toString()).append("]; ");
+        buf.append("deletion_rules=[").append(deletionRuleList.toString()).append("]; ");
+        buf.append("hiding_rules=[").append(hidingRuleList.toString()).append("]; ");
+        buf.append("inheritance=").append(new Boolean(inheritance).toString()).append("; ");
+        if (dirMergeFilename != null) {
+            buf.append("dirMergeFilename=").append(dirMergeFilename).append("; ");
         }
-        
-        if (this.parentRuleConfiguration != null) {
-            buf.append("parent=").append(this.parentRuleConfiguration.toString());
+
+        if (parentRuleConfiguration != null) {
+            buf.append("parent=").append(parentRuleConfiguration.toString());
         }
-        
+
         return buf.toString();
     }
 }

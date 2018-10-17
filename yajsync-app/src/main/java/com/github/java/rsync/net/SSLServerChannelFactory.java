@@ -24,21 +24,21 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 public class SSLServerChannelFactory implements ServerChannelFactory {
     private int backlog = 128;
-
+    
     private final SSLServerSocketFactory factory;
     private boolean reuseAddress;
     private boolean wantClientAuth;
-
+    
     public SSLServerChannelFactory() {
-        this.factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
     }
-
+    
     @Override
     public ServerChannel open(InetAddress address, int port, int timeout) throws IOException {
-        SSLServerSocket sock = (SSLServerSocket) this.factory.createServerSocket(port, this.backlog, address);
+        SSLServerSocket sock = (SSLServerSocket) factory.createServerSocket(port, backlog, address);
         try {
-            sock.setReuseAddress(this.reuseAddress);
-            sock.setWantClientAuth(this.wantClientAuth);
+            sock.setReuseAddress(reuseAddress);
+            sock.setWantClientAuth(wantClientAuth);
             return new SSLServerChannel(sock, timeout);
         } catch (Throwable t) {
             if (!sock.isClosed()) {
@@ -51,20 +51,20 @@ public class SSLServerChannelFactory implements ServerChannelFactory {
             throw t;
         }
     }
-
+    
     public ServerChannelFactory setBacklog(int backlog) {
         this.backlog = backlog;
         return this;
     }
-
+    
     @Override
     public ServerChannelFactory setReuseAddress(boolean isReuseAddress) {
-        this.reuseAddress = isReuseAddress;
+        reuseAddress = isReuseAddress;
         return this;
     }
-
+    
     public ServerChannelFactory setWantClientAuth(boolean isWantClientAuth) {
-        this.wantClientAuth = isWantClientAuth;
+        wantClientAuth = isWantClientAuth;
         return this;
     }
 }

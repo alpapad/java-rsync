@@ -29,7 +29,7 @@ public interface AuthProvider {
      * @throws IOException
      */
     char[] getPassword() throws IOException;
-    
+
     /**
      * @return the user name to be authenticated as.
      * @throws IOException

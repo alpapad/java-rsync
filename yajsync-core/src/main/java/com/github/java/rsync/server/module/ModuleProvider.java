@@ -33,15 +33,15 @@ public abstract class ModuleProvider {
         }
         return new Configuration.Reader();
     }
-    
+
     public abstract void close();
-    
+
     // must be thread safe
     public abstract Modules newAnonymous(InetAddress address) throws ModuleException;
-    
+
     // must be thread safe
     public abstract Modules newAuthenticated(InetAddress address, Principal principal) throws ModuleException;
-    
+
     public abstract Collection<Option> options();
-    
+
 }

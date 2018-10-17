@@ -33,27 +33,27 @@ public class BasicFileAttributeManager extends FileAttributeManager {
     private final int defaultFilePermissions;
     private final Group defaultGroup;
     private final User defaultUser;
-    
+
     public BasicFileAttributeManager(User defaultUser, Group defaultGroup, int defaultFilePermissions, int defaultDirectoryPermissions) {
         this.defaultUser = defaultUser;
         this.defaultGroup = defaultGroup;
         this.defaultFilePermissions = defaultFilePermissions;
         this.defaultDirectoryPermissions = defaultDirectoryPermissions;
     }
-    
+
     @Override
     public RsyncFileAttributes stat(Path path) throws IOException {
         BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-        return new RsyncFileAttributes(this.toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), this.defaultUser, this.defaultGroup);
+        return new RsyncFileAttributes(toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), defaultUser, defaultGroup);
     }
-    
+
     private int toMode(BasicFileAttributes attrs) {
         if (attrs.isDirectory()) {
-            return FileOps.S_IFDIR | this.defaultDirectoryPermissions;
+            return FileOps.S_IFDIR | defaultDirectoryPermissions;
         } else if (attrs.isRegularFile()) {
-            return FileOps.S_IFREG | this.defaultFilePermissions;
+            return FileOps.S_IFREG | defaultFilePermissions;
         } else if (attrs.isSymbolicLink()) {
-            return FileOps.S_IFLNK | this.defaultFilePermissions;
+            return FileOps.S_IFLNK | defaultFilePermissions;
         } else {
             return FileOps.S_IFUNK;
         }

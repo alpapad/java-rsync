@@ -20,7 +20,7 @@ package com.github.java.rsync.internal.session;
 
 enum TransferPhase {
     STOP, TEAR_DOWN_1, TEAR_DOWN_2, TRANSFER;
-    
+
     public TransferPhase next() {
         switch (this) {
             case TRANSFER:

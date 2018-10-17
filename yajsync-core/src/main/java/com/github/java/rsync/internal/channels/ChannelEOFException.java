@@ -20,11 +20,11 @@ package com.github.java.rsync.internal.channels;
 
 public class ChannelEOFException extends ChannelException {
     private static final long serialVersionUID = 1L;
-    
+
     public ChannelEOFException(Exception e) {
         super(e);
     }
-    
+
     public ChannelEOFException(String message) {
         super(message);
     }

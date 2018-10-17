@@ -24,28 +24,28 @@ public class AutoFlushableDuplexChannel extends BufferedDuplexChannel {
     public AutoFlushableDuplexChannel(Readable readable, Bufferable writable) {
         super(readable, writable);
     }
-    
+
     @Override
     public ByteBuffer get(int numBytes) throws ChannelException {
-        this.flush();
+        flush();
         return super.get(numBytes);
     }
-    
+
     @Override
     public byte getByte() throws ChannelException {
-        this.flush();
+        flush();
         return super.getByte();
     }
-    
+
     @Override
     public char getChar() throws ChannelException {
-        this.flush();
+        flush();
         return super.getChar();
     }
-    
+
     @Override
     public int getInt() throws ChannelException {
-        this.flush();
+        flush();
         return super.getInt();
     }
 }

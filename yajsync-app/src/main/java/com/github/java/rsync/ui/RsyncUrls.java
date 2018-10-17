@@ -24,13 +24,13 @@ final class RsyncUrls {
     private final ConnectionInfo connInfo;
     private final String moduleName;
     private final Iterable<String> pathNames;
-
+    
     public RsyncUrls(ConnectionInfo connInfo, String moduleName, Iterable<String> pathNames) {
         this.connInfo = connInfo;
         this.moduleName = moduleName;
         this.pathNames = pathNames;
     }
-
+    
     public RsyncUrls(Path cwd, Iterable<String> urls) throws IllegalUrlException {
         List<String> pathNames = new LinkedList<>();
         RsyncUrl prevUrl = null;
@@ -58,30 +58,30 @@ final class RsyncUrls {
         }
         this.pathNames = pathNames;
         this.moduleName = moduleName;
-        this.connInfo = prevUrl.getConnectionInfo();
+        connInfo = prevUrl.getConnectionInfo();
     }
-
+    
     public ConnectionInfo getConnectionInfo() {
-        return this.connInfo;
+        return connInfo;
     }
-
+    
     public String getModuleName() {
-        return this.moduleName;
+        return moduleName;
     }
-
+    
     public Iterable<String> getPathNames() {
-        return this.pathNames;
+        return pathNames;
     }
-
+    
     public boolean isRemote() {
-        return this.connInfo != null;
+        return connInfo != null;
     }
-
+    
     @Override
     public String toString() {
-        if (this.isRemote()) {
-            return String.format("%s/%s%s", this.connInfo, this.moduleName, this.pathNames.toString());
+        if (isRemote()) {
+            return String.format("%s/%s%s", connInfo, moduleName, pathNames.toString());
         }
-        return this.pathNames.toString();
+        return pathNames.toString();
     }
 }

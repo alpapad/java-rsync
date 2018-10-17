@@ -18,7 +18,7 @@ package com.github.java.rsync.ui;
 
 class IllegalUrlException extends Exception {
     private static final long serialVersionUID = 1L;
-
+    
     public IllegalUrlException(String msg) {
         super(msg);
     }

@@ -22,7 +22,7 @@ package com.github.java.rsync.internal.session;
 
 final class TransmitFlags {
     static final int EXTENDED_FLAGS = 1 << 2; /* protocols 28 - now */
-    
+
     static final int GROUP_NAME_FOLLOWS = 1 << 11; /* protocols 30 - now */
     static final int IO_ERROR_ENDLIST = 1 << 12; /* protocols 31*- now (w/EXTENDED_FLAGS) (also protocol 30 w/'f' compat flag) */
     // final static int SAME_RDEV_pre28 = (1<<2); /* protocols 20 - 27 */
@@ -35,10 +35,10 @@ final class TransmitFlags {
     static final int SAME_UID = 1 << 3;
     static final int TOP_DIR = 1 << 0;
     static final int USER_NAME_FOLLOWS = 1 << 10; /* protocols 30 - now */
-    
+
     private TransmitFlags() {
     }
-    
+
     // static final int NO_CONTENT_DIR = (1<<8); /* protocols 30 - now (dirs only)
     // */
     // static final int HLINKED = (1<<9); /* protocols 28 - now */

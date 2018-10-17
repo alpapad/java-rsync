@@ -67,10 +67,10 @@ public final class YajsyncServer {
     private int timeout = 0;
     private boolean useTLS;
     private int verbosity = 100;
-
+    
     public YajsyncServer() {
     }
-
+    
     private Callable<Boolean> createCallable(final RsyncServer server, final DuplexByteChannel sock, final boolean isInterruptible) {
         return new Callable<Boolean>() {
             @Override
@@ -82,18 +82,17 @@ public final class YajsyncServer {
                         if (LOG.isLoggable(Level.FINE)) {
                             LOG.fine(String.format("%s connected from %s", sock.getPeerPrincipal().get(), sock.getPeerAddress()));
                         }
-                        modules = YajsyncServer.this.moduleProvider.newAuthenticated(sock.getPeerAddress(), sock.getPeerPrincipal().get());
+                        modules = moduleProvider.newAuthenticated(sock.getPeerAddress(), sock.getPeerPrincipal().get());
                     } else {
                         if (LOG.isLoggable(Level.FINE)) {
                             LOG.fine("got anonymous connection from " + sock.getPeerAddress());
                         }
-                        modules = YajsyncServer.this.moduleProvider.newAnonymous(sock.getPeerAddress());
+                        modules = moduleProvider.newAnonymous(sock.getPeerAddress());
                     }
                     isOK = server.serve(modules, sock, sock, isInterruptible);
                 } catch (ModuleException e) {
                     if (LOG.isLoggable(Level.SEVERE)) {
-                        LOG.severe(String.format("Error: failed to initialise modules for " + "principal %s using ModuleProvider %s: %s%n", sock.getPeerPrincipal().get(),
-                                YajsyncServer.this.moduleProvider, e));
+                        LOG.severe(String.format("Error: failed to initialise modules for " + "principal %s using ModuleProvider %s: %s%n", sock.getPeerPrincipal().get(), moduleProvider, e));
                     }
                 } catch (ChannelException e) {
                     if (LOG.isLoggable(Level.SEVERE)) {
@@ -112,7 +111,7 @@ public final class YajsyncServer {
                         }
                     }
                 }
-
+                
                 if (LOG.isLoggable(Level.FINE)) {
                     LOG.fine("Thread exit status: " + (isOK ? "OK" : "ERROR"));
                 }
@@ -120,53 +119,53 @@ public final class YajsyncServer {
             }
         };
     }
-
+    
     private Iterable<Option> options() {
         List<Option> options = new LinkedList<>();
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "charset", "", "which charset to use (default UTF-8)", option -> {
             String charsetName = (String) option.getValue();
             try {
                 Charset charset = Charset.forName(charsetName);
-                this.serverBuilder.charset(charset);
+                serverBuilder.charset(charset);
                 return ArgumentParser.Status.CONTINUE;
             } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
                 throw new ArgumentParsingError(String.format("failed to set character set to %s: %s", charsetName, e));
             }
         }));
-
-        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", String.format("output verbosity (default %d)", this.verbosity), option -> {
-            this.verbosity++;
+        
+        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", String.format("output verbosity (default %d)", verbosity), option -> {
+            verbosity++;
             return ArgumentParser.Status.CONTINUE;
         }));
-
-        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "address", "", String.format("address to bind to (default %s)", this.address), option -> {
+        
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "address", "", String.format("address to bind to (default %s)", address), option -> {
             try {
                 String name = (String) option.getValue();
-                this.address = InetAddress.getByName(name);
+                address = InetAddress.getByName(name);
                 return ArgumentParser.Status.CONTINUE;
             } catch (UnknownHostException e) {
                 throw new ArgumentParsingError(e);
             }
         }));
-
-        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "port", "", String.format("port number to listen on (default %d)", this.port), option -> {
-            this.port = (int) option.getValue();
+        
+        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "port", "", String.format("port number to listen on (default %d)", port), option -> {
+            port = (int) option.getValue();
             return ArgumentParser.Status.CONTINUE;
         }));
-
-        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "threads", "", String.format("size of thread pool (default %d)", this.numThreads), option -> {
-            this.numThreads = (int) option.getValue();
+        
+        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "threads", "", String.format("size of thread pool (default %d)", numThreads), option -> {
+            numThreads = (int) option.getValue();
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         String deferredWriteHelp = "receiver defers writing into target tempfile as long as " + "possible to reduce I/O, at the cost of highly increased risk "
                 + "of the file being modified by a process already having it " + "opened (default false)";
-
+        
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "defer-write", "", deferredWriteHelp, option -> {
-            this.serverBuilder.isDeferWrite(true);
+            serverBuilder.isDeferWrite(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "timeout", "", "set I/O timeout in seconds", option -> {
             int timeout = (int) option.getValue();
             if (timeout < 0) {
@@ -182,9 +181,9 @@ public final class YajsyncServer {
             }
             return ArgumentParser.Status.CONTINUE;
         }));
-
-        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "", String.format("tunnel all data over TLS/SSL " + "(default %s)", this.useTLS), option -> {
-            this.useTLS = true;
+        
+        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "", String.format("tunnel all data over TLS/SSL " + "(default %s)", useTLS), option -> {
+            useTLS = true;
             // SSLChannel.read and SSLChannel.write depends on
             // ByteBuffer.array and ByteBuffer.arrayOffset.
             // Disable direct allocation if the resulting
@@ -194,37 +193,37 @@ public final class YajsyncServer {
             }
             return ArgumentParser.Status.CONTINUE;
         }));
-
+        
         return options;
     }
-
+    
     public YajsyncServer setIsListeningLatch(CountDownLatch isListeningLatch) {
-        this.listeningLatch = isListeningLatch;
+        listeningLatch = isListeningLatch;
         return this;
     }
-
+    
     public void setModuleProvider(ModuleProvider moduleProvider) {
         this.moduleProvider = moduleProvider;
     }
-
+    
     public YajsyncServer setStandardErr(PrintStream err) {
         this.err = err;
         return this;
     }
-
+    
     public YajsyncServer setStandardOut(PrintStream out) {
         this.out = out;
         return this;
     }
-
+    
     public int start(String[] args) throws IOException, InterruptedException {
         ArgumentParser argsParser = ArgumentParser.newNoUnnamed(this.getClass().getSimpleName());
         try {
-            argsParser.addHelpTextDestination(this.out);
-            for (Option o : this.options()) {
+            argsParser.addHelpTextDestination(out);
+            for (Option o : options()) {
                 argsParser.add(o);
             }
-            for (Option o : this.moduleProvider.options()) {
+            for (Option o : moduleProvider.options()) {
                 argsParser.add(o);
             }
             ArgumentParser.Status rc = argsParser.parse(Arrays.asList(args)); // throws ArgumentParsingError
@@ -232,30 +231,30 @@ public final class YajsyncServer {
                 return rc == ArgumentParser.Status.EXIT_OK ? 0 : 1;
             }
         } catch (ArgumentParsingError e) {
-            this.err.println(e.getMessage());
-            this.err.println(argsParser.toUsageString());
+            err.println(e.getMessage());
+            err.println(argsParser.toUsageString());
             return -1;
         }
-
-        Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM + this.verbosity);
+        
+        Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM + verbosity);
         Util.setRootLogLevel(logLevel);
-
-        ServerChannelFactory socketFactory = this.useTLS ? new SSLServerChannelFactory().setWantClientAuth(true) : new StandardServerChannelFactory();
-
+        
+        ServerChannelFactory socketFactory = useTLS ? new SSLServerChannelFactory().setWantClientAuth(true) : new StandardServerChannelFactory();
+        
         socketFactory.setReuseAddress(true);
         // socketFactory.setKeepAlive(true);
-        boolean isInterruptible = !this.useTLS;
-        ExecutorService executor = Executors.newFixedThreadPool(this.numThreads);
-        RsyncServer server = this.serverBuilder.build(executor);
-
-        try (ServerChannel listenSock = socketFactory.open(this.address, this.port, this.timeout)) { // throws IOException
-            if (this.listeningLatch != null) {
-                this.listeningLatch.countDown();
+        boolean isInterruptible = !useTLS;
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        RsyncServer server = serverBuilder.build(executor);
+        
+        try (ServerChannel listenSock = socketFactory.open(address, port, timeout)) { // throws IOException
+            if (listeningLatch != null) {
+                listeningLatch.countDown();
             }
             while (true) {
                 System.err.println("Got connection....");
                 DuplexByteChannel sock = listenSock.accept(); // throws IOException
-                Callable<Boolean> c = this.createCallable(server, sock, isInterruptible);
+                Callable<Boolean> c = createCallable(server, sock, isInterruptible);
                 executor.submit(c); // NOTE: result discarded
             }
         } finally {
@@ -263,7 +262,7 @@ public final class YajsyncServer {
                 LOG.info("shutting down...");
             }
             executor.shutdown();
-            this.moduleProvider.close();
+            moduleProvider.close();
             while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
                 LOG.info("some sessions are still running, waiting for them " + "to finish before exiting");
             }

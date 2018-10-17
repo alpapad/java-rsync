@@ -29,12 +29,12 @@ public enum FileSelection {
      * Transfer the initial client file list literally while excluding directories.
      */
     EXACT,
-    
+
     /**
      * Transfer the initial client file list but also recurse into directories.
      */
     RECURSE,
-    
+
     /**
      * Transfer the initial client file list and the contents of any dot
      * directories.

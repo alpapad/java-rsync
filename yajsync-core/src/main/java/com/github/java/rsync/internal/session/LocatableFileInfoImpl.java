@@ -23,16 +23,16 @@ import com.github.java.rsync.attr.RsyncFileAttributes;
 
 class LocatableFileInfoImpl extends FileInfoImpl implements LocatableFileInfo {
     private final Path path;
-    
+
     LocatableFileInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, Path path) {
         super(pathName, pathNameBytes, attrs);
         assert path != null;
         assert path.isAbsolute();
         this.path = path;
     }
-    
+
     @Override
     public Path getPath() {
-        return this.path;
+        return path;
     }
 }

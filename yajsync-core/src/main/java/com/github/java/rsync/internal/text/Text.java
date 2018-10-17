@@ -40,7 +40,7 @@ public final class Text {
     public static final String EMPTY = "";
     public static final String SLASH = "/";
     public static final String UTF8_NAME = "UTF-8";
-    
+
     public static String byteBufferToString(ByteBuffer buf) {
         StringBuilder sb = new StringBuilder();
         ByteBuffer dup = buf.duplicate();
@@ -53,15 +53,15 @@ public final class Text {
         }
         return sb.append("]").toString();
     }
-    
+
     public static String byteBufferToString(ByteBuffer buf, int start, int end) {
         return byteBufferToString(Util.slice(buf, start, end));
     }
-    
+
     public static String bytesToString(byte[] buf) {
         return byteBufferToString(ByteBuffer.wrap(buf));
     }
-    
+
     public static String charBufferToString(CharBuffer buf) {
         StringBuilder sb = new StringBuilder();
         CharBuffer dup = buf.duplicate();
@@ -74,14 +74,14 @@ public final class Text {
         }
         return sb.append("]").toString();
     }
-    
+
     public static String charBufferToString(CharBuffer buf, int start, int end) {
         CharBuffer dup = buf.duplicate();
         dup.position(start);
         dup.limit(end);
         return charBufferToString(dup);
     }
-    
+
     private static String deleteTrailingChars(String entry, char c) {
         StringBuilder sb = new StringBuilder(entry.toString());
         int index = sb.length();
@@ -91,11 +91,11 @@ public final class Text {
         sb.delete(index, sb.length());
         return sb.toString();
     }
-    
+
     public static String deleteTrailingDots(String entry) {
         return deleteTrailingChars(entry, '.');
     }
-    
+
     public static String join(Iterable<String> strings, String separator) {
         StringBuilder sb = new StringBuilder();
         for (Iterator<String> it = strings.iterator(); it.hasNext();) {
@@ -107,21 +107,21 @@ public final class Text {
         }
         return sb.toString();
     }
-    
+
     public static String nullToEmptyStr(String arg) {
         return Util.defaultIfNull(arg, "");
     }
-    
+
     public static String stripFirst(String str) {
         assert str != null;
         return str.isEmpty() ? "" : str.substring(1);
     }
-    
+
     public static String stripLast(String str) {
         assert str != null;
         return str.isEmpty() ? "" : str.substring(0, str.length() - 1);
     }
-    
+
     public static String withSlashAsPathSepator(Path path) {
         assert !path.isAbsolute();
         String separator = path.getFileSystem().getSeparator();
@@ -133,7 +133,7 @@ public final class Text {
         String[] split = pathName.split(regex);
         return join(Arrays.asList(split), Text.SLASH);
     }
-    
+
     private Text() {
     }
 }

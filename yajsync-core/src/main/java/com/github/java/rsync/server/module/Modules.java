@@ -25,7 +25,7 @@ public interface Modules {
      *         if further authentication is required.
      */
     Iterable<Module> all();
-    
+
     /**
      * @return a Module directly available to the principal or a RestrictedModule in
      *         case further authentication is required (using rsync challenge

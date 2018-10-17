@@ -24,8 +24,8 @@ import com.github.java.rsync.internal.channels.ChannelException;
 public interface RsyncTask extends Callable<Boolean> {
     @Override
     Boolean call() throws RsyncException, InterruptedException;
-    
+
     void closeChannel() throws ChannelException;
-    
+
     boolean isInterruptible();
 }

@@ -28,75 +28,75 @@ public class TaggedOutputChannel extends BufferedOutputChannel implements Taggab
     private static final int DEFAULT_TAG_OFFSET = 0;
     private static final int TAG_SIZE = Consts.SIZE_INT;
     private int tagOffset;
-    
+
     public TaggedOutputChannel(WritableByteChannel sock) {
         super(sock);
-        this.updateTagOffsetAndBufPos(DEFAULT_TAG_OFFSET);
+        updateTagOffsetAndBufPos(DEFAULT_TAG_OFFSET);
     }
-    
+
     public TaggedOutputChannel(WritableByteChannel sock, int bufferSize) {
         super(sock, bufferSize);
-        this.updateTagOffsetAndBufPos(DEFAULT_TAG_OFFSET);
+        updateTagOffsetAndBufPos(DEFAULT_TAG_OFFSET);
     }
-    
+
     @Override
     public void flush() throws ChannelException {
-        if (this.getNumBytesBuffered() > 0) {
-            if (this.getNumBytesUntagged() > 0) {
-                this.tagCurrentData();
+        if (getNumBytesBuffered() > 0) {
+            if (getNumBytesUntagged() > 0) {
+                tagCurrentData();
             } else {
                 // reset buffer position
-                assert this.buffer.position() == this.tagOffset + TAG_SIZE;
-                this.buffer.position(this.buffer.position() - TAG_SIZE);
+                assert buffer.position() == tagOffset + TAG_SIZE;
+                buffer.position(buffer.position() - TAG_SIZE);
             }
             super.flush();
-            this.updateTagOffsetAndBufPos(DEFAULT_TAG_OFFSET);
+            updateTagOffsetAndBufPos(DEFAULT_TAG_OFFSET);
         }
     }
-    
+
     @Override
     public int getNumBytesBuffered() {
-        return this.buffer.position() - TAG_SIZE;
+        return buffer.position() - TAG_SIZE;
     }
-    
+
     private int getNumBytesUntagged() {
-        int dataStartOffset = this.tagOffset + TAG_SIZE;
-        int numBytesUntagged = this.buffer.position() - dataStartOffset;
+        int dataStartOffset = tagOffset + TAG_SIZE;
+        int numBytesUntagged = buffer.position() - dataStartOffset;
         assert numBytesUntagged >= 0;
         return numBytesUntagged;
     }
-    
+
     @Override
     public void putMessage(Message message) throws ChannelException {
         assert message.getHeader().getLength() == message.getPayload().remaining();
-        
+
         int numBytesRequired = message.getHeader().getLength() + TAG_SIZE;
         int minMessageSize = TAG_SIZE + 1;
-        
-        if (numBytesRequired + minMessageSize > this.buffer.remaining()) {
-            this.flush();
-        } else if (this.getNumBytesUntagged() > 0) {
-            this.tagCurrentData();
-            this.updateTagOffsetAndBufPos(this.buffer.position());
+
+        if (numBytesRequired + minMessageSize > buffer.remaining()) {
+            flush();
+        } else if (getNumBytesUntagged() > 0) {
+            tagCurrentData();
+            updateTagOffsetAndBufPos(buffer.position());
         }
-        
-        this.putMessageHeader(this.tagOffset, message.getHeader());
-        assert this.buffer.remaining() >= message.getPayload().remaining();
+
+        putMessageHeader(tagOffset, message.getHeader());
+        assert buffer.remaining() >= message.getPayload().remaining();
         this.put(message.getPayload());
-        this.updateTagOffsetAndBufPos(this.buffer.position());
+        updateTagOffsetAndBufPos(buffer.position());
     }
-    
+
     private void putMessageHeader(int offset, MessageHeader header) {
-        this.buffer.putInt(offset, header.toTag());
+        buffer.putInt(offset, header.toTag());
     }
-    
+
     private void tagCurrentData() {
-        this.putMessageHeader(this.tagOffset, new MessageHeader(MessageCode.DATA, this.getNumBytesUntagged()));
+        putMessageHeader(tagOffset, new MessageHeader(MessageCode.DATA, getNumBytesUntagged()));
     }
-    
+
     private void updateTagOffsetAndBufPos(int position) {
-        assert position >= 0 && position < this.buffer.limit() - TAG_SIZE;
-        this.tagOffset = position;
-        this.buffer.position(this.tagOffset + TAG_SIZE);
+        assert position >= 0 && position < buffer.limit() - TAG_SIZE;
+        tagOffset = position;
+        buffer.position(tagOffset + TAG_SIZE);
     }
 }

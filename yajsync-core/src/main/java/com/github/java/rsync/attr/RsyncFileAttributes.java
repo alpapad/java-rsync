@@ -29,7 +29,7 @@ public class RsyncFileAttributes {
     private final int mode;
     private final long size;
     private final User user;
-    
+
     /**
      * @throws IllegalArgumentException if fileSize and/or lastModified is negative
      */
@@ -43,86 +43,86 @@ public class RsyncFileAttributes {
             throw new IllegalArgumentException(String.format("illegal negative last modified time %d", lastModified));
         }
         this.mode = mode;
-        this.size = fileSize;
+        size = fileSize;
         this.lastModified = lastModified;
         this.user = user;
         this.group = group;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
             RsyncFileAttributes other = (RsyncFileAttributes) obj;
-            return this.lastModified == other.lastModified && this.size == other.size && this.mode == other.mode && this.user.equals(other.user) && this.group.equals(other.group);
-            
+            return lastModified == other.lastModified && size == other.size && mode == other.mode && user.equals(other.user) && group.equals(other.group);
+
         }
         return false;
     }
-    
+
     public int getFileType() {
-        return FileOps.fileType(this.mode);
+        return FileOps.fileType(mode);
     }
-    
+
     public Group getGroup() {
-        return this.group;
+        return group;
     }
-    
+
+    public int getMode() {
+        return mode;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(this.lastModified, this.size, this.mode, this.user, this.group);
+        return Objects.hash(lastModified, size, mode, user, group);
     }
-    
+
     public boolean isBlockDevice() {
-        return FileOps.isBlockDevice(this.mode);
+        return FileOps.isBlockDevice(mode);
     }
-    
+
     public boolean isCharacterDevice() {
-        return FileOps.isCharacterDevice(this.mode);
+        return FileOps.isCharacterDevice(mode);
     }
-    
+
     public boolean isDirectory() {
-        return FileOps.isDirectory(this.mode);
+        return FileOps.isDirectory(mode);
     }
-    
+
     public boolean isFifo() {
-        return FileOps.isFIFO(this.mode);
+        return FileOps.isFIFO(mode);
     }
-    
+
     public boolean isOther() {
-        return FileOps.isOther(this.mode);
+        return FileOps.isOther(mode);
     }
-    
+
     public boolean isRegularFile() {
-        return FileOps.isRegularFile(this.mode);
+        return FileOps.isRegularFile(mode);
     }
-    
+
     public boolean isSocket() {
-        return FileOps.isSocket(this.mode);
+        return FileOps.isSocket(mode);
     }
-    
+
     public boolean isSymbolicLink() {
-        return FileOps.isSymbolicLink(this.mode);
+        return FileOps.isSymbolicLink(mode);
     }
-    
+
     public long lastModifiedTime() {
-        return this.lastModified;
+        return lastModified;
     }
-    
-    public int getMode() {
-        return this.mode;
-    }
-    
-    public long getSize() {
-        return this.size;
-    }
-    
+
     @Override
     public String toString() {
-        return String.format("%s (type=%s, mode=%#o, size=%d, " + "lastModified=%d, user=%s, group=%s)", this.getClass().getSimpleName(), FileOps.fileTypeToString(this.mode), this.mode, this.size,
-                this.lastModified, this.user, this.group);
-    }
-    
-    public User getUser() {
-        return this.user;
+        return String.format("%s (type=%s, mode=%#o, size=%d, " + "lastModified=%d, user=%s, group=%s)", this.getClass().getSimpleName(), FileOps.fileTypeToString(mode), mode, size, lastModified,
+                user, group);
     }
 }

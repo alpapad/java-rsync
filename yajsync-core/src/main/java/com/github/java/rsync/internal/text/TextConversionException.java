@@ -20,11 +20,11 @@ package com.github.java.rsync.internal.text;
 
 public class TextConversionException extends RuntimeException {
     private static final long serialVersionUID = 1L;
-    
+
     public TextConversionException(Exception e) {
         super(e);
     }
-    
+
     public TextConversionException(String description) {
         super(description);
     }

@@ -24,6 +24,6 @@ import java.util.Optional;
 
 public interface DuplexByteChannel extends ReadableByteChannel, WritableByteChannel {
     InetAddress getPeerAddress();
-
+    
     Optional<Principal> getPeerPrincipal();
 }

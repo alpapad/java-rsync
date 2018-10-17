@@ -37,15 +37,15 @@ public final class FileAttributeManagerFactory {
             return new BasicFileAttributeManager(defaultUser, defaultGroup, defaultFilePermissions, defaultDirectoryPermissions);
         }
     }
-    
+
     private static boolean isPosixSupported(FileSystem fs) {
         return fs.supportedFileAttributeViews().contains("posix");
     }
-    
+
     private static boolean isUnixSupported(FileSystem fs) {
         return fs.supportedFileAttributeViews().contains("unix");
     }
-    
+
     public static FileAttributeManager newMostAble(FileSystem fs, User defaultUser, Group defaultGroup, int defaultFilePermissions, int defaultDirectoryPermissions) {
         if (isUnixSupported(fs)) {
             try {
@@ -60,7 +60,7 @@ public final class FileAttributeManagerFactory {
             return new BasicFileAttributeManager(defaultUser, defaultGroup, defaultFilePermissions, defaultDirectoryPermissions);
         }
     }
-    
+
     private FileAttributeManagerFactory() {
     }
 }

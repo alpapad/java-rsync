@@ -26,7 +26,7 @@ public interface Statistics {
      *         up the file list into several segments).
      */
     long getFileListBuildTime();
-    
+
     /**
      * @return time for sending of end of initial segment and additional meta data
      *         (in milliseconds). Warning: not really useful since yajsync uses
@@ -34,47 +34,47 @@ public interface Statistics {
      *         several segments).
      */
     long getFileListTransferTime();
-    
+
     /**
      * @return total amount of files in all file list segments
      */
     int getNumFiles();
-    
+
     /**
      * @return total amount of files transferred
      */
     int getNumTransferredFiles();
-    
+
     /**
      * @return total amount of data received from peer (in bytes)
      */
     long getTotalBytesRead();
-    
+
     /**
      * @return total amount of data sent to peer (in bytes)
      */
     long getTotalBytesWritten();
-    
+
     /**
      * @return total file list size (in bytes)
      */
     long getTotalFileListSize();
-    
+
     /**
      * @return total size of all files in all segments (in bytes)
      */
     long getTotalFileSize();
-    
+
     /**
      * @return total amount of transferred literal file data (in bytes)
      */
     long getTotalLiteralSize();
-    
+
     /**
      * @return total amount of matched file data (in bytes)
      */
     long getTotalMatchedSize();
-    
+
     /**
      * @return total size of all files transferred (in bytes)
      */

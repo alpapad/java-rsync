@@ -24,19 +24,18 @@ import com.github.java.rsync.internal.text.Text;
 import com.github.java.rsync.internal.util.PathOps;
 
 final class RsyncUrl {
-    
     /*
      * [USER@]HOST::SRC... rsync://[USER@]HOST[:PORT]/SRC
      */
     private static final String USER_REGEX = "[^@: ]+@";
-    
     private static final String HOST_REGEX = "[^:/]+";
+
     private static final String MODULE_REGEX = "[^/]+";
     private static final String PATH_REGEX = "/.*";
     private static final String PORT_REGEX = ":[0-9]+";
-    private static final Pattern MODULE = Pattern.compile(String.format("^(%s)?(%s)::(%s)?(%s)?$", USER_REGEX, HOST_REGEX, MODULE_REGEX, PATH_REGEX));
     private static final Pattern URL = Pattern.compile(String.format("^rsync://(%s)?(%s)(%s)?(/%s)?(%s)?$", USER_REGEX, HOST_REGEX, PORT_REGEX, MODULE_REGEX, PATH_REGEX));
-    
+    private static final Pattern MODULE = Pattern.compile(String.format("^(%s)?(%s)::(%s)?(%s)?$", USER_REGEX, HOST_REGEX, MODULE_REGEX, PATH_REGEX));
+
     private static RsyncUrl local(Path cwd, String pathName) {
         try {
             return new RsyncUrl(cwd, null, "", pathName);
@@ -44,7 +43,7 @@ final class RsyncUrl {
             throw new RuntimeException(e);
         }
     }
-    
+
     private static RsyncUrl matchModule(Path cwd, String arg) throws IllegalUrlException {
         Matcher mod = MODULE.matcher(arg);
         if (!mod.matches()) {
@@ -57,7 +56,7 @@ final class RsyncUrl {
         ConnectionInfo connInfo = new ConnectionInfo.Builder(address).userName(userName).build();
         return new RsyncUrl(cwd, connInfo, moduleName, pathName);
     }
-    
+
     private static RsyncUrl matchUrl(Path cwd, String arg) throws IllegalUrlException {
         Matcher url = URL.matcher(arg);
         if (!url.matches()) {
@@ -74,7 +73,7 @@ final class RsyncUrl {
         String pathName = Text.nullToEmptyStr(url.group(5));
         return new RsyncUrl(cwd, connInfoBuilder.build(), moduleName, pathName);
     }
-    
+
     public static RsyncUrl parse(Path cwd, String arg) throws IllegalUrlException {
         assert arg != null;
         if (arg.isEmpty()) {
@@ -90,7 +89,7 @@ final class RsyncUrl {
         }
         return RsyncUrl.local(cwd, arg);
     }
-    
+
     private static String toRemotePathName(String pathName) {
         if (pathName.isEmpty()) {
             return Text.SLASH;
@@ -98,13 +97,13 @@ final class RsyncUrl {
             return pathName;
         }
     }
-    
+
     private final ConnectionInfo connInfo;
-    
+
     private final String moduleName;
-    
+
     private final String pathName;
-    
+
     public RsyncUrl(Path cwd, ConnectionInfo connInfo, String moduleName, String pathName) throws IllegalUrlException {
         assert pathName != null;
         assert moduleName != null;
@@ -115,42 +114,42 @@ final class RsyncUrl {
         this.connInfo = connInfo;
         this.moduleName = moduleName;
         if (connInfo == null) {
-            this.pathName = this.toLocalPathName(cwd, pathName);
+            this.pathName = toLocalPathName(cwd, pathName);
         } else {
             this.pathName = toRemotePathName(pathName);
         }
     }
-    
+
     public ConnectionInfo getConnectionInfo() {
-        return this.connInfo;
+        return connInfo;
     }
-    
+
     public String getModuleName() {
-        return this.moduleName;
+        return moduleName;
     }
-    
+
     public String getPathName() {
-        return this.pathName;
+        return pathName;
     }
-    
+
     public boolean isLocal() {
-        return !this.isRemote();
+        return !isRemote();
     }
-    
+
     public boolean isRemote() {
-        return this.connInfo != null;
+        return connInfo != null;
     }
-    
+
     private String toLocalPathName(Path cwd, String pathName) {
         Path p = PathOps.get(cwd.getFileSystem(), pathName);
         return cwd.resolve(p).toString();
     }
-    
+
     @Override
     public String toString() {
-        if (this.connInfo != null) {
-            return String.format("%s/%s%s", this.connInfo, this.moduleName, this.pathName);
+        if (connInfo != null) {
+            return String.format("%s/%s%s", connInfo, moduleName, pathName);
         }
-        return this.pathName;
+        return pathName;
     }
 }

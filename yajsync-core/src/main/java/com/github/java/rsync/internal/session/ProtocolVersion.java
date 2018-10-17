@@ -23,44 +23,44 @@ import java.util.Objects;
 public final class ProtocolVersion implements Comparable<ProtocolVersion> {
     private final int major;
     private final int minor;
-    
+
     public ProtocolVersion(int major, int minor) {
         this.major = major;
         this.minor = minor;
     }
-    
+
     @Override
     public int compareTo(ProtocolVersion other) {
-        int res = this.major - other.major;
+        int res = major - other.major;
         if (res == 0) {
-            return this.minor - other.minor;
+            return minor - other.minor;
         }
         return res;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (o != null && this.getClass() == o.getClass()) {
-            return this.compareTo((ProtocolVersion) o) == 0;
+            return compareTo((ProtocolVersion) o) == 0;
         }
         return false;
     }
-    
+
+    public int getMajor() {
+        return major;
+    }
+
+    public int getMinor() {
+        return minor;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(this.major, this.minor);
+        return Objects.hash(major, minor);
     }
-    
-    public int getMajor() {
-        return this.major;
-    }
-    
-    public int getMinor() {
-        return this.minor;
-    }
-    
+
     @Override
     public String toString() {
-        return String.format("%d.%d", this.major, this.minor);
+        return String.format("%d.%d", major, minor);
     }
 }

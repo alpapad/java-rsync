@@ -23,19 +23,19 @@ import java.nio.channels.WritableByteChannel;
 
 public class RsyncOutChannel extends TaggedOutputChannel implements IndexEncoder {
     private final IndexEncoder indexEncoder;
-    
+
     public RsyncOutChannel(WritableByteChannel sock) {
         super(sock);
-        this.indexEncoder = new IndexEncoderImpl(this);
+        indexEncoder = new IndexEncoderImpl(this);
     }
-    
+
     public RsyncOutChannel(WritableByteChannel sock, int bufferSize) {
         super(sock, bufferSize);
-        this.indexEncoder = new IndexEncoderImpl(this);
+        indexEncoder = new IndexEncoderImpl(this);
     }
-    
+
     @Override
     public void encodeIndex(int index) throws ChannelException {
-        this.indexEncoder.encodeIndex(index);
+        indexEncoder.encodeIndex(index);
     }
 }

@@ -24,21 +24,21 @@ import java.nio.channels.ReadableByteChannel;
 
 public class RsyncInChannel extends PrefetchedTaggedInputChannel implements IndexDecoder {
     private final IndexDecoder indexDecoder;
-    
+
     public RsyncInChannel(ReadableByteChannel sock, MessageHandler handler) {
         super(sock, handler);
-        this.indexDecoder = new IndexDecoderImpl(this);
-        
+        indexDecoder = new IndexDecoderImpl(this);
+
     }
-    
+
     public RsyncInChannel(ReadableByteChannel sock, MessageHandler handler, int bufferSize) {
         super(sock, handler, bufferSize);
-        this.indexDecoder = new IndexDecoderImpl(this);
-        
+        indexDecoder = new IndexDecoderImpl(this);
+
     }
-    
+
     @Override
     public int decodeIndex() throws ChannelException {
-        return this.indexDecoder.decodeIndex();
+        return indexDecoder.decodeIndex();
     }
 }

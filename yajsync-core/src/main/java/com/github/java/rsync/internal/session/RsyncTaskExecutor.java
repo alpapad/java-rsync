@@ -31,7 +31,7 @@ import com.github.java.rsync.internal.channels.ChannelException;
 
 public final class RsyncTaskExecutor {
     private static final Logger LOG = Logger.getLogger(RsyncTaskExecutor.class.getName());
-    
+
     public static void throwUnwrappedException(Throwable thrown) throws InterruptedException, RsyncException {
         Throwable cause;
         if (thrown instanceof ExecutionException) {
@@ -39,7 +39,7 @@ public final class RsyncTaskExecutor {
         } else {
             cause = thrown;
         }
-        
+
         if (cause instanceof InterruptedException) {
             throw (InterruptedException) cause;
         } else if (cause instanceof RsyncException) {
@@ -52,25 +52,25 @@ public final class RsyncTaskExecutor {
         }
         throw new AssertionError("BUG - missing statement for " + cause);
     }
-    
+
     private final Executor executor;
-    
+
     public RsyncTaskExecutor(Executor executor) {
         assert executor != null;
         this.executor = executor;
     }
-    
+
     public boolean exec(RsyncTask... tasks) throws RsyncException, InterruptedException {
-        CompletionService<Boolean> ecs = new ExecutorCompletionService<>(this.executor);
-        
+        CompletionService<Boolean> ecs = new ExecutorCompletionService<>(executor);
+
         List<Future<Boolean>> futures = new LinkedList<>();
         for (RsyncTask task : tasks) {
             futures.add(ecs.submit(task));
         }
-        
+
         Throwable thrown = null;
         boolean isOK = true;
-        
+
         for (int i = 0; i < futures.size(); i++) {
             try {
                 if (LOG.isLoggable(Level.FINER)) {
@@ -106,16 +106,16 @@ public final class RsyncTaskExecutor {
                 }
             }
         }
-        
+
         boolean isException = thrown != null;
         if (isException) {
             throwUnwrappedException(thrown);
         }
-        
+
         if (LOG.isLoggable(Level.FINE)) {
             LOG.fine("exit " + (isOK ? "OK" : "ERROR"));
         }
-        
+
         return isOK;
     }
 }

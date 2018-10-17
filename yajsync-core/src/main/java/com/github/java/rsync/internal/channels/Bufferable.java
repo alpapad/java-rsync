@@ -20,6 +20,6 @@ package com.github.java.rsync.internal.channels;
 
 public interface Bufferable extends Writable {
     void flush() throws ChannelException;
-    
+
     int getNumBytesBuffered();
 }

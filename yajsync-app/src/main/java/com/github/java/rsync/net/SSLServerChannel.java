@@ -24,19 +24,19 @@ import javax.net.ssl.SSLSocket;
 public class SSLServerChannel implements ServerChannel {
     private final SSLServerSocket sslSocket;
     private final int timeout;
-
+    
     public SSLServerChannel(SSLServerSocket sock, int timeout) {
-        this.sslSocket = sock;
+        sslSocket = sock;
         this.timeout = timeout;
     }
-
+    
     @Override
     public SSLChannel accept() throws IOException {
-        return new SSLChannel((SSLSocket) this.sslSocket.accept(), this.timeout);
+        return new SSLChannel((SSLSocket) sslSocket.accept(), timeout);
     }
-
+    
     @Override
     public void close() throws IOException {
-        this.sslSocket.close();
+        sslSocket.close();
     }
 }

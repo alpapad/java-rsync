@@ -21,11 +21,11 @@ package com.github.java.rsync;
  */
 public class RsyncException extends Exception {
     private static final long serialVersionUID = 1L;
-    
+
     public RsyncException(String msg) {
         super(msg);
     }
-    
+
     public RsyncException(Throwable t) {
         super(t);
     }

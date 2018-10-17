@@ -21,16 +21,16 @@ import com.github.java.rsync.attr.SymlinkInfo;
 
 class SymlinkInfoImpl extends FileInfoImpl implements SymlinkInfo {
     private final String targetPathName;
-    
+
     public SymlinkInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, String targetPathName) {
         super(pathName, pathNameBytes, attrs);
         assert targetPathName != null;
-        assert this.getAttributes().isSymbolicLink();
+        assert getAttributes().isSymbolicLink();
         this.targetPathName = targetPathName;
     }
-    
+
     @Override
     public String getTargetPathName() {
-        return this.targetPathName;
+        return targetPathName;
     }
 }

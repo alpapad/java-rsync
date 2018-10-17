@@ -22,12 +22,12 @@ import java.nio.ByteBuffer;
 
 public interface Writable {
     void put(byte[] src, int offset, int length) throws ChannelException;
-    
+
     void put(ByteBuffer src) throws ChannelException;
-    
+
     void putByte(byte b) throws ChannelException;
-    
+
     void putChar(char c) throws ChannelException;
-    
+
     void putInt(int i) throws ChannelException;
 }

@@ -36,44 +36,44 @@ public class SimpleInputChannel implements Readable {
     private final ByteBuffer intBuf;
     private long numBytesRead;
     private final ReadableByteChannel sourceChannel;
-    
+
     public SimpleInputChannel(ReadableByteChannel sock) {
         assert sock != null;
-        this.sourceChannel = sock;
+        sourceChannel = sock;
         if (Environment.isAllocateDirect()) {
-            this.byteBuf = ByteBuffer.allocateDirect(Consts.SIZE_BYTE);
-            this.charBuf = ByteBuffer.allocateDirect(Consts.SIZE_CHAR);
-            this.intBuf = ByteBuffer.allocateDirect(Consts.SIZE_INT);
+            byteBuf = ByteBuffer.allocateDirect(Consts.SIZE_BYTE);
+            charBuf = ByteBuffer.allocateDirect(Consts.SIZE_CHAR);
+            intBuf = ByteBuffer.allocateDirect(Consts.SIZE_INT);
         } else {
-            this.byteBuf = ByteBuffer.allocate(Consts.SIZE_BYTE);
-            this.charBuf = ByteBuffer.allocate(Consts.SIZE_CHAR);
-            this.intBuf = ByteBuffer.allocate(Consts.SIZE_INT);
+            byteBuf = ByteBuffer.allocate(Consts.SIZE_BYTE);
+            charBuf = ByteBuffer.allocate(Consts.SIZE_CHAR);
+            intBuf = ByteBuffer.allocate(Consts.SIZE_INT);
         }
-        this.charBuf.order(ByteOrder.LITTLE_ENDIAN);
-        this.intBuf.order(ByteOrder.LITTLE_ENDIAN);
+        charBuf.order(ByteOrder.LITTLE_ENDIAN);
+        intBuf.order(ByteOrder.LITTLE_ENDIAN);
     }
-    
+
     public void close() throws ChannelException {
         try {
-            this.sourceChannel.close();
+            sourceChannel.close();
         } catch (IOException e) {
             throw new ChannelException(e);
         }
     }
-    
+
     @Override
     public void get(byte[] dst, int offset, int length) throws ChannelException {
         this.get(ByteBuffer.wrap(dst, offset, length));
     }
-    
+
     protected void get(ByteBuffer dst) throws ChannelException {
         try {
             while (dst.hasRemaining()) {
-                int count = this.sourceChannel.read(dst);
+                int count = sourceChannel.read(dst);
                 if (count <= 0) {
                     throw new ChannelEOFException(String.format("channel read unexpectedly returned %d (EOF)", count));
                 }
-                this.numBytesRead += count;
+                numBytesRead += count;
             }
         } catch (EOFException e) {
             throw new ChannelEOFException(e);
@@ -83,7 +83,7 @@ public class SimpleInputChannel implements Readable {
             throw new ChannelException(e);
         }
     }
-    
+
     @Override
     public ByteBuffer get(int numBytes) throws ChannelException {
         ByteBuffer result = ByteBuffer.allocate(numBytes);
@@ -91,35 +91,35 @@ public class SimpleInputChannel implements Readable {
         result.flip();
         return result;
     }
-    
+
     @Override
     public byte getByte() throws ChannelException {
-        this.byteBuf.clear();
-        this.get(this.byteBuf);
-        this.byteBuf.flip();
-        return this.byteBuf.get();
+        byteBuf.clear();
+        this.get(byteBuf);
+        byteBuf.flip();
+        return byteBuf.get();
     }
-    
+
     @Override
     public char getChar() throws ChannelException {
-        this.charBuf.clear();
-        this.get(this.charBuf);
-        this.charBuf.flip();
-        return this.charBuf.getChar();
+        charBuf.clear();
+        this.get(charBuf);
+        charBuf.flip();
+        return charBuf.getChar();
     }
-    
+
     @Override
     public int getInt() throws ChannelException {
-        this.intBuf.clear();
-        this.get(this.intBuf);
-        this.intBuf.flip();
-        return this.intBuf.getInt();
+        intBuf.clear();
+        this.get(intBuf);
+        intBuf.flip();
+        return intBuf.getInt();
     }
-    
+
     public long getNumBytesRead() {
-        return this.numBytesRead;
+        return numBytesRead;
     }
-    
+
     @Override
     public void skip(int numBytes) throws ChannelException {
         assert numBytes >= 0;

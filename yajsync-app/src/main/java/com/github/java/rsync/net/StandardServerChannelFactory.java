@@ -24,12 +24,12 @@ import java.nio.channels.ServerSocketChannel;
 
 public class StandardServerChannelFactory implements ServerChannelFactory {
     private boolean reuseAddress;
-
+    
     @Override
     public ServerChannel open(InetAddress address, int port, int timeout) throws IOException {
         ServerSocketChannel sock = ServerSocketChannel.open();
         try {
-            if (this.reuseAddress) {
+            if (reuseAddress) {
                 sock.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             }
             InetSocketAddress socketAddress = new InetSocketAddress(address, port);
@@ -46,10 +46,10 @@ public class StandardServerChannelFactory implements ServerChannelFactory {
             throw t;
         }
     }
-
+    
     @Override
     public ServerChannelFactory setReuseAddress(boolean isReuseAddress) {
-        this.reuseAddress = isReuseAddress;
+        reuseAddress = isReuseAddress;
         return this;
     }
 }

@@ -24,27 +24,27 @@ public final class BitOps {
             buf[index + i] = (byte) (value >>> i * 8);
         }
     }
-    
+
     public static int toBigEndianInt(byte[] buf) {
         return toBigEndianInt(buf, 0);
     }
-    
+
     public static int toBigEndianInt(byte[] buf, int offset)
-    
+
     {
         return (0xFF & buf[offset + 0]) << 0 | (0xFF & buf[offset + 1]) << 8 | (0xFF & buf[offset + 2]) << 16 | (0xFF & buf[offset + 3]) << 24;
     }
-    
+
     public static long toBigEndianLong(byte[] buf, int offset) {
         return (0xFF & (long) buf[offset + 0]) << 0 | (0xFF & (long) buf[offset + 1]) << 8 | (0xFF & (long) buf[offset + 2]) << 16 | (0xFF & (long) buf[offset + 3]) << 24
                 | (0xFF & (long) buf[offset + 4]) << 32 | (0xFF & (long) buf[offset + 5]) << 40 | (0xFF & (long) buf[offset + 6]) << 48 | (0xFF & (long) buf[offset + 7]) << 56;
     }
-    
+
     public static byte[] toLittleEndianBuf(int value) {
         byte[] ret = { (byte) (value >>> 0), (byte) (value >>> 8), (byte) (value >>> 16), (byte) (value >>> 24) };
         return ret;
     }
-    
+
     private BitOps() {
     }
 }

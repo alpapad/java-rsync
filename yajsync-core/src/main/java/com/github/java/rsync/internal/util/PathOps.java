@@ -42,7 +42,7 @@ public final class PathOps {
         }
         return false;
     }
-    
+
     public static FileSystem fileSystemOf(String fsPathName) throws IOException, URISyntaxException {
         URI uri = new URI(fsPathName);
         try {
@@ -52,7 +52,7 @@ public final class PathOps {
             return FileSystems.newFileSystem(uri, empty);
         }
     }
-    
+
     /**
      * Preserves trailing slash information (FileSystem.getPath won't) and normalize
      * empty paths to "."
@@ -69,7 +69,7 @@ public final class PathOps {
             return normalized;
         }
     }
-    
+
     public static boolean isDirectoryStructurePreservable(String separator, String unixPathName) {
         assert unixPathName != null;
         if (separator.equals(Text.SLASH)) {
@@ -77,7 +77,7 @@ public final class PathOps {
         }
         return !unixPathName.contains(separator);
     }
-    
+
     public static boolean isPathPreservable(Path path) {
         assert path != null;
         if (Environment.IS_RUNNING_WINDOWS) {
@@ -85,7 +85,7 @@ public final class PathOps {
         }
         return true;
     }
-    
+
     private static boolean isWindowsPathPreserved(Path path) {
         assert path != null;
         for (Path p : path) {
@@ -96,7 +96,7 @@ public final class PathOps {
         }
         return true;
     }
-    
+
     private static Path joinPaths(Path path, List<Path> paths) {
         Path empty = path.getFileSystem().getPath(Text.EMPTY);
         Path result = path.isAbsolute() ? path.getRoot() : empty;
@@ -105,7 +105,7 @@ public final class PathOps {
         }
         return result;
     }
-    
+
     // we can't use Path.normalize because it resolves a/../.. -> .. for example
     private static Path normalizePathDefault(Path path) {
         LinkedList<Path> paths = new LinkedList<>();
@@ -123,7 +123,7 @@ public final class PathOps {
         }
         return joinPaths(path, paths);
     }
-    
+
     /**
      * @throws InvalidPathException if trying to resolve a relative path prefixed
      *                              with a .. directory
@@ -146,14 +146,14 @@ public final class PathOps {
         }
         return joinPaths(path, paths);
     }
-    
+
     public static Path normalizeStrict(Path path) {
         if (Environment.IS_RUNNING_WINDOWS) {
             return normalizePathWin(path);
         }
         return normalizePathDefault(path);
     }
-    
+
     // / - / = /
     // a - a = null
     // /a - /a = /
@@ -174,7 +174,7 @@ public final class PathOps {
             return res;
         }
     }
-    
+
     private PathOps() {
     }
 }

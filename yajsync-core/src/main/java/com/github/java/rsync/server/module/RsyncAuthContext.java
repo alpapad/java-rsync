@@ -34,36 +34,36 @@ public class RsyncAuthContext {
     public static RsyncAuthContext fromChallenge(TextEncoder characterEncoder, String challenge) {
         return new RsyncAuthContext(characterEncoder, challenge);
     }
-    
+
     private final String challenge;
-    
+
     private final TextEncoder characterEncoder;
-    
+
     public RsyncAuthContext(TextEncoder characterEncoder) {
-        this.challenge = this.newChallenge();
+        challenge = newChallenge();
         this.characterEncoder = characterEncoder;
     }
-    
+
     private RsyncAuthContext(TextEncoder characterEncoder, String challenge) {
         this.challenge = challenge;
         this.characterEncoder = characterEncoder;
     }
-    
+
     public String getChallenge() {
-        return this.challenge;
+        return challenge;
     }
-    
+
     /**
      * @throws TextConversionException if challenge cannot be encoded
      */
     private byte[] hash(char[] password) {
         byte[] passwordBytes = null;
         try {
-            passwordBytes = this.characterEncoder.secureEncodeOrNull(password);
+            passwordBytes = characterEncoder.secureEncodeOrNull(password);
             if (passwordBytes == null) {
                 throw new RuntimeException("Unable to encode characters in " + "password");
             }
-            byte[] challengeBytes = this.characterEncoder.encode(this.challenge); // throws TextConversionException
+            byte[] challengeBytes = characterEncoder.encode(challenge); // throws TextConversionException
             MessageDigest md = MD5.newInstance();
             md.update(passwordBytes);
             md.update(challengeBytes);
@@ -74,18 +74,18 @@ public class RsyncAuthContext {
             }
         }
     }
-    
+
     private String newChallenge() {
         long rand = new SecureRandom().nextLong();
         byte[] randBytes = ByteBuffer.allocate(Consts.SIZE_LONG).putLong(rand).array();
         return Base64.getEncoder().withoutPadding().encodeToString(randBytes);
     }
-    
+
     /**
      * @throws TextConversionException if challenge cannot be encoded
      */
     public String response(char[] password) {
-        byte[] hashedBytes = this.hash(password);
+        byte[] hashedBytes = hash(password);
         return Base64.getEncoder().withoutPadding().encodeToString(hashedBytes);
     }
 }

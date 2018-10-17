@@ -26,12 +26,12 @@ import java.util.regex.Pattern;
 import com.github.java.rsync.internal.util.ArgumentParsingError;
 
 public class FilterRuleList {
-
+    
     /*
      * see http://rsync.samba.org/ftp/rsync/rsync.html --> FILTER RULES
      */
     public class FilterRule {
-
+        
         private final boolean absoluteMatching;
         private final boolean deletionRule;
         private final boolean directoryOnly;
@@ -41,7 +41,7 @@ public class FilterRuleList {
         private String path;
         private Pattern pattern;
         private final boolean patternMatching;
-
+        
         /*
          * @formatter:off
          *
@@ -49,73 +49,73 @@ public class FilterRuleList {
          *
          * @formatter:on
          */
-
+        
         public FilterRule(String plainRule) throws ArgumentParsingError {
-
+            
             String[] splittedRule = plainRule.split("\\s+");
             if (splittedRule.length != 2) {
                 throw new ArgumentParsingError(String.format("failed to parse filter rule '%s', invalid format: should be '<+|-|P|R|H|S> <modifier><path-expression>'", plainRule));
             }
-
+            
             if ("P".equals(splittedRule[0])) {
                 splittedRule[0] = "-";
-                this.deletionRule = true;
+                deletionRule = true;
             } else if ("R".equals(splittedRule[0])) {
                 splittedRule[0] = "+";
-                this.deletionRule = true;
+                deletionRule = true;
             } else {
-                this.deletionRule = false;
+                deletionRule = false;
             }
-
+            
             if ("H".equals(splittedRule[0])) {
                 splittedRule[0] = "-";
-                this.hidingRule = true;
+                hidingRule = true;
             } else if ("S".equals(splittedRule[0])) {
                 splittedRule[0] = "+";
-                this.hidingRule = true;
+                hidingRule = true;
             } else {
-                this.hidingRule = false;
+                hidingRule = false;
             }
-
+            
             if (!"+".equals(splittedRule[0]) && !"-".equals(splittedRule[0])) {
                 throw new ArgumentParsingError(String.format("failed to parse filter rule '%s': must start with + (inclusion) or - (exclusion)", plainRule));
             }
-
-            this.inclusion = "+".equals(splittedRule[0]);
-
-            this.directoryOnly = splittedRule[1].endsWith("/");
-
-            this.negateMatching = splittedRule[1].startsWith("!");
-
-            this.path = splittedRule[1].substring(this.negateMatching ? 1 : 0, this.directoryOnly ? splittedRule[1].length() - 1 : splittedRule[1].length());
-
-            this.absoluteMatching = this.path.startsWith("/");
-
+            
+            inclusion = "+".equals(splittedRule[0]);
+            
+            directoryOnly = splittedRule[1].endsWith("/");
+            
+            negateMatching = splittedRule[1].startsWith("!");
+            
+            path = splittedRule[1].substring(negateMatching ? 1 : 0, directoryOnly ? splittedRule[1].length() - 1 : splittedRule[1].length());
+            
+            absoluteMatching = path.startsWith("/");
+            
             // add . for absolute matching to conform to rsync paths
-            if (this.absoluteMatching) {
-                this.path = "." + this.path;
+            if (absoluteMatching) {
+                path = "." + path;
             }
-
+            
             // check if string or pattern matching is required
             // patternMatching = path.contains("*") || path.contains("?") ||
             // path.contains("[");
-            this.patternMatching = this.path.matches(".*[\\*\\?\\[].*");
-
-            if (this.patternMatching) {
-
+            patternMatching = path.matches(".*[\\*\\?\\[].*");
+            
+            if (patternMatching) {
+                
                 StringBuilder b = new StringBuilder();
-
-                if (this.absoluteMatching) {
+                
+                if (absoluteMatching) {
                     b.append("^");
                 }
-
-                for (int i = 0; i < this.path.length(); i++) {
-
-                    char c = this.path.charAt(i);
-
+                
+                for (int i = 0; i < path.length(); i++) {
+                    
+                    char c = path.charAt(i);
+                    
                     if (c == '?') {
                         b.append("[^/]");
-                    } else if (c == '*' && i + 1 < this.path.length() && this.path.charAt(i + 1) == '*') {
+                    } else if (c == '*' && i + 1 < path.length() && path.charAt(i + 1) == '*') {
                         b.append(".*");
                     } else if (c == '*') {
                         b.append("[^/].*");
@@ -123,31 +123,31 @@ public class FilterRuleList {
                         b.append(c);
                     }
                 }
-
-                this.pattern = Pattern.compile(b.toString());
+                
+                pattern = Pattern.compile(b.toString());
             }
         }
-
+        
         public boolean isDirectoryOnly() {
-            return this.directoryOnly;
+            return directoryOnly;
         }
-
+        
         public boolean isInclusion() {
-            return this.inclusion;
+            return inclusion;
         }
-
+        
         public boolean matches(String filename) {
-
+            
             boolean _result;
-
-            if (this.patternMatching) {
-                _result = this.pattern.matcher(filename).matches();
+            
+            if (patternMatching) {
+                _result = pattern.matcher(filename).matches();
             } else {
-
-                String path = this.path + (this.directoryOnly ? "/" : "");
-
+                
+                String path = this.path + (directoryOnly ? "/" : "");
+                
                 // string matching
-                if (this.absoluteMatching) {
+                if (absoluteMatching) {
                     if (filename.length() < path.length()) {
                         // no matching if filename is shorter than path
                         _result = false;
@@ -169,59 +169,59 @@ public class FilterRuleList {
                     }
                 }
             }
-
-            return this.negateMatching ? !_result : _result;
+            
+            return negateMatching ? !_result : _result;
         }
-
+        
         @Override
         public String toString() {
             StringBuilder buf = new StringBuilder();
-            if (this.deletionRule) {
-                buf.append(this.inclusion ? "R" : "P").append(" ");
-            } else if (this.hidingRule) {
-                buf.append(this.inclusion ? "S" : "H").append(" ");
+            if (deletionRule) {
+                buf.append(inclusion ? "R" : "P").append(" ");
+            } else if (hidingRule) {
+                buf.append(inclusion ? "S" : "H").append(" ");
             } else {
-                buf.append(this.inclusion ? "+" : "-").append(" ");
+                buf.append(inclusion ? "+" : "-").append(" ");
             }
-            buf.append(this.negateMatching ? "!" : "");
+            buf.append(negateMatching ? "!" : "");
             /*
              * if (patternMatching) { buf.append(pattern.toString()); } else {
              */
-            buf.append(this.path);
+            buf.append(path);
             // }
-            if (this.directoryOnly) {
+            if (directoryOnly) {
                 buf.append("/");
             }
-
+            
             return buf.toString();
         }
     }
-
+    
     public enum Result {
         EXCLUDED /* PROTECTED, HIDE */, INCLUDED /* RISK, SHOW */ , NEUTRAL
     }
-
+    
     public List<FilterRule> _rules = new ArrayList<>();
-
+    
     public FilterRuleList addList(FilterRuleList list) {
-        this._rules.addAll(list._rules);
+        _rules.addAll(list._rules);
         return this;
     }
-
+    
     public void addRule(String rule) throws ArgumentParsingError {
-        this._rules.add(new FilterRule(rule));
+        _rules.add(new FilterRule(rule));
     }
-
+    
     public Result check(String filename, boolean isDirectory) {
-
-        for (FilterRule rule : this._rules) {
-
+        
+        for (FilterRule rule : _rules) {
+            
             if (!isDirectory && rule.isDirectoryOnly()) {
                 continue;
             }
-
+            
             boolean matches = rule.matches(filename);
-
+            
             if (matches) {
                 /*
                  * first matching rule matters
@@ -233,15 +233,15 @@ public class FilterRuleList {
                 }
             }
         }
-
+        
         return Result.NEUTRAL;
     }
-
+    
     @Override
     public String toString() {
-
+        
         StringBuilder buf = new StringBuilder();
-        for (FilterRule rule : this._rules) {
+        for (FilterRule rule : _rules) {
             buf.append(rule).append("; ");
         }
         return buf.toString();

@@ -21,19 +21,19 @@ package com.github.java.rsync.internal.session;
 
 public enum SessionStatus {
     AUTHREQ("@RSYNCD: AUTHREQD "), ERROR("@ERROR"), EXIT("@RSYNCD: EXIT"), OK("@RSYNCD: OK");
-    
+
     private final String repr;
-    
+
     SessionStatus(String s) {
-        this.repr = s;
+        repr = s;
     }
-    
+
     boolean matches(String s) {
-        return s.startsWith(this.repr);
+        return s.startsWith(repr);
     }
-    
+
     @Override
     public String toString() {
-        return this.repr;
+        return repr;
     }
 }

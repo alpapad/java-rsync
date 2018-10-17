@@ -18,7 +18,7 @@ package com.github.java.rsync.server.module;
 
 public class ModuleSecurityException extends ModuleException {
     private static final long serialVersionUID = 1L;
-    
+
     public ModuleSecurityException(String message) {
         super(message);
     }

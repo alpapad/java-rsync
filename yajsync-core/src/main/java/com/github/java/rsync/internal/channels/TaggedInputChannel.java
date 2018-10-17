@@ -32,41 +32,41 @@ import com.github.java.rsync.internal.util.Util;
 
 public class TaggedInputChannel extends SimpleInputChannel {
     private static final Logger LOG = Logger.getLogger(TaggedInputChannel.class.getName());
-    
+
     private final SimpleInputChannel inputChannel;
     private final MessageHandler msgHandler;
     private int readAmountAvailable = 0;
-    
+
     public TaggedInputChannel(ReadableByteChannel sock, MessageHandler handler) {
         super(sock);
-        this.inputChannel = new SimpleInputChannel(sock);
-        this.msgHandler = handler;
+        inputChannel = new SimpleInputChannel(sock);
+        msgHandler = handler;
     }
-    
+
     @Override
     protected void get(ByteBuffer dst) throws ChannelException {
         while (dst.hasRemaining()) {
-            this.readNextAvailable(dst);
+            readNextAvailable(dst);
         }
     }
-    
+
     public int getNumBytesAvailable() {
-        return this.readAmountAvailable;
+        return readAmountAvailable;
     }
-    
+
     @Override
     public long getNumBytesRead() {
-        return super.getNumBytesRead() + this.inputChannel.getNumBytesRead();
+        return super.getNumBytesRead() + inputChannel.getNumBytesRead();
     }
-    
+
     /**
      * @throws RsyncProtocolException if peer sends an invalid message
      */
     protected void readNextAvailable(ByteBuffer dst) throws ChannelException {
-        while (this.readAmountAvailable == 0) {
-            this.readAmountAvailable = this.readNextMessage();
+        while (readAmountAvailable == 0) {
+            readAmountAvailable = readNextMessage();
         }
-        int chunkLength = Math.min(this.readAmountAvailable, dst.remaining());
+        int chunkLength = Math.min(readAmountAvailable, dst.remaining());
         ByteBuffer slice = Util.slice(dst, dst.position(), dst.position() + chunkLength);
         super.get(slice);
         if (LOG.isLoggable(Level.FINEST)) {
@@ -74,26 +74,26 @@ public class TaggedInputChannel extends SimpleInputChannel {
             LOG.finest(Text.byteBufferToString(tmp));
         }
         dst.position(slice.position());
-        this.readAmountAvailable -= chunkLength;
+        readAmountAvailable -= chunkLength;
     }
-    
+
     private int readNextMessage() throws ChannelException {
         try {
             // throws IllegalArgumentException
-            MessageHeader hdr = MessageHeader.fromTag(this.inputChannel.getInt());
+            MessageHeader hdr = MessageHeader.fromTag(inputChannel.getInt());
             if (hdr.getMessageType() == MessageCode.DATA) {
                 if (LOG.isLoggable(Level.FINER)) {
                     LOG.finer("< " + hdr);
                 }
                 return hdr.getLength();
             }
-            ByteBuffer payload = this.inputChannel.get(hdr.getLength()).order(ByteOrder.LITTLE_ENDIAN);
+            ByteBuffer payload = inputChannel.get(hdr.getLength()).order(ByteOrder.LITTLE_ENDIAN);
             // throws IllegalArgumentException, IllegalStateException
             Message message = new Message(hdr, payload);
             if (LOG.isLoggable(Level.FINER)) {
                 LOG.finer("< " + message);
             }
-            this.msgHandler.handleMessage(message);
+            msgHandler.handleMessage(message);
             return 0;
         } catch (RsyncProtocolException | IllegalStateException | IllegalArgumentException e) {
             throw new ChannelException(e);

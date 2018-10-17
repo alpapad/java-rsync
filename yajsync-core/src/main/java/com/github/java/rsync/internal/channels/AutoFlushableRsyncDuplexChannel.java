@@ -21,53 +21,53 @@ package com.github.java.rsync.internal.channels;
 public class AutoFlushableRsyncDuplexChannel extends AutoFlushableDuplexChannel implements Taggable, IndexDecoder, IndexEncoder {
     private final RsyncInChannel inChannel;
     private final RsyncOutChannel outChannel;
-    
+
     public AutoFlushableRsyncDuplexChannel(RsyncInChannel inChannel, RsyncOutChannel outChannel) {
         super(inChannel, outChannel);
         this.inChannel = inChannel;
         this.outChannel = outChannel;
     }
-    
+
     public void close() throws ChannelException {
         try {
-            this.inChannel.close();
+            inChannel.close();
         } finally {
-            this.outChannel.close();
+            outChannel.close();
         }
     }
-    
+
     @Override
     public int decodeIndex() throws ChannelException {
-        this.flush();
-        return this.inChannel.decodeIndex();
+        flush();
+        return inChannel.decodeIndex();
     }
-    
+
     @Override
     public void encodeIndex(int index) throws ChannelException {
-        this.outChannel.encodeIndex(index);
+        outChannel.encodeIndex(index);
     }
-    
+
     @Override
     public void flush() throws ChannelException {
-        if (this.inChannel.getNumBytesAvailable() == 0) {
+        if (inChannel.getNumBytesAvailable() == 0) {
             super.flush();
         }
     }
-    
+
     public int numBytesAvailable() {
-        return this.inChannel.getNumBytesAvailable();
+        return inChannel.getNumBytesAvailable();
     }
-    
+
     public long numBytesRead() {
-        return this.inChannel.getNumBytesRead();
+        return inChannel.getNumBytesRead();
     }
-    
+
     public long numBytesWritten() {
-        return this.outChannel.getNumBytesWritten();
+        return outChannel.getNumBytesWritten();
     }
-    
+
     @Override
     public void putMessage(Message message) throws ChannelException {
-        this.outChannel.putMessage(message);
+        outChannel.putMessage(message);
     }
 }

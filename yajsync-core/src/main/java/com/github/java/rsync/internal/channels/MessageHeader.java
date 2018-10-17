@@ -25,7 +25,7 @@ import java.util.Objects;
 public class MessageHeader {
     private static final int MSG_MAX_LENGTH = 0xFFFFFF;
     private static final int MSG_TYPE_OFFSET = 7;
-    
+
     /**
      * @throws IllegalArgumentException if tag value is invalid and has no matching
      *                                  MessageCode
@@ -35,11 +35,11 @@ public class MessageHeader {
         MessageCode code = MessageCode.fromInt((tag >> 24) - MSG_TYPE_OFFSET); // throws IllegalArgumentException
         return new MessageHeader(code, length); // throws IllegalArgumentException
     }
-    
+
     private final MessageCode code;
-    
+
     private final int length;
-    
+
     /**
      * @throws IllegalArgumentException if length < 0 or length > 0xFFFFFF)
      */
@@ -51,35 +51,35 @@ public class MessageHeader {
         this.code = code;
         this.length = length;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
             MessageHeader other = (MessageHeader) obj;
-            return this.code == other.code && this.length == other.length;
+            return code == other.code && length == other.length;
         }
         return false;
     }
-    
+
+    public int getLength() {
+        return length;
+    }
+
+    public MessageCode getMessageType() {
+        return code;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(this.code, this.length);
+        return Objects.hash(code, length);
     }
-    
-    public int getLength() {
-        return this.length;
-    }
-    
-    public MessageCode getMessageType() {
-        return this.code;
-    }
-    
+
     @Override
     public String toString() {
-        return String.format("%s %s length=%d", this.getClass().getSimpleName(), this.code, this.length);
+        return String.format("%s %s length=%d", this.getClass().getSimpleName(), code, length);
     }
-    
+
     public int toTag() {
-        return MSG_TYPE_OFFSET + this.code.getValue() << 24 | this.length;
+        return MSG_TYPE_OFFSET + code.getValue() << 24 | length;
     }
 }

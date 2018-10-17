@@ -35,102 +35,102 @@ public class BufferedOutputChannel implements Bufferable {
     protected final ByteBuffer buffer;
     private long numBytesWritten;
     private final WritableByteChannel sinkChannel;
-    
+
     public BufferedOutputChannel(WritableByteChannel sock) {
         this(sock, DEFAULT_BUF_SIZE);
     }
-    
+
     public BufferedOutputChannel(WritableByteChannel sock, int bufferSize) {
-        this.sinkChannel = sock;
+        sinkChannel = sock;
         if (Environment.isAllocateDirect()) {
-            this.buffer = ByteBuffer.allocateDirect(bufferSize);
+            buffer = ByteBuffer.allocateDirect(bufferSize);
         } else {
-            this.buffer = ByteBuffer.allocate(bufferSize);
+            buffer = ByteBuffer.allocate(bufferSize);
         }
-        this.buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
     }
-    
+
     public void close() throws ChannelException {
         try {
-            this.flush();
+            flush();
         } finally {
             try {
-                this.sinkChannel.close();
+                sinkChannel.close();
             } catch (IOException e) {
                 throw new ChannelException(e);
             }
         }
     }
-    
+
     @Override
     public void flush() throws ChannelException {
-        if (this.getNumBytesBuffered() > 0) {
-            this.buffer.flip();
-            this.send(this.buffer);
-            this.buffer.clear();
+        if (getNumBytesBuffered() > 0) {
+            buffer.flip();
+            send(buffer);
+            buffer.clear();
         }
     }
-    
+
     @Override
     public int getNumBytesBuffered() {
-        return this.buffer.position();
+        return buffer.position();
     }
-    
+
     public long getNumBytesWritten() {
-        return this.numBytesWritten + this.getNumBytesBuffered();
+        return numBytesWritten + getNumBytesBuffered();
     }
-    
+
     @Override
     public void put(byte[] src, int offset, int length) throws ChannelException {
         this.put(ByteBuffer.wrap(src, offset, length));
     }
-    
+
     @Override
     public void put(ByteBuffer src) throws ChannelException {
         while (src.hasRemaining()) {
-            int l = Math.min(src.remaining(), this.buffer.remaining());
+            int l = Math.min(src.remaining(), buffer.remaining());
             if (l == 0) {
-                this.flush();
+                flush();
             } else {
                 ByteBuffer slice = Util.slice(src, src.position(), src.position() + l);
-                this.buffer.put(slice);
+                buffer.put(slice);
                 src.position(slice.position());
             }
         }
     }
-    
+
     @Override
     public void putByte(byte b) throws ChannelException {
-        if (this.buffer.remaining() < Consts.SIZE_BYTE) {
-            this.flush();
+        if (buffer.remaining() < Consts.SIZE_BYTE) {
+            flush();
         }
-        this.buffer.put(b);
+        buffer.put(b);
     }
-    
+
     @Override
     public void putChar(char c) throws ChannelException {
-        if (this.buffer.remaining() < Consts.SIZE_CHAR) {
-            this.flush();
+        if (buffer.remaining() < Consts.SIZE_CHAR) {
+            flush();
         }
-        this.buffer.putChar(c);
+        buffer.putChar(c);
     }
-    
+
     @Override
     public void putInt(int i) throws ChannelException {
-        if (this.buffer.remaining() < Consts.SIZE_INT) {
-            this.flush();
+        if (buffer.remaining() < Consts.SIZE_INT) {
+            flush();
         }
-        this.buffer.putInt(i);
+        buffer.putInt(i);
     }
-    
+
     public void send(ByteBuffer buf) throws ChannelException {
         try {
             while (buf.hasRemaining()) {
-                int count = this.sinkChannel.write(buf);
+                int count = sinkChannel.write(buf);
                 if (count <= 0) {
                     throw new ChannelEOFException(String.format("channel write unexpectedly returned %d (EOF)", count));
                 }
-                this.numBytesWritten += count;
+                numBytesWritten += count;
             }
         } catch (ClosedByInterruptException e) {
             throw new RuntimeInterruptException(e);

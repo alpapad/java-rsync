@@ -29,55 +29,55 @@ class FileInfoCache {
     private int prevMajor = -1;
     private int prevMode = -1;
     private User prevUser;
-    
+
     public FileInfoCache() {
     }
-    
+
     public byte[] getPrevFileNameBytes() {
-        return this.prevFileName;
+        return prevFileName;
     }
-    
+
     public Group getPrevGroup() {
-        return this.prevGroup;
+        return prevGroup;
     }
-    
+
     public long getPrevLastModified() {
-        return this.prevLastModified;
+        return prevLastModified;
     }
-    
+
     public int getPrevMajor() {
-        return this.prevMajor;
+        return prevMajor;
     }
-    
+
     public int getPrevMode() {
-        return this.prevMode;
+        return prevMode;
     }
-    
+
     public User getPrevUser() {
-        return this.prevUser;
+        return prevUser;
     }
-    
+
     public void setPrevFileNameBytes(byte[] prevFileName) {
         this.prevFileName = prevFileName;
     }
-    
+
     public void setPrevGroup(Group group) {
-        this.prevGroup = group;
+        prevGroup = group;
     }
-    
+
     public void setPrevLastModified(long prevLastModified) {
         this.prevLastModified = prevLastModified;
     }
-    
+
     public void setPrevMajor(int major) {
-        this.prevMajor = major;
+        prevMajor = major;
     }
-    
+
     public void setPrevMode(int prevMode) {
         this.prevMode = prevMode;
     }
-    
+
     public void setPrevUser(User user) {
-        this.prevUser = user;
+        prevUser = user;
     }
 }
