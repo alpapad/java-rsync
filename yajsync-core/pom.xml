@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>yajsync-parent</artifactId>
-        <groupId>com.github.perlundq</groupId>
+        <artifactId>parent</artifactId>
+        <groupId>com.github.java.rsync</groupId>
         <version>0.9.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>yajsync-core</artifactId>
+    <artifactId>core</artifactId>
     <name>yajsync: Java rsync API</name>
 
 </project>

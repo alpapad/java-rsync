@@ -4,18 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>yajsync-parent</artifactId>
-        <groupId>com.github.perlundq</groupId>
+        <artifactId>parent</artifactId>
+        <groupId>com.github.java.rsync</groupId>
         <version>0.9.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>yajsync-app</artifactId>
+    <artifactId>rsync-app</artifactId>
     <name>yajsync: Java rsync client/server</name>
 
     <dependencies>
         <dependency>
-            <groupId>com.github.perlundq</groupId>
-            <artifactId>yajsync-core</artifactId>
+            <groupId>com.github.java.rsync</groupId>
+            <artifactId>core</artifactId>
             <version>0.9.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
@@ -33,7 +33,7 @@
 
                     <archive>
                         <manifest>
-                            <mainClass>com.github.perlundq.yajsync.ui.Main</mainClass>
+                            <mainClass>com.github.java.rsync.ui.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
