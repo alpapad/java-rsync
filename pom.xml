@@ -59,8 +59,8 @@
     </build>
 
     <modules>
-        <module>yajsync-core</module>
-        <module>yajsync-app</module>
+        <module>core</module>
+        <module>rsync-app</module>
     </modules>
 
 </project>
