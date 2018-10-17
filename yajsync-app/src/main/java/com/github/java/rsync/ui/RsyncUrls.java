@@ -24,13 +24,13 @@ final class RsyncUrls {
     private final ConnectionInfo connInfo;
     private final String moduleName;
     private final Iterable<String> pathNames;
-    
+
     public RsyncUrls(ConnectionInfo connInfo, String moduleName, Iterable<String> pathNames) {
         this.connInfo = connInfo;
         this.moduleName = moduleName;
         this.pathNames = pathNames;
     }
-    
+
     public RsyncUrls(Path cwd, Iterable<String> urls) throws IllegalUrlException {
         List<String> pathNames = new LinkedList<>();
         RsyncUrl prevUrl = null;
@@ -39,7 +39,8 @@ final class RsyncUrls {
             RsyncUrl url = RsyncUrl.parse(cwd, s);
             boolean isFirst = prevUrl == null;
             boolean curAndPrevAreLocal = !isFirst && url.isLocal() && prevUrl.isLocal();
-            boolean curAndPrevIsSameRemote = !isFirst && url.isRemote() && prevUrl.isRemote() && url.getConnectionInfo().equals(prevUrl.getConnectionInfo()) && url.getModuleName().equals(prevUrl.getModuleName());
+            boolean curAndPrevIsSameRemote = !isFirst && url.isRemote() && prevUrl.isRemote() && url.getConnectionInfo().equals(prevUrl.getConnectionInfo())
+                    && url.getModuleName().equals(prevUrl.getModuleName());
             if (isFirst || curAndPrevAreLocal || curAndPrevIsSameRemote) {
                 if (moduleName == null && url.isRemote()) {
                     moduleName = url.getModuleName();
@@ -59,23 +60,23 @@ final class RsyncUrls {
         this.moduleName = moduleName;
         this.connInfo = prevUrl.getConnectionInfo();
     }
-    
+
     public ConnectionInfo getConnectionInfo() {
         return this.connInfo;
     }
-    
-    public boolean isRemote() {
-        return this.connInfo != null;
-    }
-    
+
     public String getModuleName() {
         return this.moduleName;
     }
-    
+
     public Iterable<String> getPathNames() {
         return this.pathNames;
     }
-    
+
+    public boolean isRemote() {
+        return this.connInfo != null;
+    }
+
     @Override
     public String toString() {
         if (this.isRemote()) {

@@ -27,7 +27,7 @@ public class Main {
         if (args.length == 0) {
             throw new IllegalArgumentException(helpText);
         }
-        
+
         String[] args2 = Arrays.copyOfRange(args, 1, args.length);
         if (args[0].equals("client")) {
             int rc = new YajsyncClient().start(args2);

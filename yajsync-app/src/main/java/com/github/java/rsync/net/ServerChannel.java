@@ -20,7 +20,7 @@ import java.io.IOException;
 
 public interface ServerChannel extends AutoCloseable {
     DuplexByteChannel accept() throws IOException;
-    
+
     @Override
     void close() throws IOException;
 }

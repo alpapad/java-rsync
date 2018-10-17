@@ -26,182 +26,148 @@ import com.github.java.rsync.attr.FileInfo;
 import com.github.java.rsync.attr.Group;
 import com.github.java.rsync.attr.RsyncFileAttributes;
 import com.github.java.rsync.attr.User;
-import com.github.java.rsync.internal.session.FileInfoImpl;
 import com.github.java.rsync.internal.util.FileOps;
 
 public class FileInfoTest {
-
-    RsyncFileAttributes _fileAttrs =
-            new RsyncFileAttributes(FileOps.S_IFREG | 0644, 0, 0, User.JVM_USER,
-                                    Group.JVM_GROUP);
-    RsyncFileAttributes _dirAttrs =
-        new RsyncFileAttributes(FileOps.S_IFDIR | 0755, 0, 0, User.JVM_USER,
-                                Group.JVM_GROUP);
-    String _dotDirPathName = ".";
-    FileInfoImpl _dotDir = new FileInfoImpl(".", ".".getBytes(), _dirAttrs);
-
+    
+    RsyncFileAttributes dirAttrs = new RsyncFileAttributes(FileOps.S_IFDIR | 0755, 0, 0, User.JVM_USER, Group.JVM_GROUP);
+    FileInfoImpl dotDir = new FileInfoImpl(".", ".".getBytes(), this.dirAttrs);
+    String dotDirPathName = ".";
+    RsyncFileAttributes _fileAttrs = new RsyncFileAttributes(FileOps.S_IFREG | 0644, 0, 0, User.JVM_USER, Group.JVM_GROUP);
+    
     @Test
-    public void testSortDotDirWithDotDirEqual()
-    {
-        assertTrue(_dotDir.equals(_dotDir));
-        assertEquals(_dotDir.compareTo(_dotDir), 0);
-    }
-
-    @Test
-    public void testSortDotDirBeforeNonDotDir()
-    {
+    public void testSortDotDirBeforeNonDotDir() {
         String str = ".a";
-        FileInfo f = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
-        assertFalse(_dotDir.equals(f));
-        assertTrue(_dotDir.compareTo(f) <= -1);
+        FileInfo f = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
+        assertFalse(this.dotDir.equals(f));
+        assertTrue(this.dotDir.compareTo(f) <= -1);
     }
-
+    
     @Test
-    public void testSortDotDirBeforeNonDotDir2()
-    {
+    public void testSortDotDirBeforeNonDotDir2() {
         String str = "...";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
-        assertFalse(_dotDir.equals(f));
-        assertTrue(_dotDir.compareTo(f) <= -1);
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
+        assertFalse(this.dotDir.equals(f));
+        assertTrue(this.dotDir.compareTo(f) <= -1);
     }
-
+    
     @Test
-    public void testSortDotDirBeforeNonDotDir3()
-    {
+    public void testSortDotDirBeforeNonDotDir3() {
         String str = "...";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
-        assertFalse(_dotDir.equals(f));
-        assertTrue(_dotDir.compareTo(f) <= -1);
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
+        assertFalse(this.dotDir.equals(f));
+        assertTrue(this.dotDir.compareTo(f) <= -1);
     }
-
+    
+    @Test
+    public void testSortDotDirBeforeNonDotDir4() {
+        String str = "a.";
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
+        assertFalse(this.dotDir.equals(f));
+        assertTrue(this.dotDir.compareTo(f) <= -1);
+    }
+    
     // test empty throws illegalargumentexception
     // test dot is always a directory
-
+    
     /*
-     * ./
-     * ...
-     * ..../
-     * .a
-     * a.
-     * a..
-     * ..a
-     * .a.
+     * ./ ... ..../ .a a. a.. ..a .a.
      *
-     * a.
-     * a../
-     * .a/
-     * .a/b
-     * b/
-     * b/.
-     * c
-     * cc
-     * c.c
+     * a. a../ .a/ .a/b b/ b/. c cc c.c
      */
-
+    
     @Test
-    public void testSortDotDirBeforeNonDotDir4()
-    {
-        String str = "a.";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
-        assertFalse(_dotDir.equals(f));
-        assertTrue(_dotDir.compareTo(f) <= -1);
+    public void testSortDotDirWithDotDirEqual() {
+        assertTrue(this.dotDir.equals(this.dotDir));
+        assertEquals(this.dotDir.compareTo(this.dotDir), 0);
     }
-
+    
     @Test
-    public void testSortSubstringDirs1()
-    {
+    public void testSortSubstringDirs1() {
         String str = "a"; // i.e. a/
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
         str = "a.";
-        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
+        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
         assertFalse(f.equals(g));
         assertTrue(f.compareTo(g) >= 1);
     }
-
+    
     @Test
-    public void testSortSubstringFileDir1()
-    {
-        String str = "a";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
-        str = "a.";
-        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
+    public void testSortSubstringDirs2() {
+        String str = "a"; // i.e. a/
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
+        str = "a0";
+        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
         assertFalse(f.equals(g));
         assertTrue(f.compareTo(g) <= -1);
     }
-
+    
     @Test
-    public void testSortSubstringFileDir2()
-    {
+    public void testSortSubstringFileDir1() {
         String str = "a";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
         str = "a.";
-        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
+        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
+        assertFalse(f.equals(g));
+        assertTrue(f.compareTo(g) <= -1);
+    }
+    
+    @Test
+    public void testSortSubstringFileDir2() {
+        String str = "a";
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
+        str = "a.";
+        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
         assertFalse(f.equals(g));
         assertTrue(f.compareTo(g) >= 1);
     }
-
+    
     @Test
-    public void testSortSubstringFiles1()
-    {
+    public void testSortSubstringFileDir3() {
         String str = "a";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
-        str = "a.";
-        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
+        str = "a0";
+        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
         assertFalse(f.equals(g));
         assertTrue(f.compareTo(g) <= -1);
     }
-
+    
     @Test
-    public void testSortSubstringDirs2()
-    {
-        String str = "a"; //i.e. a/
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
-        str = "a0";
-        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
-        assertFalse(f.equals(g));
-        assertTrue(f.compareTo(g) <= -1);
-    }
-
-    @Test
-    public void testSortSubstringFileDir3()
-    {
+    public void testSortSubstringFileDir4() {
         String str = "a";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this.dirAttrs);
         str = "a0";
-        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
-        assertFalse(f.equals(g));
-        assertTrue(f.compareTo(g) <= -1);
-    }
-
-    @Test
-    public void testSortSubstringFileDir4()
-    {
-        String str = "a";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _dirAttrs);
-        str = "a0";
-        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
+        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
         assertFalse(f.equals(g));
         assertTrue(f.compareTo(g) >= 1);
     }
-
+    
     @Test
-    public void testSortSubstringFiles2()
-    {
+    public void testSortSubstringFiles1() {
         String str = "a";
-        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
-        str = "a0";
-        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), _fileAttrs);
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
+        str = "a.";
+        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
         assertFalse(f.equals(g));
         assertTrue(f.compareTo(g) <= -1);
     }
-
+    
     @Test
-    public void testSortUtfString()
-    {
+    public void testSortSubstringFiles2() {
+        String str = "a";
+        FileInfoImpl f = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
+        str = "a0";
+        FileInfoImpl g = new FileInfoImpl(str, str.getBytes(), this._fileAttrs);
+        assertFalse(f.equals(g));
+        assertTrue(f.compareTo(g) <= -1);
+    }
+    
+    @Test
+    public void testSortUtfString() {
         String str1 = "Tuabc";
         String str2 = "Tüabc";
-        FileInfoImpl f = new FileInfoImpl(str1, str1.getBytes(), _fileAttrs);
-        FileInfoImpl g = new FileInfoImpl(str2, str2.getBytes(), _fileAttrs);
+        FileInfoImpl f = new FileInfoImpl(str1, str1.getBytes(), this._fileAttrs);
+        FileInfoImpl g = new FileInfoImpl(str2, str2.getBytes(), this._fileAttrs);
         assertFalse(f.equals(g));
         assertTrue(f.compareTo(g) <= -1);
     }

@@ -26,7 +26,7 @@ final class ConnectionInfo {
         private final String address;
         private int portNumber = RsyncServer.DEFAULT_LISTEN_PORT;
         private String userName = Environment.getUserName();
-        
+
         public Builder(String address) throws IllegalUrlException {
             assert address != null;
             if (address.isEmpty()) {
@@ -34,11 +34,11 @@ final class ConnectionInfo {
             }
             this.address = address;
         }
-        
+
         public ConnectionInfo build() {
             return new ConnectionInfo(this);
         }
-        
+
         public Builder portNumber(int portNumber) throws IllegalUrlException {
             if (!isValidPortNumber(portNumber)) {
                 throw new IllegalUrlException(String.format("illegal port %d - must be within the range [%d, %d]", portNumber, PORT_MIN, PORT_MAX));
@@ -46,37 +46,33 @@ final class ConnectionInfo {
             this.portNumber = portNumber;
             return this;
         }
-        
+
         public Builder userName(String userName) {
             assert userName != null;
             this.userName = userName;
             return this;
         }
     }
-    
+
     public static final int PORT_MAX = 65535;
     public static final int PORT_MIN = 1;
-    
+
     public static boolean isValidPortNumber(int portNumber) {
         return portNumber >= PORT_MIN && portNumber <= PORT_MAX;
     }
-    
+
     private final String address;
-    
+
     private final int portNumber;
-    
+
     private final String userName;
-    
+
     private ConnectionInfo(Builder builder) {
         this.userName = builder.userName;
         this.address = builder.address;
         this.portNumber = builder.portNumber;
     }
-    
-    public String getAddress() {
-        return this.address;
-    }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
@@ -85,22 +81,26 @@ final class ConnectionInfo {
         }
         return false;
     }
-    
+
+    public String getAddress() {
+        return this.address;
+    }
+
+    public int getPortNumber() {
+        return this.portNumber;
+    }
+
+    public String getUserName() {
+        return this.userName;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(this.address, this.userName, this.portNumber);
     }
-    
-    public int getPortNumber() {
-        return this.portNumber;
-    }
-    
+
     @Override
     public String toString() {
         return String.format("rsync://%s%s:%d", this.userName.isEmpty() ? "" : this.userName + "@", this.address, this.portNumber);
-    }
-    
-    public String getUserName() {
-        return this.userName;
     }
 }

@@ -23,7 +23,7 @@ import java.io.IOException;
 public class Client {
     public static void main(String args[]) throws IOException, InterruptedException {
         {
-            int rc = new YajsyncClient().start(args);
+            new YajsyncClient().start(args);
         }
         int rc = new YajsyncClient().start(new String[] { //
                 "--archive", //
@@ -34,6 +34,6 @@ public class Client {
                 "rsync://localhost/test/src/main/java/com/github/perlundq/" //
         });
         System.exit(rc);
-        
+
     }
 }

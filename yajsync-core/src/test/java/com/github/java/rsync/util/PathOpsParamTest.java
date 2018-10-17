@@ -17,49 +17,28 @@ import org.junit.runners.Parameterized.Parameters;
 import com.github.java.rsync.internal.util.PathOps;
 
 @RunWith(Parameterized.class)
-public class PathOpsParamTest
-{
-    private String _pathName;
-
+public class PathOpsParamTest {
     @Parameters
     public static Iterable<Object[]> fileNames() {
-        return Arrays.asList(new Object[][] {
-            { "" },
-            { "." },
-            { "./" },
-            { "./." },
-            { "..." },
-            { "1" },
-            { "1/" },
-            { "1/." },
-            { "1/.." },
-            { "1/../" },
-            { "1/../." },
-            { "1/.././" },
-            { "1/.././." },
-            { "1/2/.." },
-            { "1/2/../.." },
-            { "1/2/3../../." },
-            { "1/2/../3/../4/5/../6/7/.." },
-            { "1/../././2/././//3/../4/5/.././.." },
-        });
+        return Arrays.asList(new Object[][] { { "" }, { "." }, { "./" }, { "./." }, { "..." }, { "1" }, { "1/" }, { "1/." }, { "1/.." }, { "1/../" }, { "1/../." }, { "1/.././" }, { "1/.././." },
+                { "1/2/.." }, { "1/2/../.." }, { "1/2/3../../." }, { "1/2/../3/../4/5/../6/7/.." }, { "1/../././2/././//3/../4/5/.././.." }, });
     }
-
-    public PathOpsParamTest(String pathName)
-    {
-        _pathName = pathName;
-    }
-
+    
+    private String pathName;
+    
     @Rule
-    public final TemporaryFolder _tempDir = new TemporaryFolder();
-
+    public final TemporaryFolder tempDir = new TemporaryFolder();
+    
+    public PathOpsParamTest(String pathName) {
+        this.pathName = pathName;
+    }
+    
     @Test
-    public void testNormalizeIdentical() throws IOException
-    {
-        Path root = _tempDir.getRoot().toPath();
-        Path p = root.resolve(_pathName);
+    public void testNormalizeIdentical() throws IOException {
+        Path root = this.tempDir.getRoot().toPath();
+        Path p = root.resolve(this.pathName);
         Path normalized = p.normalize();
-        // make sure the test only touches files below _tempDir
+        // make sure the test only touches files below tempDir
         assertTrue(normalized.startsWith(root));
         Path created = Files.createDirectories(normalized);
         Path q = PathOps.normalizeStrict(p);

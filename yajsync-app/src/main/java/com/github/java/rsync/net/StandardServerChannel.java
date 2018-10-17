@@ -20,21 +20,21 @@ import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 
 public class StandardServerChannel implements ServerChannel {
-    private final ServerSocketChannel _sock;
-    private final int _timeout;
-    
+    private final ServerSocketChannel sock;
+    private final int timeout;
+
     public StandardServerChannel(ServerSocketChannel sock, int timeout) {
-        this._sock = sock;
-        this._timeout = timeout;
+        this.sock = sock;
+        this.timeout = timeout;
     }
-    
+
     @Override
     public StandardSocketChannel accept() throws IOException {
-        return new StandardSocketChannel(this._sock.accept(), this._timeout);
+        return new StandardSocketChannel(this.sock.accept(), this.timeout);
     }
-    
+
     @Override
     public void close() throws IOException {
-        this._sock.close();
+        this.sock.close();
     }
 }

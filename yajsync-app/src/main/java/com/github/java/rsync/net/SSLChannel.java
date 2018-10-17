@@ -44,45 +44,45 @@ public class SSLChannel implements DuplexByteChannel {
         return new SSLChannel((SSLSocket) sock, timeout);
     }
     
-    private final InputStream _is;
-    private final OutputStream _os;
+    private final InputStream is;
+    private final OutputStream os;
     
-    private final SSLSocket _sslSocket;
+    private final SSLSocket sslSocket;
     
     public SSLChannel(SSLSocket sslSocket, int timeout) throws IOException {
         assert Environment.hasAllocateDirectArray() || !Environment.isAllocateDirect();
-        this._sslSocket = sslSocket;
-        this._sslSocket.setSoTimeout(timeout);
-        this._is = this._sslSocket.getInputStream();
-        this._os = this._sslSocket.getOutputStream();
+        this.sslSocket = sslSocket;
+        this.sslSocket.setSoTimeout(timeout);
+        this.is = this.sslSocket.getInputStream();
+        this.os = this.sslSocket.getOutputStream();
     }
     
     @Override
     public void close() throws IOException {
-        this._sslSocket.close(); // will implicitly close _is and _os also
+        this.sslSocket.close(); // will implicitly close is and os also
     }
     
     @Override
-    public boolean isOpen() {
-        return !this._sslSocket.isClosed();
-    }
-    
-    @Override
-    public InetAddress peerAddress() {
-        InetAddress address = this._sslSocket.getInetAddress();
+    public InetAddress getPeerAddress() {
+        InetAddress address = this.sslSocket.getInetAddress();
         if (address == null) {
-            throw new IllegalStateException(String.format("unable to determine remote address of %s - not connected", this._sslSocket));
+            throw new IllegalStateException(String.format("unable to determine remote address of %s - not connected", this.sslSocket));
         }
         return address;
     }
     
     @Override
-    public Optional<Principal> peerPrincipal() {
+    public Optional<Principal> getPeerPrincipal() {
         try {
-            return Optional.of(this._sslSocket.getSession().getPeerPrincipal());
+            return Optional.of(this.sslSocket.getSession().getPeerPrincipal());
         } catch (SSLPeerUnverifiedException e) {
             return Optional.empty();
         }
+    }
+    
+    @Override
+    public boolean isOpen() {
+        return !this.sslSocket.isClosed();
     }
     
     @Override
@@ -90,7 +90,7 @@ public class SSLChannel implements DuplexByteChannel {
         byte[] buf = dst.array();
         int offset = dst.arrayOffset() + dst.position();
         int len = dst.remaining();
-        int n = this._is.read(buf, offset, len);
+        int n = this.is.read(buf, offset, len);
         if (n != -1) {
             dst.position(dst.position() + n);
         }
@@ -99,7 +99,7 @@ public class SSLChannel implements DuplexByteChannel {
     
     @Override
     public String toString() {
-        return this._sslSocket.toString();
+        return this.sslSocket.toString();
     }
     
     @Override
@@ -107,7 +107,7 @@ public class SSLChannel implements DuplexByteChannel {
         byte[] buf = src.array();
         int offset = src.arrayOffset() + src.position();
         int len = src.remaining();
-        this._os.write(buf, offset, len);
+        this.os.write(buf, offset, len);
         src.position(src.position() + len);
         return len;
     }

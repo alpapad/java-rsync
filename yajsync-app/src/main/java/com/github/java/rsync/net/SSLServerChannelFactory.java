@@ -23,22 +23,22 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
 public class SSLServerChannelFactory implements ServerChannelFactory {
-    private int _backlog = 128;
-    
-    private final SSLServerSocketFactory _factory;
-    private boolean _isReuseAddress;
-    private boolean _isWantClientAuth;
-    
+    private int backlog = 128;
+
+    private final SSLServerSocketFactory factory;
+    private boolean reuseAddress;
+    private boolean wantClientAuth;
+
     public SSLServerChannelFactory() {
-        this._factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        this.factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
     }
-    
+
     @Override
     public ServerChannel open(InetAddress address, int port, int timeout) throws IOException {
-        SSLServerSocket sock = (SSLServerSocket) this._factory.createServerSocket(port, this._backlog, address);
+        SSLServerSocket sock = (SSLServerSocket) this.factory.createServerSocket(port, this.backlog, address);
         try {
-            sock.setReuseAddress(this._isReuseAddress);
-            sock.setWantClientAuth(this._isWantClientAuth);
+            sock.setReuseAddress(this.reuseAddress);
+            sock.setWantClientAuth(this.wantClientAuth);
             return new SSLServerChannel(sock, timeout);
         } catch (Throwable t) {
             if (!sock.isClosed()) {
@@ -51,20 +51,20 @@ public class SSLServerChannelFactory implements ServerChannelFactory {
             throw t;
         }
     }
-    
+
     public ServerChannelFactory setBacklog(int backlog) {
-        this._backlog = backlog;
+        this.backlog = backlog;
         return this;
     }
-    
+
     @Override
     public ServerChannelFactory setReuseAddress(boolean isReuseAddress) {
-        this._isReuseAddress = isReuseAddress;
+        this.reuseAddress = isReuseAddress;
         return this;
     }
-    
+
     public ServerChannelFactory setWantClientAuth(boolean isWantClientAuth) {
-        this._isWantClientAuth = isWantClientAuth;
+        this.wantClientAuth = isWantClientAuth;
         return this;
     }
 }

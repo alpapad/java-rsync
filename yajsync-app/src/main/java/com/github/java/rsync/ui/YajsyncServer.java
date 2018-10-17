@@ -59,18 +59,18 @@ public final class YajsyncServer {
     private InetAddress address = InetAddress.getLoopbackAddress();
     private PrintStream err = System.err;
     private CountDownLatch listeningLatch;
-    private boolean useTLS;
     private ModuleProvider moduleProvider = ModuleProvider.getDefault();
     private int numThreads = Runtime.getRuntime().availableProcessors() * THREAD_FACTOR;
     private PrintStream out = System.out;
     private int port = RsyncServer.DEFAULT_LISTEN_PORT;
     private final RsyncServer.Builder serverBuilder = new RsyncServer.Builder();
     private int timeout = 0;
-    private int verbosity=100;
-    
+    private boolean useTLS;
+    private int verbosity = 100;
+
     public YajsyncServer() {
     }
-    
+
     private Callable<Boolean> createCallable(final RsyncServer server, final DuplexByteChannel sock, final boolean isInterruptible) {
         return new Callable<Boolean>() {
             @Override
@@ -78,21 +78,21 @@ public final class YajsyncServer {
                 boolean isOK = false;
                 try {
                     Modules modules;
-                    if (sock.peerPrincipal().isPresent()) {
+                    if (sock.getPeerPrincipal().isPresent()) {
                         if (LOG.isLoggable(Level.FINE)) {
-                            LOG.fine(String.format("%s connected from %s", sock.peerPrincipal().get(), sock.peerAddress()));
+                            LOG.fine(String.format("%s connected from %s", sock.getPeerPrincipal().get(), sock.getPeerAddress()));
                         }
-                        modules = YajsyncServer.this.moduleProvider.newAuthenticated(sock.peerAddress(), sock.peerPrincipal().get());
+                        modules = YajsyncServer.this.moduleProvider.newAuthenticated(sock.getPeerAddress(), sock.getPeerPrincipal().get());
                     } else {
                         if (LOG.isLoggable(Level.FINE)) {
-                            LOG.fine("got anonymous connection from " + sock.peerAddress());
+                            LOG.fine("got anonymous connection from " + sock.getPeerAddress());
                         }
-                        modules = YajsyncServer.this.moduleProvider.newAnonymous(sock.peerAddress());
+                        modules = YajsyncServer.this.moduleProvider.newAnonymous(sock.getPeerAddress());
                     }
                     isOK = server.serve(modules, sock, sock, isInterruptible);
                 } catch (ModuleException e) {
                     if (LOG.isLoggable(Level.SEVERE)) {
-                        LOG.severe(String.format("Error: failed to initialise modules for " + "principal %s using ModuleProvider %s: %s%n", sock.peerPrincipal().get(),
+                        LOG.severe(String.format("Error: failed to initialise modules for " + "principal %s using ModuleProvider %s: %s%n", sock.getPeerPrincipal().get(),
                                 YajsyncServer.this.moduleProvider, e));
                     }
                 } catch (ChannelException e) {
@@ -112,7 +112,7 @@ public final class YajsyncServer {
                         }
                     }
                 }
-                
+
                 if (LOG.isLoggable(Level.FINE)) {
                     LOG.fine("Thread exit status: " + (isOK ? "OK" : "ERROR"));
                 }
@@ -120,7 +120,7 @@ public final class YajsyncServer {
             }
         };
     }
-    
+
     private Iterable<Option> options() {
         List<Option> options = new LinkedList<>();
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "charset", "", "which charset to use (default UTF-8)", option -> {
@@ -133,12 +133,12 @@ public final class YajsyncServer {
                 throw new ArgumentParsingError(String.format("failed to set character set to %s: %s", charsetName, e));
             }
         }));
-        
+
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", String.format("output verbosity (default %d)", this.verbosity), option -> {
             this.verbosity++;
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "address", "", String.format("address to bind to (default %s)", this.address), option -> {
             try {
                 String name = (String) option.getValue();
@@ -148,25 +148,25 @@ public final class YajsyncServer {
                 throw new ArgumentParsingError(e);
             }
         }));
-        
+
         options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "port", "", String.format("port number to listen on (default %d)", this.port), option -> {
             this.port = (int) option.getValue();
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "threads", "", String.format("size of thread pool (default %d)", this.numThreads), option -> {
             this.numThreads = (int) option.getValue();
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         String deferredWriteHelp = "receiver defers writing into target tempfile as long as " + "possible to reduce I/O, at the cost of highly increased risk "
                 + "of the file being modified by a process already having it " + "opened (default false)";
-        
+
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "defer-write", "", deferredWriteHelp, option -> {
             this.serverBuilder.isDeferWrite(true);
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "timeout", "", "set I/O timeout in seconds", option -> {
             int timeout = (int) option.getValue();
             if (timeout < 0) {
@@ -182,7 +182,7 @@ public final class YajsyncServer {
             }
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "", String.format("tunnel all data over TLS/SSL " + "(default %s)", this.useTLS), option -> {
             this.useTLS = true;
             // SSLChannel.read and SSLChannel.write depends on
@@ -194,29 +194,29 @@ public final class YajsyncServer {
             }
             return ArgumentParser.Status.CONTINUE;
         }));
-        
+
         return options;
     }
-    
+
     public YajsyncServer setIsListeningLatch(CountDownLatch isListeningLatch) {
         this.listeningLatch = isListeningLatch;
         return this;
     }
-    
+
     public void setModuleProvider(ModuleProvider moduleProvider) {
         this.moduleProvider = moduleProvider;
     }
-    
+
     public YajsyncServer setStandardErr(PrintStream err) {
         this.err = err;
         return this;
     }
-    
+
     public YajsyncServer setStandardOut(PrintStream out) {
         this.out = out;
         return this;
     }
-    
+
     public int start(String[] args) throws IOException, InterruptedException {
         ArgumentParser argsParser = ArgumentParser.newNoUnnamed(this.getClass().getSimpleName());
         try {
@@ -236,18 +236,18 @@ public final class YajsyncServer {
             this.err.println(argsParser.toUsageString());
             return -1;
         }
-        
+
         Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM + this.verbosity);
         Util.setRootLogLevel(logLevel);
-        
+
         ServerChannelFactory socketFactory = this.useTLS ? new SSLServerChannelFactory().setWantClientAuth(true) : new StandardServerChannelFactory();
-        
+
         socketFactory.setReuseAddress(true);
         // socketFactory.setKeepAlive(true);
         boolean isInterruptible = !this.useTLS;
         ExecutorService executor = Executors.newFixedThreadPool(this.numThreads);
         RsyncServer server = this.serverBuilder.build(executor);
-        
+
         try (ServerChannel listenSock = socketFactory.open(this.address, this.port, this.timeout)) { // throws IOException
             if (this.listeningLatch != null) {
                 this.listeningLatch.countDown();

@@ -21,47 +21,40 @@ import java.nio.ByteBuffer;
 import com.github.java.rsync.internal.channels.Readable;
 import com.github.java.rsync.internal.util.Util;
 
-public class ReadableByteBuffer implements Readable
-{
-    private final ByteBuffer _buf;
-
+public class ReadableByteBuffer implements Readable {
+    private final ByteBuffer buf;
+    
     public ReadableByteBuffer(ByteBuffer buf) {
-        _buf = buf;
+        this.buf = buf;
     }
-
+    
     @Override
-    public void get(byte[] dst, int offset, int length)
-    {
-        _buf.get(dst, offset, length);
+    public void get(byte[] dst, int offset, int length) {
+        this.buf.get(dst, offset, length);
     }
-
+    
     @Override
-    public ByteBuffer get(int numBytes)
-    {
-        return Util.slice(_buf, 0, numBytes);
+    public ByteBuffer get(int numBytes) {
+        return Util.slice(this.buf, 0, numBytes);
     }
-
+    
     @Override
-    public byte getByte()
-    {
-        return _buf.get();
+    public byte getByte() {
+        return this.buf.get();
     }
-
+    
     @Override
-    public char getChar()
-    {
-        return _buf.getChar();
+    public char getChar() {
+        return this.buf.getChar();
     }
-
+    
     @Override
-    public int getInt()
-    {
-        return _buf.getInt();
+    public int getInt() {
+        return this.buf.getInt();
     }
-
+    
     @Override
-    public void skip(int numBytes)
-    {
-        _buf.position(_buf.position() + numBytes);
+    public void skip(int numBytes) {
+        this.buf.position(this.buf.position() + numBytes);
     }
 }

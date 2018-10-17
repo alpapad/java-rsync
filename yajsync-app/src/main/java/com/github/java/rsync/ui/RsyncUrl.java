@@ -24,14 +24,16 @@ import com.github.java.rsync.internal.text.Text;
 import com.github.java.rsync.internal.util.PathOps;
 
 final class RsyncUrl {
-    private static final String HOST_REGEX = "[^:/]+";
-    private static final String MODULE_REGEX = "[^/]+";
-    private static final String PATH_REGEX = "/.*";
-    private static final String PORT_REGEX = ":[0-9]+";
+    
     /*
      * [USER@]HOST::SRC... rsync://[USER@]HOST[:PORT]/SRC
      */
     private static final String USER_REGEX = "[^@: ]+@";
+    
+    private static final String HOST_REGEX = "[^:/]+";
+    private static final String MODULE_REGEX = "[^/]+";
+    private static final String PATH_REGEX = "/.*";
+    private static final String PORT_REGEX = ":[0-9]+";
     private static final Pattern MODULE = Pattern.compile(String.format("^(%s)?(%s)::(%s)?(%s)?$", USER_REGEX, HOST_REGEX, MODULE_REGEX, PATH_REGEX));
     private static final Pattern URL = Pattern.compile(String.format("^rsync://(%s)?(%s)(%s)?(/%s)?(%s)?$", USER_REGEX, HOST_REGEX, PORT_REGEX, MODULE_REGEX, PATH_REGEX));
     
@@ -123,20 +125,20 @@ final class RsyncUrl {
         return this.connInfo;
     }
     
-    public boolean isLocal() {
-        return !this.isRemote();
-    }
-    
-    public boolean isRemote() {
-        return this.connInfo != null;
-    }
-    
     public String getModuleName() {
         return this.moduleName;
     }
     
     public String getPathName() {
         return this.pathName;
+    }
+    
+    public boolean isLocal() {
+        return !this.isRemote();
+    }
+    
+    public boolean isRemote() {
+        return this.connInfo != null;
     }
     
     private String toLocalPathName(Path cwd, String pathName) {

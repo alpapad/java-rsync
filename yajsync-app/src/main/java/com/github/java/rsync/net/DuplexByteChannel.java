@@ -23,7 +23,7 @@ import java.security.Principal;
 import java.util.Optional;
 
 public interface DuplexByteChannel extends ReadableByteChannel, WritableByteChannel {
-    InetAddress peerAddress();
-    
-    Optional<Principal> peerPrincipal();
+    InetAddress getPeerAddress();
+
+    Optional<Principal> getPeerPrincipal();
 }
