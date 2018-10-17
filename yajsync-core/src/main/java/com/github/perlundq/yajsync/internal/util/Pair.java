@@ -17,19 +17,19 @@
 package com.github.perlundq.yajsync.internal.util;
 
 public final class Pair<T, V> {
-    private final T _first;
-    private final V _second;
+    private final T first;
+    private final V second;
     
     public Pair(T first, V second) {
-        this._first = first;
-        this._second = second;
+        this.first = first;
+        this.second = second;
     }
     
-    public T first() {
-        return this._first;
+    public T getFirst() {
+        return this.first;
     }
     
-    public V second() {
-        return this._second;
+    public V getSecond() {
+        return this.second;
     }
 }

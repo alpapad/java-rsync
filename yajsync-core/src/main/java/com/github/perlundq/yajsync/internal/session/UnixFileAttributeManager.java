@@ -146,45 +146,45 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
         return res;
     }
     
-    private final Group _defaultGroup;
+    private final Group defaultGroup;
     
-    private final User _defaultUser;
+    private final User defaultUser;
     
-    private final Map<Integer, String> _groupIdToGroupName;
+    private final Map<Integer, String> groupIdToGroupName;
     
-    private final boolean _isCacheEnabled;
+    private final boolean cacheEnabled;
     
-    private final Map<String, GroupPrincipal> _nameToGroupPrincipal;
+    private final Map<String, GroupPrincipal> nameToGroupPrincipal;
     
-    private final Map<String, UserPrincipal> _nameToUserPrincipal;
+    private final Map<String, UserPrincipal> nameToUserPrincipal;
     
-    private final Map<Integer, String> _userIdToUserName;
+    private final Map<Integer, String> userIdToUserName;
     
     public UnixFileAttributeManager(User defaultUser, Group defaultGroup, boolean isPreserveUser, boolean isPreserveGroup) throws IOException {
-        this._defaultUser = defaultUser;
-        this._defaultGroup = defaultGroup;
+        this.defaultUser = defaultUser;
+        this.defaultGroup = defaultGroup;
         
         Pair<Map<Integer, String>, Map<Integer, String>> resOrNull = getUserAndGroupCaches();
-        this._isCacheEnabled = resOrNull != null;
+        this.cacheEnabled = resOrNull != null;
         
-        if (this._isCacheEnabled) {
-            this._userIdToUserName = resOrNull.first();
-            this._groupIdToGroupName = resOrNull.second();
+        if (this.cacheEnabled) {
+            this.userIdToUserName = resOrNull.getFirst();
+            this.groupIdToGroupName = resOrNull.getSecond();
             if (isPreserveUser) {
-                this._nameToUserPrincipal = userPrincipalsOf(this._userIdToUserName.values());
+                this.nameToUserPrincipal = userPrincipalsOf(this.userIdToUserName.values());
             } else {
-                this._nameToUserPrincipal = Collections.emptyMap();
+                this.nameToUserPrincipal = Collections.emptyMap();
             }
             if (isPreserveGroup) {
-                this._nameToGroupPrincipal = groupPrincipalsOf(this._groupIdToGroupName.values());
+                this.nameToGroupPrincipal = groupPrincipalsOf(this.groupIdToGroupName.values());
             } else {
-                this._nameToGroupPrincipal = Collections.emptyMap();
+                this.nameToGroupPrincipal = Collections.emptyMap();
             }
         } else {
-            this._userIdToUserName = null;
-            this._groupIdToGroupName = null;
-            this._nameToUserPrincipal = null;
-            this._nameToGroupPrincipal = null;
+            this.userIdToUserName = null;
+            this.groupIdToGroupName = null;
+            this.nameToUserPrincipal = null;
+            this.nameToGroupPrincipal = null;
         }
     }
     
@@ -196,8 +196,8 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
         long size = (long) attrs.get("size");
         int uid = (int) attrs.get("uid");
         int gid = (int) attrs.get("gid");
-        String userName = this._userIdToUserName.getOrDefault(uid, this._defaultUser.name());
-        String groupName = this._groupIdToGroupName.getOrDefault(gid, this._defaultGroup.name());
+        String userName = this.userIdToUserName.getOrDefault(uid, this.defaultUser.getName());
+        String groupName = this.groupIdToGroupName.getOrDefault(gid, this.defaultGroup.getName());
         User user = new User(userName, uid);
         Group group = new Group(groupName, gid);
         
@@ -222,8 +222,8 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
     
     private GroupPrincipal getGroupPrincipalFrom(String groupName) throws IOException {
         try {
-            if (this._isCacheEnabled) {
-                return this._nameToGroupPrincipal.get(groupName);
+            if (this.cacheEnabled) {
+                return this.nameToGroupPrincipal.get(groupName);
             }
             UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
             return service.lookupPrincipalByGroupName(groupName);
@@ -234,8 +234,8 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
     
     private UserPrincipal getUserPrincipalFrom(String userName) throws IOException {
         try {
-            if (this._isCacheEnabled) {
-                return this._nameToUserPrincipal.get(userName);
+            if (this.cacheEnabled) {
+                return this.nameToUserPrincipal.get(userName);
             }
             UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
             return service.lookupPrincipalByName(userName);
@@ -251,9 +251,9 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
     
     @Override
     public void setGroup(Path path, Group group, LinkOption... linkOption) throws IOException {
-        GroupPrincipal principal = this.getGroupPrincipalFrom(group.name());
+        GroupPrincipal principal = this.getGroupPrincipalFrom(group.getName());
         if (principal == null) {
-            this.setGroupId(path, group.id(), linkOption);
+            this.setGroupId(path, group.getId(), linkOption);
         }
         Files.setAttribute(path, "unix:group", principal, linkOption);
     }
@@ -265,9 +265,9 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
     
     @Override
     public void setOwner(Path path, User user, LinkOption... linkOption) throws IOException {
-        UserPrincipal principal = this.getUserPrincipalFrom(user.name());
+        UserPrincipal principal = this.getUserPrincipalFrom(user.getName());
         if (principal == null) {
-            this.setUserId(path, user.id(), linkOption);
+            this.setUserId(path, user.getId(), linkOption);
         }
         Files.setAttribute(path, "unix:owner", principal, linkOption);
     }
@@ -279,7 +279,7 @@ public final class UnixFileAttributeManager extends FileAttributeManager {
     
     @Override
     public RsyncFileAttributes stat(Path path) throws IOException {
-        if (this._isCacheEnabled) {
+        if (this.cacheEnabled) {
             return this.cachedStat(path);
         }
         return this.fullStat(path);

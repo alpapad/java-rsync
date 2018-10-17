@@ -19,13 +19,13 @@
 package com.github.perlundq.yajsync.server.module;
 
 public interface Module {
-    String comment();
+    String getComment();
     
     boolean isReadable();
     
     boolean isWritable();
     
-    String name();
+    String getName();
     
-    RestrictedPath restrictedPath();
+    RestrictedPath getRestrictedPath();
 }

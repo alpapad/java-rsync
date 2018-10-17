@@ -17,25 +17,25 @@
 package com.github.perlundq.yajsync.internal.util;
 
 public final class Triple<S, T, U> {
-    private final S _first;
-    private final T _second;
-    private final U _third;
+    private final S first;
+    private final T second;
+    private final U third;
     
     public Triple(S first, T second, U third) {
-        this._first = first;
-        this._second = second;
-        this._third = third;
+        this.first = first;
+        this.second = second;
+        this.third = third;
     }
     
-    public S first() {
-        return this._first;
+    public S getFirst() {
+        return this.first;
     }
     
-    public T second() {
-        return this._second;
+    public T getSecond() {
+        return this.second;
     }
     
-    public U third() {
-        return this._third;
+    public U getThird() {
+        return this.third;
     }
 }

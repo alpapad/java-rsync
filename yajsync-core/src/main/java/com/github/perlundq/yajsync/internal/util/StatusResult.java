@@ -1,19 +1,19 @@
 package com.github.perlundq.yajsync.internal.util;
 
 public class StatusResult<T> {
-    private final boolean _isOK;
-    private final T _value;
+    private final boolean isOK;
+    private final T value;
     
     public StatusResult(boolean isOK, T value) {
-        this._isOK = isOK;
-        this._value = value;
+        this.isOK = isOK;
+        this.value = value;
     }
     
     public boolean isOK() {
-        return this._isOK;
+        return this.isOK;
     }
     
-    public T value() {
-        return this._value;
+    public T getValue() {
+        return this.value;
     }
 }

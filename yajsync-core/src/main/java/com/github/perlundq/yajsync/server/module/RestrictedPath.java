@@ -36,10 +36,10 @@ import com.github.perlundq.yajsync.internal.util.PathOps;
  */
 public final class RestrictedPath {
     private static final Pattern MODULE_REGEX = Pattern.compile("^\\w+$");
-    private final Path _dotDir;
-    private final Path _dotDotDir;
-    private final String _moduleName;
-    private final Path _rootPath;
+    private final Path dotDir;
+    private final Path dotDotDir;
+    private final String moduleName;
+    private final Path rootPath;
     
     /**
      * @param moduleName
@@ -50,24 +50,24 @@ public final class RestrictedPath {
             throw new IllegalArgumentException(String.format("rsync module must consist of alphanumeric characters " + "and underscore only: %s", moduleName));
         }
         assert rootPath.isAbsolute() : rootPath;
-        this._moduleName = moduleName;
-        this._rootPath = rootPath.normalize();
-        this._dotDir = this._rootPath.getFileSystem().getPath(Text.DOT);
-        this._dotDotDir = this._rootPath.getFileSystem().getPath(Text.DOT_DOT);
+        this.moduleName = moduleName;
+        this.rootPath = rootPath.normalize();
+        this.dotDir = this.rootPath.getFileSystem().getPath(Text.DOT);
+        this.dotDotDir = this.rootPath.getFileSystem().getPath(Text.DOT_DOT);
     }
     
     @Override
     public boolean equals(Object other) {
         if (other != null && other.getClass() == this.getClass()) {
             RestrictedPath otherPath = (RestrictedPath) other;
-            return this._moduleName.equals(otherPath._moduleName) && this._rootPath.equals(otherPath._rootPath);
+            return this.moduleName.equals(otherPath.moduleName) && this.rootPath.equals(otherPath.rootPath);
         }
         return false;
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(this._moduleName, this._rootPath);
+        return Objects.hash(this.moduleName, this.rootPath);
     }
     
     /**
@@ -78,18 +78,18 @@ public final class RestrictedPath {
     private Path resolve(Path path) throws RsyncSecurityException {
         Path result;
         Path normalized = path.normalize();
-        if (normalized.startsWith(this._moduleName)) {
+        if (normalized.startsWith(this.moduleName)) {
             if (normalized.getNameCount() == 1) {
-                result = this._rootPath;
+                result = this.rootPath;
             } else {
                 Path strippedOfModulePrefix = normalized.subpath(1, normalized.getNameCount());
-                result = this._rootPath.resolve(strippedOfModulePrefix).normalize();
+                result = this.rootPath.resolve(strippedOfModulePrefix).normalize();
             }
         } else {
-            throw new RsyncSecurityException(String.format("\"%s\" is outside virtual dir for module %s", path, this._moduleName));
+            throw new RsyncSecurityException(String.format("\"%s\" is outside virtual dir for module %s", path, this.moduleName));
         }
-        if (path.endsWith(this._dotDir)) {
-            return result.resolve(this._dotDir);
+        if (path.endsWith(this.dotDir)) {
+            return result.resolve(this.dotDir);
         } else {
             return result;
         }
@@ -97,9 +97,9 @@ public final class RestrictedPath {
     
     public Path resolve(String pathName) throws RsyncSecurityException {
         try {
-            Path otherPath = PathOps.get(this._rootPath.getFileSystem(), pathName);
+            Path otherPath = PathOps.get(this.rootPath.getFileSystem(), pathName);
             Path resolved = this.resolve(otherPath);
-            if (PathOps.contains(resolved, this._dotDotDir)) {
+            if (PathOps.contains(resolved, this.dotDotDir)) {
                 throw new RsyncSecurityException(String.format("resolved path of %s contains ..: %s", pathName, resolved));
             }
             return resolved;
@@ -110,6 +110,6 @@ public final class RestrictedPath {
     
     @Override
     public String toString() {
-        return String.format("%s(name=%s, root=%s)", this.getClass().getSimpleName(), this._moduleName, this._rootPath);
+        return String.format("%s(name=%s, root=%s)", this.getClass().getSimpleName(), this.moduleName, this.rootPath);
     }
 }

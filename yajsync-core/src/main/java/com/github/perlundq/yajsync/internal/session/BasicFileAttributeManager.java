@@ -29,31 +29,31 @@ import com.github.perlundq.yajsync.attr.User;
 import com.github.perlundq.yajsync.internal.util.FileOps;
 
 public class BasicFileAttributeManager extends FileAttributeManager {
-    private final int _defaultDirectoryPermissions;
-    private final int _defaultFilePermissions;
-    private final Group _defaultGroup;
-    private final User _defaultUser;
+    private final int defaultDirectoryPermissions;
+    private final int defaultFilePermissions;
+    private final Group defaultGroup;
+    private final User defaultUser;
     
     public BasicFileAttributeManager(User defaultUser, Group defaultGroup, int defaultFilePermissions, int defaultDirectoryPermissions) {
-        this._defaultUser = defaultUser;
-        this._defaultGroup = defaultGroup;
-        this._defaultFilePermissions = defaultFilePermissions;
-        this._defaultDirectoryPermissions = defaultDirectoryPermissions;
+        this.defaultUser = defaultUser;
+        this.defaultGroup = defaultGroup;
+        this.defaultFilePermissions = defaultFilePermissions;
+        this.defaultDirectoryPermissions = defaultDirectoryPermissions;
     }
     
     @Override
     public RsyncFileAttributes stat(Path path) throws IOException {
         BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-        return new RsyncFileAttributes(this.toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), this._defaultUser, this._defaultGroup);
+        return new RsyncFileAttributes(this.toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), this.defaultUser, this.defaultGroup);
     }
     
     private int toMode(BasicFileAttributes attrs) {
         if (attrs.isDirectory()) {
-            return FileOps.S_IFDIR | this._defaultDirectoryPermissions;
+            return FileOps.S_IFDIR | this.defaultDirectoryPermissions;
         } else if (attrs.isRegularFile()) {
-            return FileOps.S_IFREG | this._defaultFilePermissions;
+            return FileOps.S_IFREG | this.defaultFilePermissions;
         } else if (attrs.isSymbolicLink()) {
-            return FileOps.S_IFLNK | this._defaultFilePermissions;
+            return FileOps.S_IFLNK | this.defaultFilePermissions;
         } else {
             return FileOps.S_IFUNK;
         }

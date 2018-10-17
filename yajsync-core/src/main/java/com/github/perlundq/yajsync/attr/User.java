@@ -30,8 +30,8 @@ public final class User {
     public static final User ROOT = new User("root", 0);
     public static final User JVM_USER = new User(Environment.getUserName(), Environment.getUserId());
     
-    private final int _id;
-    private final String _name;
+    private final int id;
+    private final String name;
     
     public User(String name, int uid) {
         if (name == null) {
@@ -43,8 +43,8 @@ public final class User {
         if (uid < 0 || uid > ID_MAX) {
             throw new IllegalArgumentException();
         }
-        this._name = name;
-        this._id = uid;
+        this.name = name;
+        this.id = uid;
     }
     
     @Override
@@ -53,26 +53,26 @@ public final class User {
             return true;
         } else if (other != null && this.getClass() == other.getClass()) {
             User otherUser = (User) other;
-            return this._id == otherUser._id && this._name.equals(otherUser._name);
+            return this.id == otherUser.id && this.name.equals(otherUser.name);
         }
         return false;
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(this._name, this._id);
+        return Objects.hash(this.name, this.id);
     }
     
-    public int id() {
-        return this._id;
+    public int getId() {
+        return this.id;
     }
     
-    public String name() {
-        return this._name;
+    public String getName() {
+        return this.name;
     }
     
     @Override
     public String toString() {
-        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), this._name, this._id);
+        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), this.name, this.id);
     }
 }

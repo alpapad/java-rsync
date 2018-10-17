@@ -20,25 +20,25 @@ import com.github.perlundq.yajsync.attr.DeviceInfo;
 import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 
 class DeviceInfoImpl extends FileInfoImpl implements DeviceInfo {
-    private final int _major;
-    private final int _minor;
+    private final int major;
+    private final int minor;
     
     DeviceInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, int major, int minor) {
         super(pathName, pathNameBytes, attrs);
         assert attrs.isBlockDevice() || attrs.isCharacterDevice() || attrs.isFifo() || attrs.isSocket();
         assert major >= 0;
         assert minor >= 0;
-        this._major = major;
-        this._minor = minor;
+        this.major = major;
+        this.minor = minor;
     }
     
     @Override
-    public int major() {
-        return this._major;
+    public int getMajor() {
+        return this.major;
     }
     
     @Override
-    public int minor() {
-        return this._minor;
+    public int getMinor() {
+        return this.minor;
     }
 }

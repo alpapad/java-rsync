@@ -32,15 +32,15 @@ public class FilterRuleList {
      */
     public class FilterRule {
 
-        private final boolean _absoluteMatching;
-        private final boolean _deletionRule;
-        private final boolean _directoryOnly;
-        private final boolean _hidingRule;
-        private final boolean _inclusion;
-        private final boolean _negateMatching;
-        private String _path;
-        private Pattern _pattern;
-        private final boolean _patternMatching;
+        private final boolean absoluteMatching;
+        private final boolean deletionRule;
+        private final boolean directoryOnly;
+        private final boolean hidingRule;
+        private final boolean inclusion;
+        private final boolean negateMatching;
+        private String path;
+        private Pattern pattern;
+        private final boolean patternMatching;
 
         /*
          * @formatter:off
@@ -59,63 +59,63 @@ public class FilterRuleList {
 
             if ("P".equals(splittedRule[0])) {
                 splittedRule[0] = "-";
-                this._deletionRule = true;
+                this.deletionRule = true;
             } else if ("R".equals(splittedRule[0])) {
                 splittedRule[0] = "+";
-                this._deletionRule = true;
+                this.deletionRule = true;
             } else {
-                this._deletionRule = false;
+                this.deletionRule = false;
             }
 
             if ("H".equals(splittedRule[0])) {
                 splittedRule[0] = "-";
-                this._hidingRule = true;
+                this.hidingRule = true;
             } else if ("S".equals(splittedRule[0])) {
                 splittedRule[0] = "+";
-                this._hidingRule = true;
+                this.hidingRule = true;
             } else {
-                this._hidingRule = false;
+                this.hidingRule = false;
             }
 
             if (!"+".equals(splittedRule[0]) && !"-".equals(splittedRule[0])) {
                 throw new ArgumentParsingError(String.format("failed to parse filter rule '%s': must start with + (inclusion) or - (exclusion)", plainRule));
             }
 
-            this._inclusion = "+".equals(splittedRule[0]);
+            this.inclusion = "+".equals(splittedRule[0]);
 
-            this._directoryOnly = splittedRule[1].endsWith("/");
+            this.directoryOnly = splittedRule[1].endsWith("/");
 
-            this._negateMatching = splittedRule[1].startsWith("!");
+            this.negateMatching = splittedRule[1].startsWith("!");
 
-            this._path = splittedRule[1].substring(this._negateMatching ? 1 : 0, this._directoryOnly ? splittedRule[1].length() - 1 : splittedRule[1].length());
+            this.path = splittedRule[1].substring(this.negateMatching ? 1 : 0, this.directoryOnly ? splittedRule[1].length() - 1 : splittedRule[1].length());
 
-            this._absoluteMatching = this._path.startsWith("/");
+            this.absoluteMatching = this.path.startsWith("/");
 
             // add . for absolute matching to conform to rsync paths
-            if (this._absoluteMatching) {
-                this._path = "." + this._path;
+            if (this.absoluteMatching) {
+                this.path = "." + this.path;
             }
 
             // check if string or pattern matching is required
-            // _patternMatching = _path.contains("*") || _path.contains("?") ||
-            // _path.contains("[");
-            this._patternMatching = this._path.matches(".*[\\*\\?\\[].*");
+            // patternMatching = path.contains("*") || path.contains("?") ||
+            // path.contains("[");
+            this.patternMatching = this.path.matches(".*[\\*\\?\\[].*");
 
-            if (this._patternMatching) {
+            if (this.patternMatching) {
 
                 StringBuilder b = new StringBuilder();
 
-                if (this._absoluteMatching) {
+                if (this.absoluteMatching) {
                     b.append("^");
                 }
 
-                for (int i = 0; i < this._path.length(); i++) {
+                for (int i = 0; i < this.path.length(); i++) {
 
-                    char c = this._path.charAt(i);
+                    char c = this.path.charAt(i);
 
                     if (c == '?') {
                         b.append("[^/]");
-                    } else if (c == '*' && i + 1 < this._path.length() && this._path.charAt(i + 1) == '*') {
+                    } else if (c == '*' && i + 1 < this.path.length() && this.path.charAt(i + 1) == '*') {
                         b.append(".*");
                     } else if (c == '*') {
                         b.append("[^/].*");
@@ -124,38 +124,38 @@ public class FilterRuleList {
                     }
                 }
 
-                this._pattern = Pattern.compile(b.toString());
+                this.pattern = Pattern.compile(b.toString());
             }
         }
 
         public boolean isDirectoryOnly() {
-            return this._directoryOnly;
+            return this.directoryOnly;
         }
 
         public boolean isInclusion() {
-            return this._inclusion;
+            return this.inclusion;
         }
 
         public boolean matches(String filename) {
 
             boolean _result;
 
-            if (this._patternMatching) {
-                _result = this._pattern.matcher(filename).matches();
+            if (this.patternMatching) {
+                _result = this.pattern.matcher(filename).matches();
             } else {
 
-                String path = this._path + (this._directoryOnly ? "/" : "");
+                String path = this.path + (this.directoryOnly ? "/" : "");
 
                 // string matching
-                if (this._absoluteMatching) {
+                if (this.absoluteMatching) {
                     if (filename.length() < path.length()) {
-                        // no matching if filename is shorter than _path
+                        // no matching if filename is shorter than path
                         _result = false;
                     } else if (filename.length() == path.length()) {
-                        // matching if filename equals _path
+                        // matching if filename equals path
                         _result = filename.startsWith(path);
                     } else if (filename.charAt(path.length()) == '/') {
-                        // matching if filename is contained in _path
+                        // matching if filename is contained in path
                         _result = filename.startsWith(path);
                     } else {
                         _result = false;
@@ -170,26 +170,26 @@ public class FilterRuleList {
                 }
             }
 
-            return this._negateMatching ? !_result : _result;
+            return this.negateMatching ? !_result : _result;
         }
 
         @Override
         public String toString() {
             StringBuilder buf = new StringBuilder();
-            if (this._deletionRule) {
-                buf.append(this._inclusion ? "R" : "P").append(" ");
-            } else if (this._hidingRule) {
-                buf.append(this._inclusion ? "S" : "H").append(" ");
+            if (this.deletionRule) {
+                buf.append(this.inclusion ? "R" : "P").append(" ");
+            } else if (this.hidingRule) {
+                buf.append(this.inclusion ? "S" : "H").append(" ");
             } else {
-                buf.append(this._inclusion ? "+" : "-").append(" ");
+                buf.append(this.inclusion ? "+" : "-").append(" ");
             }
-            buf.append(this._negateMatching ? "!" : "");
+            buf.append(this.negateMatching ? "!" : "");
             /*
-             * if (_patternMatching) { buf.append(_pattern.toString()); } else {
+             * if (patternMatching) { buf.append(pattern.toString()); } else {
              */
-            buf.append(this._path);
+            buf.append(this.path);
             // }
-            if (this._directoryOnly) {
+            if (this.directoryOnly) {
                 buf.append("/");
             }
 

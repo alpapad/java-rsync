@@ -19,5 +19,5 @@ package com.github.perlundq.yajsync.attr;
 import java.nio.file.Path;
 
 public interface LocatableFileInfo extends FileInfo {
-    Path path();
+    Path getPath();
 }

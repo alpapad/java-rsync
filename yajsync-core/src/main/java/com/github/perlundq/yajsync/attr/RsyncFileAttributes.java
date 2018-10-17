@@ -24,11 +24,11 @@ import java.util.Objects;
 import com.github.perlundq.yajsync.internal.util.FileOps;
 
 public class RsyncFileAttributes {
-    private final Group _group;
-    private final long _lastModified;
-    private final int _mode;
-    private final long _size;
-    private final User _user;
+    private final Group group;
+    private final long lastModified;
+    private final int mode;
+    private final long size;
+    private final User user;
     
     /**
      * @throws IllegalArgumentException if fileSize and/or lastModified is negative
@@ -42,87 +42,87 @@ public class RsyncFileAttributes {
         if (lastModified < 0) {
             throw new IllegalArgumentException(String.format("illegal negative last modified time %d", lastModified));
         }
-        this._mode = mode;
-        this._size = fileSize;
-        this._lastModified = lastModified;
-        this._user = user;
-        this._group = group;
+        this.mode = mode;
+        this.size = fileSize;
+        this.lastModified = lastModified;
+        this.user = user;
+        this.group = group;
     }
     
     @Override
     public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
             RsyncFileAttributes other = (RsyncFileAttributes) obj;
-            return this._lastModified == other._lastModified && this._size == other._size && this._mode == other._mode && this._user.equals(other._user) && this._group.equals(other._group);
+            return this.lastModified == other.lastModified && this.size == other.size && this.mode == other.mode && this.user.equals(other.user) && this.group.equals(other.group);
             
         }
         return false;
     }
     
-    public int fileType() {
-        return FileOps.fileType(this._mode);
+    public int getFileType() {
+        return FileOps.fileType(this.mode);
     }
     
-    public Group group() {
-        return this._group;
+    public Group getGroup() {
+        return this.group;
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(this._lastModified, this._size, this._mode, this._user, this._group);
+        return Objects.hash(this.lastModified, this.size, this.mode, this.user, this.group);
     }
     
     public boolean isBlockDevice() {
-        return FileOps.isBlockDevice(this._mode);
+        return FileOps.isBlockDevice(this.mode);
     }
     
     public boolean isCharacterDevice() {
-        return FileOps.isCharacterDevice(this._mode);
+        return FileOps.isCharacterDevice(this.mode);
     }
     
     public boolean isDirectory() {
-        return FileOps.isDirectory(this._mode);
+        return FileOps.isDirectory(this.mode);
     }
     
     public boolean isFifo() {
-        return FileOps.isFIFO(this._mode);
+        return FileOps.isFIFO(this.mode);
     }
     
     public boolean isOther() {
-        return FileOps.isOther(this._mode);
+        return FileOps.isOther(this.mode);
     }
     
     public boolean isRegularFile() {
-        return FileOps.isRegularFile(this._mode);
+        return FileOps.isRegularFile(this.mode);
     }
     
     public boolean isSocket() {
-        return FileOps.isSocket(this._mode);
+        return FileOps.isSocket(this.mode);
     }
     
     public boolean isSymbolicLink() {
-        return FileOps.isSymbolicLink(this._mode);
+        return FileOps.isSymbolicLink(this.mode);
     }
     
     public long lastModifiedTime() {
-        return this._lastModified;
+        return this.lastModified;
     }
     
-    public int mode() {
-        return this._mode;
+    public int getMode() {
+        return this.mode;
     }
     
-    public long size() {
-        return this._size;
+    public long getSize() {
+        return this.size;
     }
     
     @Override
     public String toString() {
-        return String.format("%s (type=%s, mode=%#o, size=%d, " + "lastModified=%d, user=%s, group=%s)", this.getClass().getSimpleName(), FileOps.fileTypeToString(this._mode), this._mode, this._size,
-                this._lastModified, this._user, this._group);
+        return String.format("%s (type=%s, mode=%#o, size=%d, " + "lastModified=%d, user=%s, group=%s)", this.getClass().getSimpleName(), FileOps.fileTypeToString(this.mode), this.mode, this.size,
+                this.lastModified, this.user, this.group);
     }
     
-    public User user() {
-        return this._user;
+    public User getUser() {
+        return this.user;
     }
 }

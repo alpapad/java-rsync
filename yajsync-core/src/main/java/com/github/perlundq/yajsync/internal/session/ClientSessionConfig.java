@@ -40,19 +40,19 @@ import com.github.perlundq.yajsync.internal.util.Pair;
 import com.github.perlundq.yajsync.server.module.RsyncAuthContext;
 
 public class ClientSessionConfig extends SessionConfig {
-    private static final Logger _log = Logger.getLogger(ClientSessionConfig.class.getName());
-    private final PrintStream _err;
-    private final boolean _isRecursive;
-    private boolean _isSafeFileList;
-    private final BlockingQueue<Pair<Boolean, String>> _listing = new LinkedBlockingQueue<>();
+    private static final Logger LOG = Logger.getLogger(ClientSessionConfig.class.getName());
+    private final PrintStream err;
+    private final boolean recursive;
+    private boolean safeFileList;
+    private final BlockingQueue<Pair<Boolean, String>> listing = new LinkedBlockingQueue<>();
     
     /**
      * @throws IllegalArgumentException if charset is not supported
      */
     public ClientSessionConfig(ReadableByteChannel in, WritableByteChannel out, Charset charset, boolean isRecursive, PrintStream stderr) {
         super(in, out, charset);
-        this._isRecursive = isRecursive;
-        this._err = stderr;
+        this.recursive = isRecursive;
+        this.err = stderr;
     }
     
     /**
@@ -66,32 +66,32 @@ public class ClientSessionConfig extends SessionConfig {
      */
     public SessionStatus handshake(String moduleName, Iterable<String> args, AuthProvider authProvider) throws RsyncException {
         try {
-            this.exchangeProtocolVersion();
+            this.getExchangeProtocolVersion();
             this.sendModule(moduleName);
             this.printLinesAndGetReplyStatus(authProvider);
-            if (this._status != SessionStatus.OK) {
-                return this._status;
+            if (this.status != SessionStatus.OK) {
+                return this.status;
             }
             
             assert !moduleName.isEmpty();
             this.sendArguments(args);
             this.receiveCompatibilities();
             this.receiveChecksumSeed();
-            return this._status;
+            return this.status;
         } catch (TextConversionException e) {
             throw new RsyncProtocolException(e);
         } finally {
             Pair<Boolean, String> poisonPill = new Pair<>(false, null);
-            this._listing.add(poisonPill);
+            this.listing.add(poisonPill);
         }
     }
     
     public boolean isSafeFileList() {
-        return this._isSafeFileList;
+        return this.safeFileList;
     }
     
     public BlockingQueue<Pair<Boolean, String>> modules() {
-        return this._listing;
+        return this.listing;
     }
     
     /**
@@ -105,29 +105,29 @@ public class ClientSessionConfig extends SessionConfig {
         while (true) {
             String line = this.readLine();
             if (line.equals(SessionStatus.OK.toString())) {
-                this._status = SessionStatus.OK;
+                this.status = SessionStatus.OK;
                 return;
             } else if (line.equals(SessionStatus.EXIT.toString())) {
-                this._status = SessionStatus.EXIT;
+                this.status = SessionStatus.EXIT;
                 return;
             } else if (line.startsWith(SessionStatus.ERROR.toString())) {
-                this._err.println(line);
-                this._status = SessionStatus.ERROR;
+                this.err.println(line);
+                this.status = SessionStatus.ERROR;
                 return;
             } else if (line.startsWith(SessionStatus.AUTHREQ.toString())) {
                 String challenge = line.substring(SessionStatus.AUTHREQ.toString().length());
                 this.sendAuthResponse(authProvider, challenge);
             } else {
-                this._listing.add(new Pair<>(true, line));
+                this.listing.add(new Pair<>(true, line));
             }
         }
     }
     
     private void receiveChecksumSeed() throws ChannelException {
-        int seedValue = this._peerConnection.getInt();
-        this._checksumSeed = BitOps.toLittleEndianBuf(seedValue);
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("< (checksum seed) " + seedValue);
+        int seedValue = this.peerConnection.getInt();
+        this.checksumSeed = BitOps.toLittleEndianBuf(seedValue);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("< (checksum seed) " + seedValue);
         }
     }
     
@@ -136,14 +136,14 @@ public class ClientSessionConfig extends SessionConfig {
      * @throws RsyncProtocolException if peer protocol is incompatible with ours
      */
     private void receiveCompatibilities() throws ChannelException, RsyncProtocolException {
-        byte flags = this._peerConnection.getByte();
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("< (peer supports) " + flags);
+        byte flags = this.peerConnection.getByte();
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("< (peer supports) " + flags);
         }
-        if (this._isRecursive && (flags & RsyncCompatibilities.CF_INC_RECURSE) == 0) {
+        if (this.recursive && (flags & RsyncCompatibilities.CF_INC_RECURSE) == 0) {
             throw new RsyncProtocolException("peer does not support " + "incremental recurse");
         }
-        this._isSafeFileList = (flags & RsyncCompatibilities.CF_SAFE_FLIST) != 0;
+        this.safeFileList = (flags & RsyncCompatibilities.CF_SAFE_FLIST) != 0;
     }
     
     /**
@@ -153,9 +153,9 @@ public class ClientSessionConfig extends SessionConfig {
     private void sendArguments(Iterable<String> serverArgs) throws ChannelException {
         for (String arg : serverArgs) {
             this.writeString(arg);
-            this._peerConnection.putByte((byte) 0);
+            this.peerConnection.putByte((byte) 0);
         }
-        this._peerConnection.putByte((byte) 0);
+        this.peerConnection.putByte((byte) 0);
     }
     
     /**
@@ -167,7 +167,7 @@ public class ClientSessionConfig extends SessionConfig {
             String user = authProvider.getUser();
             char[] password = authProvider.getPassword();
             try {
-                RsyncAuthContext authContext = RsyncAuthContext.fromChallenge(this._characterEncoder, challenge);
+                RsyncAuthContext authContext = RsyncAuthContext.fromChallenge(this.characterEncoder, challenge);
                 String response = authContext.response(password);
                 this.writeString(String.format("%s %s\n", user, response));
             } finally {

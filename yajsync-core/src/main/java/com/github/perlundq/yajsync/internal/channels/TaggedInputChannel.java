@@ -31,16 +31,16 @@ import com.github.perlundq.yajsync.internal.text.Text;
 import com.github.perlundq.yajsync.internal.util.Util;
 
 public class TaggedInputChannel extends SimpleInputChannel {
-    private static final Logger _log = Logger.getLogger(TaggedInputChannel.class.getName());
+    private static final Logger LOG = Logger.getLogger(TaggedInputChannel.class.getName());
     
-    private final SimpleInputChannel _inputChannel;
-    private final MessageHandler _msgHandler;
-    private int _readAmountAvailable = 0;
+    private final SimpleInputChannel inputChannel;
+    private final MessageHandler msgHandler;
+    private int readAmountAvailable = 0;
     
     public TaggedInputChannel(ReadableByteChannel sock, MessageHandler handler) {
         super(sock);
-        this._inputChannel = new SimpleInputChannel(sock);
-        this._msgHandler = handler;
+        this.inputChannel = new SimpleInputChannel(sock);
+        this.msgHandler = handler;
     }
     
     @Override
@@ -50,50 +50,50 @@ public class TaggedInputChannel extends SimpleInputChannel {
         }
     }
     
-    public int numBytesAvailable() {
-        return this._readAmountAvailable;
+    public int getNumBytesAvailable() {
+        return this.readAmountAvailable;
     }
     
     @Override
-    public long numBytesRead() {
-        return super.numBytesRead() + this._inputChannel.numBytesRead();
+    public long getNumBytesRead() {
+        return super.getNumBytesRead() + this.inputChannel.getNumBytesRead();
     }
     
     /**
      * @throws RsyncProtocolException if peer sends an invalid message
      */
     protected void readNextAvailable(ByteBuffer dst) throws ChannelException {
-        while (this._readAmountAvailable == 0) {
-            this._readAmountAvailable = this.readNextMessage();
+        while (this.readAmountAvailable == 0) {
+            this.readAmountAvailable = this.readNextMessage();
         }
-        int chunkLength = Math.min(this._readAmountAvailable, dst.remaining());
+        int chunkLength = Math.min(this.readAmountAvailable, dst.remaining());
         ByteBuffer slice = Util.slice(dst, dst.position(), dst.position() + chunkLength);
         super.get(slice);
-        if (_log.isLoggable(Level.FINEST)) {
+        if (LOG.isLoggable(Level.FINEST)) {
             ByteBuffer tmp = Util.slice(dst, dst.position(), dst.position() + Math.min(chunkLength, 64));
-            _log.finest(Text.byteBufferToString(tmp));
+            LOG.finest(Text.byteBufferToString(tmp));
         }
         dst.position(slice.position());
-        this._readAmountAvailable -= chunkLength;
+        this.readAmountAvailable -= chunkLength;
     }
     
     private int readNextMessage() throws ChannelException {
         try {
             // throws IllegalArgumentException
-            MessageHeader hdr = MessageHeader.fromTag(this._inputChannel.getInt());
-            if (hdr.messageType() == MessageCode.DATA) {
-                if (_log.isLoggable(Level.FINER)) {
-                    _log.finer("< " + hdr);
+            MessageHeader hdr = MessageHeader.fromTag(this.inputChannel.getInt());
+            if (hdr.getMessageType() == MessageCode.DATA) {
+                if (LOG.isLoggable(Level.FINER)) {
+                    LOG.finer("< " + hdr);
                 }
-                return hdr.length();
+                return hdr.getLength();
             }
-            ByteBuffer payload = this._inputChannel.get(hdr.length()).order(ByteOrder.LITTLE_ENDIAN);
+            ByteBuffer payload = this.inputChannel.get(hdr.getLength()).order(ByteOrder.LITTLE_ENDIAN);
             // throws IllegalArgumentException, IllegalStateException
             Message message = new Message(hdr, payload);
-            if (_log.isLoggable(Level.FINER)) {
-                _log.finer("< " + message);
+            if (LOG.isLoggable(Level.FINER)) {
+                LOG.finer("< " + message);
             }
-            this._msgHandler.handleMessage(message);
+            this.msgHandler.handleMessage(message);
             return 0;
         } catch (RsyncProtocolException | IllegalStateException | IllegalArgumentException e) {
             throw new ChannelException(e);

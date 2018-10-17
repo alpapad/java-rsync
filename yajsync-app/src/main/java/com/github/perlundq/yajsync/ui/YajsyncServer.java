@@ -54,19 +54,19 @@ import com.github.perlundq.yajsync.server.module.ModuleProvider;
 import com.github.perlundq.yajsync.server.module.Modules;
 
 public final class YajsyncServer {
-    private static final Logger _log = Logger.getLogger(YajsyncServer.class.getName());
+    private static final Logger LOG = Logger.getLogger(YajsyncServer.class.getName());
     private static final int THREAD_FACTOR = 4;
-    private InetAddress _address = InetAddress.getLoopbackAddress();
-    private PrintStream _err = System.err;
-    private CountDownLatch _isListeningLatch;
-    private boolean _isTLS;
-    private ModuleProvider _moduleProvider = ModuleProvider.getDefault();
-    private int _numThreads = Runtime.getRuntime().availableProcessors() * THREAD_FACTOR;
-    private PrintStream _out = System.out;
-    private int _port = RsyncServer.DEFAULT_LISTEN_PORT;
-    private final RsyncServer.Builder _serverBuilder = new RsyncServer.Builder();
-    private int _timeout = 0;
-    private int _verbosity=100;
+    private InetAddress address = InetAddress.getLoopbackAddress();
+    private PrintStream err = System.err;
+    private CountDownLatch listeningLatch;
+    private boolean useTLS;
+    private ModuleProvider moduleProvider = ModuleProvider.getDefault();
+    private int numThreads = Runtime.getRuntime().availableProcessors() * THREAD_FACTOR;
+    private PrintStream out = System.out;
+    private int port = RsyncServer.DEFAULT_LISTEN_PORT;
+    private final RsyncServer.Builder serverBuilder = new RsyncServer.Builder();
+    private int timeout = 0;
+    private int verbosity=100;
     
     public YajsyncServer() {
     }
@@ -79,42 +79,42 @@ public final class YajsyncServer {
                 try {
                     Modules modules;
                     if (sock.peerPrincipal().isPresent()) {
-                        if (_log.isLoggable(Level.FINE)) {
-                            _log.fine(String.format("%s connected from %s", sock.peerPrincipal().get(), sock.peerAddress()));
+                        if (LOG.isLoggable(Level.FINE)) {
+                            LOG.fine(String.format("%s connected from %s", sock.peerPrincipal().get(), sock.peerAddress()));
                         }
-                        modules = YajsyncServer.this._moduleProvider.newAuthenticated(sock.peerAddress(), sock.peerPrincipal().get());
+                        modules = YajsyncServer.this.moduleProvider.newAuthenticated(sock.peerAddress(), sock.peerPrincipal().get());
                     } else {
-                        if (_log.isLoggable(Level.FINE)) {
-                            _log.fine("got anonymous connection from " + sock.peerAddress());
+                        if (LOG.isLoggable(Level.FINE)) {
+                            LOG.fine("got anonymous connection from " + sock.peerAddress());
                         }
-                        modules = YajsyncServer.this._moduleProvider.newAnonymous(sock.peerAddress());
+                        modules = YajsyncServer.this.moduleProvider.newAnonymous(sock.peerAddress());
                     }
                     isOK = server.serve(modules, sock, sock, isInterruptible);
                 } catch (ModuleException e) {
-                    if (_log.isLoggable(Level.SEVERE)) {
-                        _log.severe(String.format("Error: failed to initialise modules for " + "principal %s using ModuleProvider %s: %s%n", sock.peerPrincipal().get(),
-                                YajsyncServer.this._moduleProvider, e));
+                    if (LOG.isLoggable(Level.SEVERE)) {
+                        LOG.severe(String.format("Error: failed to initialise modules for " + "principal %s using ModuleProvider %s: %s%n", sock.peerPrincipal().get(),
+                                YajsyncServer.this.moduleProvider, e));
                     }
                 } catch (ChannelException e) {
-                    if (_log.isLoggable(Level.SEVERE)) {
-                        _log.severe("Error: communication closed with peer: " + e.getMessage());
+                    if (LOG.isLoggable(Level.SEVERE)) {
+                        LOG.severe("Error: communication closed with peer: " + e.getMessage());
                     }
                 } catch (Throwable t) {
-                    if (_log.isLoggable(Level.SEVERE)) {
-                        _log.log(Level.SEVERE, "", t);
+                    if (LOG.isLoggable(Level.SEVERE)) {
+                        LOG.log(Level.SEVERE, "", t);
                     }
                 } finally {
                     try {
                         sock.close();
                     } catch (IOException e) {
-                        if (_log.isLoggable(Level.SEVERE)) {
-                            _log.severe(String.format("Got error during close of socket %s: %s", sock, e.getMessage()));
+                        if (LOG.isLoggable(Level.SEVERE)) {
+                            LOG.severe(String.format("Got error during close of socket %s: %s", sock, e.getMessage()));
                         }
                     }
                 }
                 
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine("Thread exit status: " + (isOK ? "OK" : "ERROR"));
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine("Thread exit status: " + (isOK ? "OK" : "ERROR"));
                 }
                 return isOK;
             }
@@ -127,35 +127,35 @@ public final class YajsyncServer {
             String charsetName = (String) option.getValue();
             try {
                 Charset charset = Charset.forName(charsetName);
-                this._serverBuilder.charset(charset);
+                this.serverBuilder.charset(charset);
                 return ArgumentParser.Status.CONTINUE;
             } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
                 throw new ArgumentParsingError(String.format("failed to set character set to %s: %s", charsetName, e));
             }
         }));
         
-        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", String.format("output verbosity (default %d)", this._verbosity), option -> {
-            this._verbosity++;
+        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", String.format("output verbosity (default %d)", this.verbosity), option -> {
+            this.verbosity++;
             return ArgumentParser.Status.CONTINUE;
         }));
         
-        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "address", "", String.format("address to bind to (default %s)", this._address), option -> {
+        options.add(Option.newStringOption(Option.Policy.OPTIONAL, "address", "", String.format("address to bind to (default %s)", this.address), option -> {
             try {
                 String name = (String) option.getValue();
-                this._address = InetAddress.getByName(name);
+                this.address = InetAddress.getByName(name);
                 return ArgumentParser.Status.CONTINUE;
             } catch (UnknownHostException e) {
                 throw new ArgumentParsingError(e);
             }
         }));
         
-        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "port", "", String.format("port number to listen on (default %d)", this._port), option -> {
-            this._port = (int) option.getValue();
+        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "port", "", String.format("port number to listen on (default %d)", this.port), option -> {
+            this.port = (int) option.getValue();
             return ArgumentParser.Status.CONTINUE;
         }));
         
-        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "threads", "", String.format("size of thread pool (default %d)", this._numThreads), option -> {
-            this._numThreads = (int) option.getValue();
+        options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "threads", "", String.format("size of thread pool (default %d)", this.numThreads), option -> {
+            this.numThreads = (int) option.getValue();
             return ArgumentParser.Status.CONTINUE;
         }));
         
@@ -163,7 +163,7 @@ public final class YajsyncServer {
                 + "of the file being modified by a process already having it " + "opened (default false)";
         
         options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "defer-write", "", deferredWriteHelp, option -> {
-            this._serverBuilder.isDeferWrite(true);
+            this.serverBuilder.isDeferWrite(true);
             return ArgumentParser.Status.CONTINUE;
         }));
         
@@ -172,7 +172,7 @@ public final class YajsyncServer {
             if (timeout < 0) {
                 throw new ArgumentParsingError(String.format("invalid timeout %d - must be " + "greater than or equal to 0", timeout));
             }
-            this._timeout = timeout * 1000;
+            this.timeout = timeout * 1000;
             // Timeout socket operations depend on
             // ByteBuffer.array and ByteBuffer.arrayOffset.
             // Disable direct allocation if the resulting
@@ -183,8 +183,8 @@ public final class YajsyncServer {
             return ArgumentParser.Status.CONTINUE;
         }));
         
-        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "", String.format("tunnel all data over TLS/SSL " + "(default %s)", this._isTLS), option -> {
-            this._isTLS = true;
+        options.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "tls", "", String.format("tunnel all data over TLS/SSL " + "(default %s)", this.useTLS), option -> {
+            this.useTLS = true;
             // SSLChannel.read and SSLChannel.write depends on
             // ByteBuffer.array and ByteBuffer.arrayOffset.
             // Disable direct allocation if the resulting
@@ -199,32 +199,32 @@ public final class YajsyncServer {
     }
     
     public YajsyncServer setIsListeningLatch(CountDownLatch isListeningLatch) {
-        this._isListeningLatch = isListeningLatch;
+        this.listeningLatch = isListeningLatch;
         return this;
     }
     
     public void setModuleProvider(ModuleProvider moduleProvider) {
-        this._moduleProvider = moduleProvider;
+        this.moduleProvider = moduleProvider;
     }
     
     public YajsyncServer setStandardErr(PrintStream err) {
-        this._err = err;
+        this.err = err;
         return this;
     }
     
     public YajsyncServer setStandardOut(PrintStream out) {
-        this._out = out;
+        this.out = out;
         return this;
     }
     
     public int start(String[] args) throws IOException, InterruptedException {
         ArgumentParser argsParser = ArgumentParser.newNoUnnamed(this.getClass().getSimpleName());
         try {
-            argsParser.addHelpTextDestination(this._out);
+            argsParser.addHelpTextDestination(this.out);
             for (Option o : this.options()) {
                 argsParser.add(o);
             }
-            for (Option o : this._moduleProvider.options()) {
+            for (Option o : this.moduleProvider.options()) {
                 argsParser.add(o);
             }
             ArgumentParser.Status rc = argsParser.parse(Arrays.asList(args)); // throws ArgumentParsingError
@@ -232,25 +232,25 @@ public final class YajsyncServer {
                 return rc == ArgumentParser.Status.EXIT_OK ? 0 : 1;
             }
         } catch (ArgumentParsingError e) {
-            this._err.println(e.getMessage());
-            this._err.println(argsParser.toUsageString());
+            this.err.println(e.getMessage());
+            this.err.println(argsParser.toUsageString());
             return -1;
         }
         
-        Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM + this._verbosity);
+        Level logLevel = Util.getLogLevelForNumber(Util.WARNING_LOG_LEVEL_NUM + this.verbosity);
         Util.setRootLogLevel(logLevel);
         
-        ServerChannelFactory socketFactory = this._isTLS ? new SSLServerChannelFactory().setWantClientAuth(true) : new StandardServerChannelFactory();
+        ServerChannelFactory socketFactory = this.useTLS ? new SSLServerChannelFactory().setWantClientAuth(true) : new StandardServerChannelFactory();
         
         socketFactory.setReuseAddress(true);
         // socketFactory.setKeepAlive(true);
-        boolean isInterruptible = !this._isTLS;
-        ExecutorService executor = Executors.newFixedThreadPool(this._numThreads);
-        RsyncServer server = this._serverBuilder.build(executor);
+        boolean isInterruptible = !this.useTLS;
+        ExecutorService executor = Executors.newFixedThreadPool(this.numThreads);
+        RsyncServer server = this.serverBuilder.build(executor);
         
-        try (ServerChannel listenSock = socketFactory.open(this._address, this._port, this._timeout)) { // throws IOException
-            if (this._isListeningLatch != null) {
-                this._isListeningLatch.countDown();
+        try (ServerChannel listenSock = socketFactory.open(this.address, this.port, this.timeout)) { // throws IOException
+            if (this.listeningLatch != null) {
+                this.listeningLatch.countDown();
             }
             while (true) {
                 System.err.println("Got connection....");
@@ -259,16 +259,16 @@ public final class YajsyncServer {
                 executor.submit(c); // NOTE: result discarded
             }
         } finally {
-            if (_log.isLoggable(Level.INFO)) {
-                _log.info("shutting down...");
+            if (LOG.isLoggable(Level.INFO)) {
+                LOG.info("shutting down...");
             }
             executor.shutdown();
-            this._moduleProvider.close();
+            this.moduleProvider.close();
             while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
-                _log.info("some sessions are still running, waiting for them " + "to finish before exiting");
+                LOG.info("some sessions are still running, waiting for them " + "to finish before exiting");
             }
-            if (_log.isLoggable(Level.INFO)) {
-                _log.info("done");
+            if (LOG.isLoggable(Level.INFO)) {
+                LOG.info("done");
             }
         }
     }

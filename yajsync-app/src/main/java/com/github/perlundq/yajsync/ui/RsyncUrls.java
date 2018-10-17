@@ -21,14 +21,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 final class RsyncUrls {
-    private final ConnInfo _connInfo;
-    private final String _moduleName;
-    private final Iterable<String> _pathNames;
+    private final ConnectionInfo connInfo;
+    private final String moduleName;
+    private final Iterable<String> pathNames;
     
-    public RsyncUrls(ConnInfo connInfo, String moduleName, Iterable<String> pathNames) {
-        this._connInfo = connInfo;
-        this._moduleName = moduleName;
-        this._pathNames = pathNames;
+    public RsyncUrls(ConnectionInfo connInfo, String moduleName, Iterable<String> pathNames) {
+        this.connInfo = connInfo;
+        this.moduleName = moduleName;
+        this.pathNames = pathNames;
     }
     
     public RsyncUrls(Path cwd, Iterable<String> urls) throws IllegalUrlException {
@@ -39,13 +39,13 @@ final class RsyncUrls {
             RsyncUrl url = RsyncUrl.parse(cwd, s);
             boolean isFirst = prevUrl == null;
             boolean curAndPrevAreLocal = !isFirst && url.isLocal() && prevUrl.isLocal();
-            boolean curAndPrevIsSameRemote = !isFirst && url.isRemote() && prevUrl.isRemote() && url.connInfoOrNull().equals(prevUrl.connInfoOrNull()) && url.moduleName().equals(prevUrl.moduleName());
+            boolean curAndPrevIsSameRemote = !isFirst && url.isRemote() && prevUrl.isRemote() && url.getConnectionInfo().equals(prevUrl.getConnectionInfo()) && url.getModuleName().equals(prevUrl.getModuleName());
             if (isFirst || curAndPrevAreLocal || curAndPrevIsSameRemote) {
                 if (moduleName == null && url.isRemote()) {
-                    moduleName = url.moduleName();
+                    moduleName = url.getModuleName();
                 }
-                if (!url.pathName().isEmpty()) {
-                    pathNames.add(url.pathName());
+                if (!url.getPathName().isEmpty()) {
+                    pathNames.add(url.getPathName());
                 }
                 prevUrl = url;
             } else {
@@ -55,32 +55,32 @@ final class RsyncUrls {
         if (prevUrl == null) {
             throw new IllegalArgumentException("empty sequence: " + urls);
         }
-        this._pathNames = pathNames;
-        this._moduleName = moduleName;
-        this._connInfo = prevUrl.connInfoOrNull();
+        this.pathNames = pathNames;
+        this.moduleName = moduleName;
+        this.connInfo = prevUrl.getConnectionInfo();
     }
     
-    public ConnInfo connInfoOrNull() {
-        return this._connInfo;
+    public ConnectionInfo getConnectionInfo() {
+        return this.connInfo;
     }
     
     public boolean isRemote() {
-        return this._connInfo != null;
+        return this.connInfo != null;
     }
     
-    public String moduleName() {
-        return this._moduleName;
+    public String getModuleName() {
+        return this.moduleName;
     }
     
-    public Iterable<String> pathNames() {
-        return this._pathNames;
+    public Iterable<String> getPathNames() {
+        return this.pathNames;
     }
     
     @Override
     public String toString() {
         if (this.isRemote()) {
-            return String.format("%s/%s%s", this._connInfo, this._moduleName, this._pathNames.toString());
+            return String.format("%s/%s%s", this.connInfo, this.moduleName, this.pathNames.toString());
         }
-        return this._pathNames.toString();
+        return this.pathNames.toString();
     }
 }

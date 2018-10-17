@@ -19,55 +19,55 @@
 package com.github.perlundq.yajsync.internal.channels;
 
 public class AutoFlushableRsyncDuplexChannel extends AutoFlushableDuplexChannel implements Taggable, IndexDecoder, IndexEncoder {
-    private final RsyncInChannel _inChannel;
-    private final RsyncOutChannel _outChannel;
+    private final RsyncInChannel inChannel;
+    private final RsyncOutChannel outChannel;
     
     public AutoFlushableRsyncDuplexChannel(RsyncInChannel inChannel, RsyncOutChannel outChannel) {
         super(inChannel, outChannel);
-        this._inChannel = inChannel;
-        this._outChannel = outChannel;
+        this.inChannel = inChannel;
+        this.outChannel = outChannel;
     }
     
     public void close() throws ChannelException {
         try {
-            this._inChannel.close();
+            this.inChannel.close();
         } finally {
-            this._outChannel.close();
+            this.outChannel.close();
         }
     }
     
     @Override
     public int decodeIndex() throws ChannelException {
         this.flush();
-        return this._inChannel.decodeIndex();
+        return this.inChannel.decodeIndex();
     }
     
     @Override
     public void encodeIndex(int index) throws ChannelException {
-        this._outChannel.encodeIndex(index);
+        this.outChannel.encodeIndex(index);
     }
     
     @Override
     public void flush() throws ChannelException {
-        if (this._inChannel.numBytesAvailable() == 0) {
+        if (this.inChannel.getNumBytesAvailable() == 0) {
             super.flush();
         }
     }
     
     public int numBytesAvailable() {
-        return this._inChannel.numBytesAvailable();
+        return this.inChannel.getNumBytesAvailable();
     }
     
     public long numBytesRead() {
-        return this._inChannel.numBytesRead();
+        return this.inChannel.getNumBytesRead();
     }
     
     public long numBytesWritten() {
-        return this._outChannel.numBytesWritten();
+        return this.outChannel.getNumBytesWritten();
     }
     
     @Override
     public void putMessage(Message message) throws ChannelException {
-        this._outChannel.putMessage(message);
+        this.outChannel.putMessage(message);
     }
 }

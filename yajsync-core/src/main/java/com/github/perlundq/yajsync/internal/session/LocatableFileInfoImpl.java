@@ -22,17 +22,17 @@ import com.github.perlundq.yajsync.attr.LocatableFileInfo;
 import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 
 class LocatableFileInfoImpl extends FileInfoImpl implements LocatableFileInfo {
-    private final Path _path;
+    private final Path path;
     
     LocatableFileInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, Path path) {
         super(pathName, pathNameBytes, attrs);
         assert path != null;
         assert path.isAbsolute();
-        this._path = path;
+        this.path = path;
     }
     
     @Override
-    public Path path() {
-        return this._path;
+    public Path getPath() {
+        return this.path;
     }
 }

@@ -33,7 +33,7 @@ package com.github.perlundq.yajsync.attr;
  * instance of LocatableFileInfo will be used.
  */
 public interface FileInfo extends Comparable<FileInfo> {
-    RsyncFileAttributes attrs();
+    RsyncFileAttributes getAttributes();
     
-    String pathName();
+    String getPathName();
 }

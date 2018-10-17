@@ -22,18 +22,18 @@ package com.github.perlundq.yajsync.internal.session;
 public enum SessionStatus {
     AUTHREQ("@RSYNCD: AUTHREQD "), ERROR("@ERROR"), EXIT("@RSYNCD: EXIT"), OK("@RSYNCD: OK");
     
-    private final String _repr;
+    private final String repr;
     
     SessionStatus(String s) {
-        this._repr = s;
+        this.repr = s;
     }
     
     boolean matches(String s) {
-        return s.startsWith(this._repr);
+        return s.startsWith(this.repr);
     }
     
     @Override
     public String toString() {
-        return this._repr;
+        return this.repr;
     }
 }

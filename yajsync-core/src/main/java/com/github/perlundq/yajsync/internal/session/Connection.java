@@ -38,10 +38,10 @@ final class Connection {
     }
     
     public static void sendChecksumHeader(Writable conn, Checksum.Header header) throws ChannelException {
-        conn.putInt(header.chunkCount());
-        conn.putInt(header.blockLength());
-        conn.putInt(header.digestLength());
-        conn.putInt(header.remainder());
+        conn.putInt(header.getChunkCount());
+        conn.putInt(header.getBlockLength());
+        conn.putInt(header.getDigestLength());
+        conn.putInt(header.getRemainder());
     }
     
     private Connection() {

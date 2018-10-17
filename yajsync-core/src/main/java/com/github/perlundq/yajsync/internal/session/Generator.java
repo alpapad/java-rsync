@@ -76,104 +76,104 @@ import com.github.perlundq.yajsync.internal.util.Util;
 
 public class Generator implements RsyncTask {
     public static class Builder {
-        private Charset _charset;
-        private final byte[] _checksumSeed;
-        private FileSelection _fileSelection = FileSelection.EXACT;
-        private boolean _isAlwaysItemize;
-        private boolean _isDelete;
-        private boolean _isIgnoreTimes;
-        private boolean _isInterruptible = true;
-        private boolean _isNumericIds;
-        private boolean _isPreserveDevices;
-        private boolean _isPreserveGroup;
-        private boolean _isPreserveLinks;
-        private boolean _isPreservePermissions;
-        private boolean _isPreserveSpecials;
-        private boolean _isPreserveTimes;
-        private boolean _isPreserveUser;
-        private final WritableByteChannel _out;
+        private Charset charset;
+        private final byte[] checksumSeed;
+        private FileSelection fileSelection = FileSelection.EXACT;
+        private boolean alwaysItemize;
+        private boolean delete;
+        private boolean ignoreTimes;
+        private boolean interruptible = true;
+        private boolean numericIds;
+        private boolean preserveDevices;
+        private boolean preserveGroup;
+        private boolean preserveLinks;
+        private boolean preservePermissions;
+        private boolean preserveSpecials;
+        private boolean preserveTimes;
+        private boolean preserveUser;
+        private final WritableByteChannel out;
         
         public Builder(WritableByteChannel out, byte[] checksumSeed) {
             assert out != null;
             assert checksumSeed != null;
-            this._out = out;
-            this._checksumSeed = checksumSeed;
+            this.out = out;
+            this.checksumSeed = checksumSeed;
         }
         
         public Generator build() {
-            assert !this._isDelete || this._fileSelection != FileSelection.EXACT;
+            assert !this.delete || this.fileSelection != FileSelection.EXACT;
             return new Generator(this);
         }
         
         public Builder charset(Charset charset) {
             assert charset != null;
-            this._charset = charset;
+            this.charset = charset;
             return this;
         }
         
         public Builder fileSelection(FileSelection fileSelection) {
             assert fileSelection != null;
-            this._fileSelection = fileSelection;
+            this.fileSelection = fileSelection;
             return this;
         }
         
         public Builder isAlwaysItemize(boolean isAlwaysItemize) {
-            this._isAlwaysItemize = isAlwaysItemize;
+            this.alwaysItemize = isAlwaysItemize;
             return this;
         }
         
         public Builder isDelete(boolean isDelete) {
-            this._isDelete = isDelete;
+            this.delete = isDelete;
             return this;
         }
         
         public Builder isIgnoreTimes(boolean isIgnoreTimes) {
-            this._isIgnoreTimes = isIgnoreTimes;
+            this.ignoreTimes = isIgnoreTimes;
             return this;
         }
         
         public Builder isInterruptible(boolean isInterruptible) {
-            this._isInterruptible = isInterruptible;
+            this.interruptible = isInterruptible;
             return this;
         }
         
         public Builder isNumericIds(boolean isNumericIds) {
-            this._isNumericIds = isNumericIds;
+            this.numericIds = isNumericIds;
             return this;
         }
         
         public Builder isPreserveDevices(boolean isPreserveDevices) {
-            this._isPreserveDevices = isPreserveDevices;
+            this.preserveDevices = isPreserveDevices;
             return this;
         }
         
         public Builder isPreserveGroup(boolean isPreserveGroup) {
-            this._isPreserveGroup = isPreserveGroup;
+            this.preserveGroup = isPreserveGroup;
             return this;
         }
         
         public Builder isPreserveLinks(boolean isPreserveLinks) {
-            this._isPreserveLinks = isPreserveLinks;
+            this.preserveLinks = isPreserveLinks;
             return this;
         }
         
         public Builder isPreservePermissions(boolean isPreservePermissions) {
-            this._isPreservePermissions = isPreservePermissions;
+            this.preservePermissions = isPreservePermissions;
             return this;
         }
         
         public Builder isPreserveSpecials(boolean isPreserveSpecials) {
-            this._isPreserveSpecials = isPreserveSpecials;
+            this.preserveSpecials = isPreserveSpecials;
             return this;
         }
         
         public Builder isPreserveTimes(boolean isPreserveTimes) {
-            this._isPreserveTimes = isPreserveTimes;
+            this.preserveTimes = isPreserveTimes;
             return this;
         }
         
         public Builder isPreserveUser(boolean isPreserveUser) {
-            this._isPreserveUser = isPreserveUser;
+            this.preserveUser = isPreserveUser;
             return this;
         }
     }
@@ -182,7 +182,7 @@ public class Generator implements RsyncTask {
         void process() throws RsyncException;
     }
     
-    private static final Logger _log = Logger.getLogger(Generator.class.getName());
+    private static final Logger LOG = Logger.getLogger(Generator.class.getName());
     private static final int MIN_BLOCK_SIZE = 512;
     private static final int OUTPUT_CHANNEL_BUF_SIZE = 8 * 1024;
     private static final Checksum.Header ZERO_SUM;
@@ -235,88 +235,88 @@ public class Generator implements RsyncTask {
         return (int) result;
     }
     
-    private final TextEncoder _characterEncoder;
-    private final byte[] _checksumSeed;
-    private final SimpleDateFormat _dateFormat = new SimpleDateFormat();
-    private final Deque<Job> _deferredJobs = new ArrayDeque<>();
-    private FileAttributeManager _fileAttributeManager;
-    private final Filelist _fileList;
-    private final FileSelection _fileSelection;
-    private final List<Filelist.Segment> _generated = new LinkedList<>();
-    private final boolean _isAlwaysItemize;
-    private final boolean _isDelete;
-    private volatile boolean _isDeletionsEnabled;
-    private final boolean _isIgnoreTimes;
-    private final boolean _isInterruptible;
-    private final boolean _isNumericIds;
-    private final boolean _isPreserveDevices;
-    private final boolean _isPreserveGroup;
-    private final boolean _isPreserveLinks;
-    private final boolean _isPreservePermissions;
-    private final boolean _isPreserveSpecials;
+    private final TextEncoder characterEncoder;
+    private final byte[] checksumSeed;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat();
+    private final Deque<Job> deferredJobs = new ArrayDeque<>();
+    private FileAttributeManager fileAttributeManager;
+    private final Filelist fileList;
+    private final FileSelection fileSelection;
+    private final List<Filelist.Segment> generated = new LinkedList<>();
+    private final boolean alwaysItemize;
+    private final boolean delete;
+    private volatile boolean deletionsEnabled;
+    private final boolean ignoreTimes;
+    private final boolean interruptible;
+    private final boolean numericIds;
+    private final boolean preserveDevices;
+    private final boolean preserveGroup;
+    private final boolean preserveLinks;
+    private final boolean preservePermissions;
+    private final boolean preserveSpecials;
     
-    private final boolean _isPreserveTimes;
-    private final boolean _isPreserveUser;
-    private boolean _isRunning = true;
-    private final LinkedBlockingQueue<Job> _jobs = new LinkedBlockingQueue<>();
+    private final boolean preserveTimes;
+    private final boolean preserveUser;
+    private boolean running = true;
+    private final LinkedBlockingQueue<Job> jobs = new LinkedBlockingQueue<>();
     
-    private final BlockingQueue<Pair<Boolean, FileInfo>> _listing = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Pair<Boolean, FileInfo>> listing = new LinkedBlockingQueue<>();
     
-    private final RsyncOutChannel _out;
+    private final RsyncOutChannel out;
     
-    private final BitSet _pruned = new BitSet();
+    private final BitSet pruned = new BitSet();
     
-    private int _returnStatus;
+    private int returnStatus;
     
     private Generator(Builder builder) {
-        this._checksumSeed = builder._checksumSeed;
-        this._fileSelection = builder._fileSelection;
-        this._fileList = new ConcurrentFilelist(this._fileSelection == FileSelection.RECURSE, true);
-        this._out = new RsyncOutChannel(builder._out, OUTPUT_CHANNEL_BUF_SIZE);
-        this._characterEncoder = TextEncoder.newStrict(builder._charset);
-        this._isAlwaysItemize = builder._isAlwaysItemize;
-        this._isDelete = builder._isDelete;
-        this._isDeletionsEnabled = this._fileSelection != FileSelection.EXACT;
-        this._isIgnoreTimes = builder._isIgnoreTimes;
-        this._isInterruptible = builder._isInterruptible;
-        this._isPreserveDevices = builder._isPreserveDevices;
-        this._isPreserveLinks = builder._isPreserveLinks;
-        this._isPreservePermissions = builder._isPreservePermissions;
-        this._isPreserveSpecials = builder._isPreserveSpecials;
-        this._isPreserveTimes = builder._isPreserveTimes;
-        this._isPreserveUser = builder._isPreserveUser;
-        this._isPreserveGroup = builder._isPreserveGroup;
-        this._isNumericIds = builder._isNumericIds;
+        this.checksumSeed = builder.checksumSeed;
+        this.fileSelection = builder.fileSelection;
+        this.fileList = new ConcurrentFilelist(this.fileSelection == FileSelection.RECURSE, true);
+        this.out = new RsyncOutChannel(builder.out, OUTPUT_CHANNEL_BUF_SIZE);
+        this.characterEncoder = TextEncoder.newStrict(builder.charset);
+        this.alwaysItemize = builder.alwaysItemize;
+        this.delete = builder.delete;
+        this.deletionsEnabled = this.fileSelection != FileSelection.EXACT;
+        this.ignoreTimes = builder.ignoreTimes;
+        this.interruptible = builder.interruptible;
+        this.preserveDevices = builder.preserveDevices;
+        this.preserveLinks = builder.preserveLinks;
+        this.preservePermissions = builder.preservePermissions;
+        this.preserveSpecials = builder.preserveSpecials;
+        this.preserveTimes = builder.preserveTimes;
+        this.preserveUser = builder.preserveUser;
+        this.preserveGroup = builder.preserveGroup;
+        this.numericIds = builder.numericIds;
     }
     
     private void appendJob(Job job) throws InterruptedException {
         assert job != null;
-        this._jobs.put(job);
+        this.jobs.put(job);
     }
     
     @Override
     public Boolean call() throws InterruptedException, RsyncException {
         try {
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(this.toString());
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(this.toString());
             }
             this.processJobQueueBatched();
-            return this._returnStatus == 0;
+            return this.returnStatus == 0;
         } catch (RuntimeInterruptException e) {
             throw new InterruptedException();
         } finally {
             Pair<Boolean, FileInfo> poisonPill = new Pair<>(false, null);
-            this._listing.add(poisonPill);
+            this.listing.add(poisonPill);
         }
     }
     
-    Charset charset() {
-        return this._characterEncoder.charset();
+    Charset getCharset() {
+        return this.characterEncoder.charset();
     }
     
     @Override
     public void closeChannel() throws ChannelException {
-        this._out.close();
+        this.out.close();
     }
     
     private void deferUpdateAttrsIfDiffer(final Path path, final RsyncFileAttributes curAttrsOrNull, final RsyncFileAttributes newAttrs) {
@@ -330,25 +330,25 @@ public class Generator implements RsyncTask {
                     Generator.this.updateAttrsIfDiffer(path, curAttrsOrNull, newAttrs);
                 } catch (IOException e) {
                     String msg = String.format("received I/O error while applying " + "attributes on %s: %s", path, e.getMessage());
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning(msg);
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning(msg);
                     }
-                    Generator.this._out.putMessage(Generator.this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
-                    Generator.this._returnStatus++;
+                    Generator.this.out.putMessage(Generator.this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                    Generator.this.returnStatus++;
                 }
             }
         };
-        this._deferredJobs.addFirst(j);
+        this.deferredJobs.addFirst(j);
     }
     
     RsyncFileAttributes deleteIfDifferentType(LocatableFileInfo fileInfo) throws IOException {
         // null if file does not exist; throws IOException on any other error
-        RsyncFileAttributes curAttrsOrNull = this._fileAttributeManager.statIfExists(fileInfo.path());
-        if (curAttrsOrNull != null && curAttrsOrNull.fileType() != fileInfo.attrs().fileType()) {
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("deleting %s %s (expecting a %s)", FileOps.fileType(curAttrsOrNull.mode()), fileInfo.path(), FileOps.fileType(fileInfo.attrs().mode())));
+        RsyncFileAttributes curAttrsOrNull = this.fileAttributeManager.statIfExists(fileInfo.getPath());
+        if (curAttrsOrNull != null && curAttrsOrNull.getFileType() != fileInfo.getAttributes().getFileType()) {
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("deleting %s %s (expecting a %s)", FileOps.fileType(curAttrsOrNull.getMode()), fileInfo.getPath(), FileOps.fileType(fileInfo.getAttributes().getMode())));
             }
-            FileOps.unlink(fileInfo.path());
+            FileOps.unlink(fileInfo.getPath());
             return null;
         } else {
             return curAttrsOrNull;
@@ -356,24 +356,24 @@ public class Generator implements RsyncTask {
     }
     
     void disableDelete() {
-        if (this._isDelete && this._isDeletionsEnabled) {
-            if (_log.isLoggable(Level.WARNING)) {
-                _log.warning("--delete disabled due to receiving error " + "notification from peer sender");
+        if (this.delete && this.deletionsEnabled) {
+            if (LOG.isLoggable(Level.WARNING)) {
+                LOG.warning("--delete disabled due to receiving error " + "notification from peer sender");
             }
-            this._isDeletionsEnabled = false;
+            this.deletionsEnabled = false;
         }
     }
     
-    Filelist fileList() {
-        return this._fileList;
+    Filelist getFileList() {
+        return this.fileList;
     }
     
-    public BlockingQueue<Pair<Boolean, FileInfo>> files() {
-        return this._listing;
+    public BlockingQueue<Pair<Boolean, FileInfo>> getFiles() {
+        return this.listing;
     }
     
-    FileSelection fileSelection() {
-        return this._fileSelection;
+    FileSelection getFileSelection() {
+        return this.fileSelection;
     }
     
     void generateFile(final Filelist.Segment segment, final int fileIndex, final LocatableFileInfo fileInfo) throws InterruptedException {
@@ -390,18 +390,18 @@ public class Generator implements RsyncTask {
                         Generator.this.removeAllFinishedSegmentsAndNotifySender();
                     }
                 } catch (IOException e) {
-                    String msg = String.format("failed to generate file meta " + "data for %s (index %d): %s", fileInfo.path(), fileIndex, e.getMessage());
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning(msg);
+                    String msg = String.format("failed to generate file meta " + "data for %s (index %d): %s", fileInfo.getPath(), fileIndex, e.getMessage());
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning(msg);
                     }
-                    Generator.this._out.putMessage(Generator.this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
-                    Generator.this._returnStatus++;
+                    Generator.this.out.putMessage(Generator.this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                    Generator.this.returnStatus++;
                 }
             }
             
             @Override
             public String toString() {
-                return String.format("generateFile (%s, %d, %s)", segment, fileIndex, fileInfo.path());
+                return String.format("generateFile (%s, %d, %s)", segment, fileIndex, fileInfo.getPath());
             }
         };
         this.appendJob(j);
@@ -414,7 +414,7 @@ public class Generator implements RsyncTask {
             @Override
             public void process() throws ChannelException {
                 Generator.this.sendChecksumForSegment(targetPath, segment, filterRuleConfiguration);
-                Generator.this._generated.add(segment);
+                Generator.this.generated.add(segment);
                 Generator.this.removeAllFinishedSegmentsAndNotifySender();
             }
             
@@ -428,43 +428,43 @@ public class Generator implements RsyncTask {
     
     @Override
     public boolean isInterruptible() {
-        return this._isInterruptible;
+        return this.interruptible;
     }
     
     boolean isNumericIds() {
-        return this._isNumericIds;
+        return this.numericIds;
     }
     
     boolean isPreserveDevices() {
-        return this._isPreserveDevices;
+        return this.preserveDevices;
     }
     
     boolean isPreserveGroup() {
-        return this._isPreserveGroup;
+        return this.preserveGroup;
     }
     
     boolean isPreserveLinks() {
-        return this._isPreserveLinks;
+        return this.preserveLinks;
     }
     
     boolean isPreservePermissions() {
-        return this._isPreservePermissions;
+        return this.preservePermissions;
     }
     
     boolean isPreserveSpecials() {
-        return this._isPreserveSpecials;
+        return this.preserveSpecials;
     }
     
     boolean isPreserveTimes() {
-        return this._isPreserveTimes;
+        return this.preserveTimes;
     }
     
     boolean isPreserveUser() {
-        return this._isPreserveUser;
+        return this.preserveUser;
     }
     
     boolean isPruned(int index) {
-        return this._pruned.get(index);
+        return this.pruned.get(index);
     }
     
     /**
@@ -480,14 +480,14 @@ public class Generator implements RsyncTask {
         
         RsyncFileAttributes curAttrsOrNull = this.deleteIfDifferentType(fileInfo);
         if (curAttrsOrNull == null) {
-            this.sendItemizeInfo(index, null /* curAttrsOrNull */, fileInfo.attrs(), Item.LOCAL_CHANGE);
+            this.sendItemizeInfo(index, null /* curAttrsOrNull */, fileInfo.getAttributes(), Item.LOCAL_CHANGE);
             this.mkdir(fileInfo); // throws IOException
         } else {
-            if (this._isAlwaysItemize) {
-                this.sendItemizeInfo(index, curAttrsOrNull, fileInfo.attrs(), Item.NO_CHANGE);
+            if (this.alwaysItemize) {
+                this.sendItemizeInfo(index, curAttrsOrNull, fileInfo.getAttributes(), Item.NO_CHANGE);
             }
-            if (!curAttrsOrNull.equals(fileInfo.attrs())) {
-                this.deferUpdateAttrsIfDiffer(fileInfo.path(), curAttrsOrNull, fileInfo.attrs());
+            if (!curAttrsOrNull.equals(fileInfo.getAttributes())) {
+                this.deferUpdateAttrsIfDiffer(fileInfo.getPath(), curAttrsOrNull, fileInfo.getAttributes());
             }
         }
     }
@@ -499,9 +499,9 @@ public class Generator implements RsyncTask {
         
         // NOTE: native opens the file first though even if its file size is
         // zero
-        if (FileOps.isDataModified(curAttrsOrNull, fileInfo.attrs()) || this._isIgnoreTimes) {
+        if (FileOps.isDataModified(curAttrsOrNull, fileInfo.getAttributes()) || this.ignoreTimes) {
             if (curAttrsOrNull == null) {
-                this.sendItemizeInfo(index, null /* curAttrsOrNull */, fileInfo.attrs(), Item.TRANSFER);
+                this.sendItemizeInfo(index, null /* curAttrsOrNull */, fileInfo.getAttributes(), Item.TRANSFER);
                 this.sendChecksumHeader(ZERO_SUM);
             } else {
                 this.sendItemizeAndChecksums(index, fileInfo, curAttrsOrNull, digestLength);
@@ -509,19 +509,19 @@ public class Generator implements RsyncTask {
             return true;
         }
         
-        if (this._isAlwaysItemize) {
-            this.sendItemizeInfo(index, curAttrsOrNull, fileInfo.attrs(), Item.NO_CHANGE);
+        if (this.alwaysItemize) {
+            this.sendItemizeInfo(index, curAttrsOrNull, fileInfo.getAttributes(), Item.NO_CHANGE);
         }
         
         try {
-            this.updateAttrsIfDiffer(fileInfo.path(), curAttrsOrNull, fileInfo.attrs());
+            this.updateAttrsIfDiffer(fileInfo.getPath(), curAttrsOrNull, fileInfo.getAttributes());
         } catch (IOException e) {
-            String msg = String.format("received an I/O error while applying attributes on %s: %s", fileInfo.path(), e.getMessage());
-            if (_log.isLoggable(Level.WARNING)) {
-                _log.warning(msg);
+            String msg = String.format("received an I/O error while applying attributes on %s: %s", fileInfo.getPath(), e.getMessage());
+            if (LOG.isLoggable(Level.WARNING)) {
+                LOG.warning(msg);
             }
-            this._out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
-            this._returnStatus++;
+            this.out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+            this.returnStatus++;
         }
         return false;
     }
@@ -533,19 +533,19 @@ public class Generator implements RsyncTask {
             return Item.IS_NEW;
         }
         char iFlags = Item.NO_CHANGE;
-        if (this._isPreservePermissions && curAttrsOrNull.mode() != newAttrs.mode()) {
+        if (this.preservePermissions && curAttrsOrNull.getMode() != newAttrs.getMode()) {
             iFlags |= Item.REPORT_PERMS;
         }
-        if (this._isPreserveTimes && curAttrsOrNull.lastModifiedTime() != newAttrs.lastModifiedTime()) {
+        if (this.preserveTimes && curAttrsOrNull.lastModifiedTime() != newAttrs.lastModifiedTime()) {
             iFlags |= Item.REPORT_TIME;
         }
-        if (this._isPreserveUser && !curAttrsOrNull.user().equals(newAttrs.user())) {
+        if (this.preserveUser && !curAttrsOrNull.getUser().equals(newAttrs.getUser())) {
             iFlags |= Item.REPORT_OWNER;
         }
-        if (this._isPreserveGroup && !curAttrsOrNull.group().equals(newAttrs.group())) {
+        if (this.preserveGroup && !curAttrsOrNull.getGroup().equals(newAttrs.getGroup())) {
             iFlags |= Item.REPORT_GROUP;
         }
-        if (curAttrsOrNull.isRegularFile() && curAttrsOrNull.size() != newAttrs.size()) {
+        if (curAttrsOrNull.isRegularFile() && curAttrsOrNull.getSize() != newAttrs.getSize()) {
             iFlags |= Item.REPORT_SIZE;
         }
         return iFlags;
@@ -563,42 +563,42 @@ public class Generator implements RsyncTask {
             if (f instanceof LocatableFileInfo) {
                 LocatableFileInfo lf = (LocatableFileInfo) f;
                 try {
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.fine(String.format("(Generator) generating %s, index %d", lf.path(), index));
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.fine(String.format("(Generator) generating %s, index %d", lf.getPath(), index));
                     }
-                    if (f.attrs().isRegularFile()) {
+                    if (f.getAttributes().isRegularFile()) {
                         isTransfer = this.itemizeFile(index, lf, Checksum.MIN_DIGEST_LENGTH);
-                    } else if (f.attrs().isDirectory()) {
-                        if (this._fileSelection != FileSelection.RECURSE) {
+                    } else if (f.getAttributes().isDirectory()) {
+                        if (this.fileSelection != FileSelection.RECURSE) {
                             this.itemizeDirectory(index, lf);
                         }
-                    } else if (f instanceof LocatableDeviceInfo && this._isPreserveDevices && (f.attrs().isBlockDevice() || f.attrs().isCharacterDevice())) {
+                    } else if (f instanceof LocatableDeviceInfo && this.preserveDevices && (f.getAttributes().isBlockDevice() || f.getAttributes().isCharacterDevice())) {
                         this.itemizeDevice(index, (LocatableDeviceInfo) f);
-                    } else if (f instanceof LocatableDeviceInfo && this._isPreserveSpecials && (f.attrs().isFifo() || f.attrs().isSocket())) {
+                    } else if (f instanceof LocatableDeviceInfo && this.preserveSpecials && (f.getAttributes().isFifo() || f.getAttributes().isSocket())) {
                         this.itemizeDevice(index, (LocatableDeviceInfo) f);
-                    } else if (this._isPreserveLinks && f instanceof LocatableSymlinkInfo) {
+                    } else if (this.preserveLinks && f instanceof LocatableSymlinkInfo) {
                         this.itemizeSymlink(index, (LocatableSymlinkInfo) f);
                     } else {
-                        if (_log.isLoggable(Level.FINE)) {
-                            _log.fine("(Generator) Skipping " + lf.path());
+                        if (LOG.isLoggable(Level.FINE)) {
+                            LOG.fine("(Generator) Skipping " + lf.getPath());
                         }
                     }
                 } catch (IOException e) {
-                    if (lf.attrs().isDirectory()) {
+                    if (lf.getAttributes().isDirectory()) {
                         // we cannot remove the corresponding segment since we
                         // may not have received it yet
                         this.prune(index);
                     }
-                    String msg = String.format("failed to generate %s %s (index %d): %s", FileOps.fileTypeToString(lf.attrs().mode()), lf.path(), index, e.getMessage());
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning(msg);
+                    String msg = String.format("failed to generate %s %s (index %d): %s", FileOps.fileTypeToString(lf.getAttributes().getMode()), lf.getPath(), index, e.getMessage());
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning(msg);
                     }
-                    this._out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                    this.out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
                     numErrors++;
                 }
             } else {
-                if (_log.isLoggable(Level.WARNING)) {
-                    _log.warning("skipping untransferrable " + f);
+                if (LOG.isLoggable(Level.WARNING)) {
+                    LOG.warning("skipping untransferrable " + f);
                 }
             }
             if (!isTransfer) {
@@ -613,25 +613,25 @@ public class Generator implements RsyncTask {
         try {
             RsyncFileAttributes curAttrsOrNull = this.deleteIfDifferentType(linkInfo);
             if (curAttrsOrNull != null) {
-                Path curTarget = Files.readSymbolicLink(linkInfo.path());
-                if (curTarget.toString().equals(linkInfo.targetPathName())) {
-                    if (this._isAlwaysItemize) {
-                        this.sendItemizeInfo(index, curAttrsOrNull, linkInfo.attrs(), Item.NO_CHANGE);
+                Path curTarget = Files.readSymbolicLink(linkInfo.getPath());
+                if (curTarget.toString().equals(linkInfo.getTargetPathName())) {
+                    if (this.alwaysItemize) {
+                        this.sendItemizeInfo(index, curAttrsOrNull, linkInfo.getAttributes(), Item.NO_CHANGE);
                     }
                     return;
                 }
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine(String.format("deleting symlink %s -> %s", linkInfo.path(), curTarget));
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine(String.format("deleting symlink %s -> %s", linkInfo.getPath(), curTarget));
                 }
-                FileOps.unlink(linkInfo.path());
+                FileOps.unlink(linkInfo.getPath());
             }
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("creating symlink %s -> %s", linkInfo.path(), linkInfo.targetPathName()));
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("creating symlink %s -> %s", linkInfo.getPath(), linkInfo.getTargetPathName()));
             }
-            Path targetPath = linkInfo.path().getFileSystem().getPath(linkInfo.targetPathName());
-            Files.createSymbolicLink(linkInfo.path(), targetPath);
+            Path targetPath = linkInfo.getPath().getFileSystem().getPath(linkInfo.getTargetPathName());
+            Files.createSymbolicLink(linkInfo.getPath(), targetPath);
             
-            this.sendItemizeInfo(index, null /* curAttrsOrNull */, linkInfo.attrs(), (char) (Item.LOCAL_CHANGE | Item.REPORT_CHANGE));
+            this.sendItemizeInfo(index, null /* curAttrsOrNull */, linkInfo.getAttributes(), (char) (Item.LOCAL_CHANGE | Item.REPORT_CHANGE));
         } catch (UnsupportedOperationException e) {
             throw new IOException(e);
         }
@@ -644,20 +644,20 @@ public class Generator implements RsyncTask {
             @Override
             public void process() throws ChannelException {
                 Collection<FileInfo> c;
-                if (Generator.this._fileSelection != FileSelection.RECURSE) {
-                    c = segment.files();
-                } else if (segment.directory() == null) {
+                if (Generator.this.fileSelection != FileSelection.RECURSE) {
+                    c = segment.getFiles();
+                } else if (segment.getDirectory() == null) {
                     c = Generator.this.toInitialListing(segment);
                 } else {
                     c = Generator.this.toListing(segment);
                 }
-                Generator.this._listing.addAll(Generator.this.toListingPair(c));
+                Generator.this.listing.addAll(Generator.this.toListingPair(c));
                 segment.removeAll();
-                Filelist.Segment deleted = Generator.this._fileList.deleteFirstSegment();
+                Filelist.Segment deleted = Generator.this.fileList.deleteFirstSegment();
                 if (deleted != segment) {
                     throw new IllegalStateException(String.format("%s != %s", deleted, segment));
                 }
-                Generator.this._out.encodeIndex(Filelist.DONE);
+                Generator.this.out.encodeIndex(Filelist.DONE);
                 
             }
             
@@ -673,25 +673,25 @@ public class Generator implements RsyncTask {
     private void mkdir(LocatableFileInfo dir) throws IOException {
         assert dir != null;
         
-        RsyncFileAttributes attrs = this._fileAttributeManager.statOrNull(dir.path());
+        RsyncFileAttributes attrs = this.fileAttributeManager.statOrNull(dir.getPath());
         if (attrs == null) {
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine("(Generator) creating directory " + dir.path());
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("(Generator) creating directory " + dir.getPath());
             }
-            Files.createDirectories(dir.path());
+            Files.createDirectories(dir.getPath());
         }
-        this.deferUpdateAttrsIfDiffer(dir.path(), attrs, dir.attrs());
+        this.deferUpdateAttrsIfDiffer(dir.getPath(), attrs, dir.getAttributes());
     }
     
-    synchronized long numBytesWritten() {
-        return this._out.numBytesWritten();
+    synchronized long getNumBytesWritten() {
+        return this.out.getNumBytesWritten();
     }
     
     void processDeferredJobs() throws InterruptedException {
         Job job = new Job() {
             @Override
             public void process() throws RsyncException {
-                for (Job j : Generator.this._deferredJobs) {
+                for (Job j : Generator.this.deferredJobs) {
                     j.process();
                 }
             }
@@ -706,36 +706,36 @@ public class Generator implements RsyncTask {
     
     private void processJobQueueBatched() throws InterruptedException, RsyncException {
         List<Job> jobList = new LinkedList<>();
-        while (this._isRunning) {
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine("(Generator) awaiting next jobs...");
+        while (this.running) {
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("(Generator) awaiting next jobs...");
             }
             
-            jobList.add(this._jobs.take());
-            this._jobs.drainTo(jobList);
+            jobList.add(this.jobs.take());
+            this.jobs.drainTo(jobList);
             
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("(Generator) got %d job(s)", jobList.size()));
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("(Generator) got %d job(s)", jobList.size()));
             }
             
             for (Job job : jobList) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine("(Generator) processing " + job);
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine("(Generator) processing " + job);
                 }
                 job.process();
             }
             jobList.clear();
-            if (this._jobs.isEmpty()) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine(String.format("(Generator) flushing %d bytes", this._out.numBytesBuffered()));
+            if (this.jobs.isEmpty()) {
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine(String.format("(Generator) flushing %d bytes", this.out.getNumBytesBuffered()));
                 }
-                this._out.flush();
+                this.out.flush();
             }
         }
     }
     
     void prune(int index) {
-        this._pruned.set(index);
+        this.pruned.set(index);
     }
     
     void purgeFile(final Filelist.Segment segment, final int index) throws InterruptedException {
@@ -745,7 +745,7 @@ public class Generator implements RsyncTask {
                 if (segment != null) {
                     segment.remove(index);
                 } else {
-                    Filelist.Segment tmpSegment = Generator.this._fileList.getSegmentWith(index);
+                    Filelist.Segment tmpSegment = Generator.this.fileList.getSegmentWith(index);
                     if (tmpSegment == null) {
                         throw new RsyncProtocolException(String.format("invalid file index %d from peer", index));
                     }
@@ -763,25 +763,25 @@ public class Generator implements RsyncTask {
     }
     
     private void removeAllFinishedSegmentsAndNotifySender() throws ChannelException {
-        for (Iterator<Filelist.Segment> it = this._generated.iterator(); it.hasNext();) {
+        for (Iterator<Filelist.Segment> it = this.generated.iterator(); it.hasNext();) {
             Filelist.Segment segment = it.next();
             if (!segment.isFinished()) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine(String.format("(Generator) %s not finished yet", segment));
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine(String.format("(Generator) %s not finished yet", segment));
                 }
                 break;
             }
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("(Generator) removing finished " + "segment %s and sending index %d", segment, Filelist.DONE));
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("(Generator) removing finished " + "segment %s and sending index %d", segment, Filelist.DONE));
             }
-            Filelist.Segment deleted = this._fileList.deleteFirstSegment();
+            Filelist.Segment deleted = this.fileList.deleteFirstSegment();
             // identity comparison
             if (deleted != segment) {
                 throw new IllegalStateException(String.format("%s != %s", deleted, segment));
             }
             // NOTE: remove before notifying peer
             it.remove();
-            this._out.encodeIndex(Filelist.DONE);
+            this.out.encodeIndex(Filelist.DONE);
         }
     }
     
@@ -792,7 +792,7 @@ public class Generator implements RsyncTask {
         Job j = new Job() {
             @Override
             public void process() throws ChannelException {
-                Generator.this._out.put(buf);
+                Generator.this.out.put(buf);
             }
             
             @Override
@@ -806,13 +806,13 @@ public class Generator implements RsyncTask {
     private void sendChecksumForSegment(final Path targetPath, Filelist.Segment segment, FilterRuleConfiguration filterRuleConfiguration) throws ChannelException {
         assert segment != null;
         
-        final int dirIndex = segment.directoryIndex();
-        if (segment.directory() != null && !(segment.directory() instanceof LocatableFileInfo)) {
+        final int dirIndex = segment.getDirectoryIndex();
+        if (segment.getDirectory() != null && !(segment.getDirectory() instanceof LocatableFileInfo)) {
             segment.removeAll();
             return;
         }
-        LocatableFileInfo dir = (LocatableFileInfo) segment.directory();
-        if (dir != null && (this.isPruned(dirIndex) || dir.path() == null)) {
+        LocatableFileInfo dir = (LocatableFileInfo) segment.getDirectory();
+        if (dir != null && (this.isPruned(dirIndex) || dir.getPath() == null)) {
             segment.removeAll();
             return;
         }
@@ -826,84 +826,84 @@ public class Generator implements RsyncTask {
             }
             dir = (LocatableFileInfo) tmp;
         }
-        if (this._isDelete && this._isDeletionsEnabled) {
+        if (this.delete && this.deletionsEnabled) {
             try {
-                this.unlinkFilesInDirNotAtSender(targetPath, dir.path(), segment.files(), filterRuleConfiguration);
+                this.unlinkFilesInDirNotAtSender(targetPath, dir.getPath(), segment.getFiles(), filterRuleConfiguration);
             } catch (IOException e) {
-                if (Files.exists(dir.path(), LinkOption.NOFOLLOW_LINKS)) {
+                if (Files.exists(dir.getPath(), LinkOption.NOFOLLOW_LINKS)) {
                     String msg = String.format("failed to delete %s and all " + "its files: %s", dir, e);
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning(msg);
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning(msg);
                     }
-                    this._out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
-                    this._returnStatus++;
+                    this.out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                    this.returnStatus++;
                 }
             }
         }
         try {
-            if (dir.attrs().isDirectory()) {
+            if (dir.getAttributes().isDirectory()) {
                 this.mkdir(dir);
             }
             if (!isInitialFileList) {
                 this.itemizeDirectory(dirIndex, dir);
             }
-            this._returnStatus += this.itemizeSegment(segment);
+            this.returnStatus += this.itemizeSegment(segment);
         } catch (IOException e) {
-            String msg = String.format("failed to generate files below dir %s (index %d): %s", dir.path(), dirIndex, e.getMessage());
-            if (_log.isLoggable(Level.WARNING)) {
-                _log.warning(msg);
+            String msg = String.format("failed to generate files below dir %s (index %d): %s", dir.getPath(), dirIndex, e.getMessage());
+            if (LOG.isLoggable(Level.WARNING)) {
+                LOG.warning(msg);
             }
-            this._out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+            this.out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
             segment.removeAll();
-            this._returnStatus++;
+            this.returnStatus++;
         }
     }
     
     private void sendChecksumHeader(Checksum.Header header) throws ChannelException {
-        Connection.sendChecksumHeader(this._out, header);
+        Connection.sendChecksumHeader(this.out, header);
     }
     
     private void sendItemizeAndChecksums(int index, LocatableFileInfo fileInfo, RsyncFileAttributes curAttrs, int minDigestLength) throws ChannelException {
         assert fileInfo != null;
         assert curAttrs != null;
         
-        long currentSize = curAttrs.size();
+        long currentSize = curAttrs.getSize();
         int blockLength = getBlockLengthFor(currentSize);
         int windowLength = blockLength;
         int digestLength = currentSize > 0 ? Math.max(minDigestLength, getDigestLength(currentSize, blockLength)) : 0;
         // new FileView() throws FileViewOpenFailed
-        try (FileView fv = new FileView(fileInfo.path(), currentSize, blockLength, windowLength)) {
+        try (FileView fv = new FileView(fileInfo.getPath(), currentSize, blockLength, windowLength)) {
             
             // throws ChunkCountOverflow
             Checksum.Header header = new Checksum.Header(blockLength, digestLength, currentSize);
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("(Generator) generating file %s, " + "index %d, checksum %s", fileInfo, index, header));
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("(Generator) generating file %s, " + "index %d, checksum %s", fileInfo, index, header));
             }
             
-            this.sendItemizeInfo(index, curAttrs, fileInfo.attrs(), Item.TRANSFER);
+            this.sendItemizeInfo(index, curAttrs, fileInfo.getAttributes(), Item.TRANSFER);
             this.sendChecksumHeader(header);
             
             MessageDigest md = MD5.newInstance();
             
-            while (fv.windowLength() > 0) {
-                int rolling = Rolling.compute(fv.array(), fv.startOffset(), fv.windowLength());
-                this._out.putInt(rolling);
-                md.update(fv.array(), fv.startOffset(), fv.windowLength());
-                md.update(this._checksumSeed);
-                this._out.put(md.digest(), 0, digestLength);
-                fv.slide(fv.windowLength());
+            while (fv.getWindowLength() > 0) {
+                int rolling = Rolling.compute(fv.getArray(), fv.getStartOffset(), fv.getWindowLength());
+                this.out.putInt(rolling);
+                md.update(fv.getArray(), fv.getStartOffset(), fv.getWindowLength());
+                md.update(this.checksumSeed);
+                this.out.put(md.digest(), 0, digestLength);
+                fv.slide(fv.getWindowLength());
             }
         } catch (FileViewOpenFailed | Checksum.ChunkOverflow e) {
-            if (_log.isLoggable(Level.WARNING)) {
-                _log.warning(String.format("(Generator) received I/O error during checksum " + "generation (%s)", e.getMessage()));
+            if (LOG.isLoggable(Level.WARNING)) {
+                LOG.warning(String.format("(Generator) received I/O error during checksum " + "generation (%s)", e.getMessage()));
             }
-            this.sendItemizeInfo(index, null, fileInfo.attrs(), Item.TRANSFER);
+            this.sendItemizeInfo(index, null, fileInfo.getAttributes(), Item.TRANSFER);
             this.sendChecksumHeader(ZERO_SUM);
         } catch (FileViewException e) {
             // occurs at FileView.close() - if there were any I/O errors during
             // file read
-            if (_log.isLoggable(Level.WARNING)) {
-                _log.warning("(Generator) Warning got I/O errors during " + "checksum generation. Errors ignored and data " + "filled with zeroes): " + e.getMessage());
+            if (LOG.isLoggable(Level.WARNING)) {
+                LOG.warning("(Generator) Warning got I/O errors during " + "checksum generation. Errors ignored and data " + "filled with zeroes): " + e.getMessage());
             }
         }
     }
@@ -911,11 +911,11 @@ public class Generator implements RsyncTask {
     private void sendItemizeInfo(int index, RsyncFileAttributes curAttrsOrNull, RsyncFileAttributes newAttrs, char iMask) throws ChannelException {
         assert newAttrs != null;
         char iFlags = (char) (iMask | this.itemizeFlags(curAttrsOrNull, newAttrs));
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine("(Generator) sending itemizeFlags=" + (int) iFlags);
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine("(Generator) sending itemizeFlags=" + (int) iFlags);
         }
-        this._out.encodeIndex(index);
-        this._out.putChar(iFlags);
+        this.out.encodeIndex(index);
+        this.out.putChar(iFlags);
     }
     
     /**
@@ -929,7 +929,7 @@ public class Generator implements RsyncTask {
         Job j = new Job() {
             @Override
             public void process() throws ChannelException {
-                Generator.this._out.putMessage(message);
+                Generator.this.out.putMessage(message);
             }
             
             @Override
@@ -944,7 +944,7 @@ public class Generator implements RsyncTask {
         Job j = new Job() {
             @Override
             public void process() throws ChannelException {
-                Generator.this._out.encodeIndex(Filelist.DONE);
+                Generator.this.out.encodeIndex(Filelist.DONE);
             }
             
             @Override
@@ -956,14 +956,14 @@ public class Generator implements RsyncTask {
     }
     
     synchronized void setFileAttributeManager(FileAttributeManager fileAttributeManager) {
-        this._fileAttributeManager = fileAttributeManager;
+        this.fileAttributeManager = fileAttributeManager;
     }
     
     void stop() throws InterruptedException {
         Job job = new Job() {
             @Override
             public void process() {
-                Generator.this._isRunning = false;
+                Generator.this.running = false;
             }
             
             @Override
@@ -975,12 +975,12 @@ public class Generator implements RsyncTask {
     }
     
     private Collection<FileInfo> toInitialListing(Filelist.Segment segment) {
-        assert this._fileSelection == FileSelection.RECURSE;
-        assert segment.directory() == null;
+        assert this.fileSelection == FileSelection.RECURSE;
+        assert segment.getDirectory() == null;
         boolean listFirstDotDir = true;
-        Collection<FileInfo> res = new ArrayList<>(segment.files().size());
-        for (FileInfo f : segment.files()) {
-            if (!f.attrs().isDirectory()) {
+        Collection<FileInfo> res = new ArrayList<>(segment.getFiles().size());
+        for (FileInfo f : segment.getFiles()) {
+            if (!f.getAttributes().isDirectory()) {
                 res.add(f);
             } else if (listFirstDotDir) {
                 if (((FileInfoImpl) f).isDotDir()) {
@@ -993,12 +993,12 @@ public class Generator implements RsyncTask {
     }
     
     private Collection<FileInfo> toListing(Filelist.Segment segment) {
-        assert this._fileSelection == FileSelection.RECURSE;
-        assert segment.directory() != null;
-        Collection<FileInfo> res = new ArrayList<>(segment.files().size());
-        res.add(segment.directory());
-        for (FileInfo f : segment.files()) {
-            if (!f.attrs().isDirectory()) {
+        assert this.fileSelection == FileSelection.RECURSE;
+        assert segment.getDirectory() != null;
+        Collection<FileInfo> res = new ArrayList<>(segment.getFiles().size());
+        res.add(segment.getDirectory());
+        for (FileInfo f : segment.getFiles()) {
+            if (!f.getAttributes().isDirectory()) {
                 res.add(f);
             }
         }
@@ -1017,7 +1017,7 @@ public class Generator implements RsyncTask {
      * @throws TextConversionException
      */
     private Message toMessage(MessageCode code, String text) {
-        ByteBuffer payload = ByteBuffer.wrap(this._characterEncoder.encode(text));
+        ByteBuffer payload = ByteBuffer.wrap(this.characterEncoder.encode(text));
         return new Message(code, payload);
     }
     
@@ -1025,29 +1025,18 @@ public class Generator implements RsyncTask {
     public String toString() {
         return String.format("%s(" + "isAlwaysItemize=%b, " + "isDelete=%b, " + "isIgnoreTimes=%b, " + "isInterruptible=%b, " + "isNumericIds=%b, " + "isPreserveDevices=%b, " + "isPreserveLinks=%b, "
                 + "isPreservePermissions=%b, " + "isPreserveSpecials=%b, " + "isPreserveTimes=%b, " + "isPreserveUser=%b, " + "isPreserveGroup=%b, " + "checksumSeed=%s, " + "fileSelection=%s" + ")",
-                this.getClass().getSimpleName(), this._isAlwaysItemize, this._isDelete, this._isIgnoreTimes, this._isInterruptible, this._isNumericIds, this._isPreserveDevices, this._isPreserveLinks,
-                this._isPreservePermissions, this._isPreserveSpecials, this._isPreserveTimes, this._isPreserveUser, this._isPreserveGroup, Text.bytesToString(this._checksumSeed), this._fileSelection);
+                this.getClass().getSimpleName(), this.alwaysItemize, this.delete, this.ignoreTimes, this.interruptible, this.numericIds, this.preserveDevices, this.preserveLinks,
+                this.preservePermissions, this.preserveSpecials, this.preserveTimes, this.preserveUser, this.preserveGroup, Text.bytesToString(this.checksumSeed), this.fileSelection);
     }
     
     private void unlinkFilesInDirNotAtSender(final Path targetPath, Path dir, Collection<FileInfo> files, FilterRuleConfiguration cfg) throws IOException, ChannelException {
-        assert this._isDelete && this._isDeletionsEnabled;
-//        boolean isDirectory = Files.isDirectory(entry);
-//        String filename = "./" + relativePathName;
-//        
-//        // detect protection
-//        if (cfg.protect(filename, isDirectory)) {
-//            return;
-//        }
-//        
-//        // detect exclusion, TODO: check path conversion
-//        boolean isEntryExcluded = cfg.exclude(filename, isDirectory);
-        
+        assert this.delete && this.deletionsEnabled;
+
         Set<Path> senderPaths = new HashSet<>(files.size());
         for (FileInfo f : files) {
             if (f instanceof LocatableFileInfo) {
                 LocatableFileInfo lf = (LocatableFileInfo) f;
-                System.err.println("Deleting:" + lf.pathName() + "------>" + lf.path().toAbsolutePath().toString());
-                senderPaths.add(lf.path());
+                senderPaths.add(lf.getPath());
             }
         }
         
@@ -1066,17 +1055,17 @@ public class Generator implements RsyncTask {
                     
                     if (!isEntryExcluded) {
                         try {
-                            if (_log.isLoggable(Level.INFO)) {
-                                _log.info("deleting extraneous " + entry);
+                            if (LOG.isLoggable(Level.INFO)) {
+                                LOG.info("deleting extraneous " + entry);
                             }
                             FileOps.unlink(entry);
                         } catch (IOException e) {
                             String msg = String.format("failed to delete %s: %s", entry, e);
-                            if (_log.isLoggable(Level.WARNING)) {
-                                _log.warning(msg);
+                            if (LOG.isLoggable(Level.WARNING)) {
+                                LOG.warning(msg);
                             }
-                            this._out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
-                            this._returnStatus++;
+                            this.out.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                            this.returnStatus++;
                             
                         }
                     } else {
@@ -1091,56 +1080,56 @@ public class Generator implements RsyncTask {
         assert path != null;
         assert newAttrs != null;
         
-        if (this._isPreservePermissions && (curAttrsOrNull == null || curAttrsOrNull.mode() != newAttrs.mode())) {
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("(Generator) %s: updating mode %o -> %o", path, curAttrsOrNull == null ? 0 : curAttrsOrNull.mode(), newAttrs.mode()));
+        if (this.preservePermissions && (curAttrsOrNull == null || curAttrsOrNull.getMode() != newAttrs.getMode())) {
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("(Generator) %s: updating mode %o -> %o", path, curAttrsOrNull == null ? 0 : curAttrsOrNull.getMode(), newAttrs.getMode()));
             }
-            this._fileAttributeManager.setFileMode(path, newAttrs.mode(), LinkOption.NOFOLLOW_LINKS);
+            this.fileAttributeManager.setFileMode(path, newAttrs.getMode(), LinkOption.NOFOLLOW_LINKS);
         }
-        if (this._isPreserveTimes && (curAttrsOrNull == null || curAttrsOrNull.lastModifiedTime() != newAttrs.lastModifiedTime())) {
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("(Generator) %s: updating mtime %s -> %s", path,
-                        curAttrsOrNull == null ? this._dateFormat.format(new Date(FileTime.from(0L, TimeUnit.SECONDS).toMillis()))
-                                : this._dateFormat.format(new Date(FileTime.from(curAttrsOrNull.lastModifiedTime(), TimeUnit.SECONDS).toMillis())),
-                        this._dateFormat.format(new Date(FileTime.from(newAttrs.lastModifiedTime(), TimeUnit.SECONDS).toMillis()))));
+        if (this.preserveTimes && (curAttrsOrNull == null || curAttrsOrNull.lastModifiedTime() != newAttrs.lastModifiedTime())) {
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("(Generator) %s: updating mtime %s -> %s", path,
+                        curAttrsOrNull == null ? this.dateFormat.format(new Date(FileTime.from(0L, TimeUnit.SECONDS).toMillis()))
+                                : this.dateFormat.format(new Date(FileTime.from(curAttrsOrNull.lastModifiedTime(), TimeUnit.SECONDS).toMillis())),
+                        this.dateFormat.format(new Date(FileTime.from(newAttrs.lastModifiedTime(), TimeUnit.SECONDS).toMillis()))));
                 
             }
-            this._fileAttributeManager.setLastModifiedTime(path, newAttrs.lastModifiedTime(), LinkOption.NOFOLLOW_LINKS);
+            this.fileAttributeManager.setLastModifiedTime(path, newAttrs.lastModifiedTime(), LinkOption.NOFOLLOW_LINKS);
         }
         // NOTE: keep this one last in the method, in case we fail due to
         // insufficient permissions (the other ones are more likely to
         // succeed).
         // NOTE: we cannot detect if we have the capabilities to change
         // ownership (knowing if UID 0 is not sufficient)
-        if (this._isPreserveUser) {
-            if (!this._isNumericIds && !newAttrs.user().name().isEmpty() && (curAttrsOrNull == null || !curAttrsOrNull.user().name().equals(newAttrs.user().name()))) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine(String.format("(Generator) %s: updating ownership %s -> %s", path, curAttrsOrNull == null ? "" : curAttrsOrNull.user(), newAttrs.user()));
+        if (this.preserveUser) {
+            if (!this.numericIds && !newAttrs.getUser().getName().isEmpty() && (curAttrsOrNull == null || !curAttrsOrNull.getUser().getName().equals(newAttrs.getUser().getName()))) {
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine(String.format("(Generator) %s: updating ownership %s -> %s", path, curAttrsOrNull == null ? "" : curAttrsOrNull.getUser(), newAttrs.getUser()));
                 }
                 // NOTE: side effect of chown in Linux is that set user/group id
                 // bit might be cleared.
-                this._fileAttributeManager.setOwner(path, newAttrs.user(), LinkOption.NOFOLLOW_LINKS);
-            } else if ((this._isNumericIds || newAttrs.user().name().isEmpty()) && (curAttrsOrNull == null || curAttrsOrNull.user().id() != newAttrs.user().id())) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine(String.format("(Generator) %s: updating ownership %s -> %s", path, curAttrsOrNull == null ? "" : curAttrsOrNull.user().id(), newAttrs.user().id()));
+                this.fileAttributeManager.setOwner(path, newAttrs.getUser(), LinkOption.NOFOLLOW_LINKS);
+            } else if ((this.numericIds || newAttrs.getUser().getName().isEmpty()) && (curAttrsOrNull == null || curAttrsOrNull.getUser().getId() != newAttrs.getUser().getId())) {
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine(String.format("(Generator) %s: updating ownership %s -> %s", path, curAttrsOrNull == null ? "" : curAttrsOrNull.getUser().getId(), newAttrs.getUser().getId()));
                 }
                 // NOTE: side effect of chown in Linux is that set user/group id
                 // bit might be cleared.
-                this._fileAttributeManager.setUserId(path, newAttrs.user().id(), LinkOption.NOFOLLOW_LINKS);
+                this.fileAttributeManager.setUserId(path, newAttrs.getUser().getId(), LinkOption.NOFOLLOW_LINKS);
             }
         }
         
-        if (this._isPreserveGroup) {
-            if (!this._isNumericIds && !newAttrs.group().name().isEmpty() && (curAttrsOrNull == null || !curAttrsOrNull.group().name().equals(newAttrs.group().name()))) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine(String.format("(Generator) %s: updating group %s -> %s", path, curAttrsOrNull == null ? "" : curAttrsOrNull.group(), newAttrs.group()));
+        if (this.preserveGroup) {
+            if (!this.numericIds && !newAttrs.getGroup().getName().isEmpty() && (curAttrsOrNull == null || !curAttrsOrNull.getGroup().getName().equals(newAttrs.getGroup().getName()))) {
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine(String.format("(Generator) %s: updating group %s -> %s", path, curAttrsOrNull == null ? "" : curAttrsOrNull.getGroup(), newAttrs.getGroup()));
                 }
-                this._fileAttributeManager.setGroup(path, newAttrs.group(), LinkOption.NOFOLLOW_LINKS);
-            } else if ((this._isNumericIds || newAttrs.group().name().isEmpty()) && (curAttrsOrNull == null || curAttrsOrNull.group().id() != newAttrs.group().id())) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine(String.format("(Generator) %s: updating gid %s -> %d", path, curAttrsOrNull == null ? "" : curAttrsOrNull.group().id(), newAttrs.group().id()));
+                this.fileAttributeManager.setGroup(path, newAttrs.getGroup(), LinkOption.NOFOLLOW_LINKS);
+            } else if ((this.numericIds || newAttrs.getGroup().getName().isEmpty()) && (curAttrsOrNull == null || curAttrsOrNull.getGroup().getId() != newAttrs.getGroup().getId())) {
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine(String.format("(Generator) %s: updating gid %s -> %d", path, curAttrsOrNull == null ? "" : curAttrsOrNull.getGroup().getId(), newAttrs.getGroup().getId()));
                 }
-                this._fileAttributeManager.setGroupId(path, newAttrs.group().id(), LinkOption.NOFOLLOW_LINKS);
+                this.fileAttributeManager.setGroupId(path, newAttrs.getGroup().getId(), LinkOption.NOFOLLOW_LINKS);
             }
         }
     }

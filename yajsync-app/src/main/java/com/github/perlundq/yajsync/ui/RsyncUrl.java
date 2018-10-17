@@ -52,7 +52,7 @@ final class RsyncUrl {
         String address = mod.group(2);
         String moduleName = Text.nullToEmptyStr(mod.group(3));
         String pathName = Text.nullToEmptyStr(mod.group(4));
-        ConnInfo connInfo = new ConnInfo.Builder(address).userName(userName).build();
+        ConnectionInfo connInfo = new ConnectionInfo.Builder(address).userName(userName).build();
         return new RsyncUrl(cwd, connInfo, moduleName, pathName);
     }
     
@@ -64,7 +64,7 @@ final class RsyncUrl {
         String userName = Text.stripLast(Text.nullToEmptyStr(url.group(1)));
         String address = url.group(2);
         String moduleName = Text.stripFirst(Text.nullToEmptyStr(url.group(4)));
-        ConnInfo.Builder connInfoBuilder = new ConnInfo.Builder(address).userName(userName);
+        ConnectionInfo.Builder connInfoBuilder = new ConnectionInfo.Builder(address).userName(userName);
         if (url.group(3) != null) {
             int portNumber = Integer.parseInt(Text.stripFirst(url.group(3)));
             connInfoBuilder.portNumber(portNumber);
@@ -97,30 +97,30 @@ final class RsyncUrl {
         }
     }
     
-    private final ConnInfo _connInfo;
+    private final ConnectionInfo connInfo;
     
-    private final String _moduleName;
+    private final String moduleName;
     
-    private final String _pathName;
+    private final String pathName;
     
-    public RsyncUrl(Path cwd, ConnInfo connInfo, String moduleName, String pathName) throws IllegalUrlException {
+    public RsyncUrl(Path cwd, ConnectionInfo connInfo, String moduleName, String pathName) throws IllegalUrlException {
         assert pathName != null;
         assert moduleName != null;
         assert connInfo != null || moduleName.isEmpty() : connInfo + " " + moduleName;
         if (connInfo != null && moduleName.isEmpty() && !pathName.isEmpty()) {
             throw new IllegalUrlException(String.format("remote path %s specified without a module", pathName));
         }
-        this._connInfo = connInfo;
-        this._moduleName = moduleName;
+        this.connInfo = connInfo;
+        this.moduleName = moduleName;
         if (connInfo == null) {
-            this._pathName = this.toLocalPathName(cwd, pathName);
+            this.pathName = this.toLocalPathName(cwd, pathName);
         } else {
-            this._pathName = toRemotePathName(pathName);
+            this.pathName = toRemotePathName(pathName);
         }
     }
     
-    public ConnInfo connInfoOrNull() {
-        return this._connInfo;
+    public ConnectionInfo getConnectionInfo() {
+        return this.connInfo;
     }
     
     public boolean isLocal() {
@@ -128,15 +128,15 @@ final class RsyncUrl {
     }
     
     public boolean isRemote() {
-        return this._connInfo != null;
+        return this.connInfo != null;
     }
     
-    public String moduleName() {
-        return this._moduleName;
+    public String getModuleName() {
+        return this.moduleName;
     }
     
-    public String pathName() {
-        return this._pathName;
+    public String getPathName() {
+        return this.pathName;
     }
     
     private String toLocalPathName(Path cwd, String pathName) {
@@ -146,9 +146,9 @@ final class RsyncUrl {
     
     @Override
     public String toString() {
-        if (this._connInfo != null) {
-            return String.format("%s/%s%s", this._connInfo, this._moduleName, this._pathName);
+        if (this.connInfo != null) {
+            return String.format("%s/%s%s", this.connInfo, this.moduleName, this.pathName);
         }
-        return this._pathName;
+        return this.pathName;
     }
 }

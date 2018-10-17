@@ -25,16 +25,16 @@ import java.util.List;
 import java.util.Map;
 
 public final class Multimap<K, V> {
-    private final Map<K, List<V>> _map;
-    private int _size;
+    private final Map<K, List<V>> map;
+    private int size;
     
     public Multimap(int size) {
-        this._map = new HashMap<>((int) Math.ceil(size / 0.75));
+        this.map = new HashMap<>((int) Math.ceil(size / 0.75));
     }
     
     // we trust the caller to not modify the returned collection
     public List<V> get(K key) {
-        List<V> values = this._map.get(key);
+        List<V> values = this.map.get(key);
         if (values == null) {
             return Collections.emptyList();
         } else {
@@ -46,16 +46,16 @@ public final class Multimap<K, V> {
         List<V> existing = this.get(key);
         if (existing.isEmpty()) {
             existing = new ArrayList<>();
-            this._map.put(key, existing);
+            this.map.put(key, existing);
         }
         boolean isAdded = existing.add(value);
         if (isAdded) {
-            this._size++;
+            this.size++;
         }
         return isAdded;
     }
     
     public int size() {
-        return this._size;
+        return this.size;
     }
 }

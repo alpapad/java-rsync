@@ -31,7 +31,7 @@ public class ConcurrentFilelist extends Filelist {
     
     @Override
     public Segment deleteFirstSegment() {
-        synchronized (this._segments) {
+        synchronized (this.segments) {
             return super.deleteFirstSegment();
         }
     }
@@ -39,7 +39,7 @@ public class ConcurrentFilelist extends Filelist {
     @Override
     public Segment getSegmentWith(int fileIndex) {
         assert fileIndex >= 0;
-        synchronized (this._segments) {
+        synchronized (this.segments) {
             return super.getSegmentWith(fileIndex);
         }
     }
@@ -51,7 +51,7 @@ public class ConcurrentFilelist extends Filelist {
     
     @Override
     public String toString() {
-        synchronized (this._segments) {
+        synchronized (this.segments) {
             return super.toString();
         }
     }

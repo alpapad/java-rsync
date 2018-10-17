@@ -37,10 +37,10 @@ final class Item {
     public static final char REPORT_XATTR = 1 << 8;
     public static final char TRANSFER = 1 << 15; // used
     public static final char XNAME_FOLLOWS = 1 << 12;
-    private static final char _supported = IS_NEW | LOCAL_CHANGE | REPORT_CHANGE | REPORT_OWNER | REPORT_GROUP | REPORT_PERMS | REPORT_SIZE | REPORT_TIME | TRANSFER;
+    private static final char supported = IS_NEW | LOCAL_CHANGE | REPORT_CHANGE | REPORT_OWNER | REPORT_GROUP | REPORT_PERMS | REPORT_SIZE | REPORT_TIME | TRANSFER;
     
     public static boolean isValidItem(int flags) {
-        return (flags | _supported) == _supported;
+        return (flags | supported) == supported;
     }
     
     private Item() {

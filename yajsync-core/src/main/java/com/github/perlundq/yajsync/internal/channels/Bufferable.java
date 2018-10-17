@@ -21,5 +21,5 @@ package com.github.perlundq.yajsync.internal.channels;
 public interface Bufferable extends Writable {
     void flush() throws ChannelException;
     
-    int numBytesBuffered();
+    int getNumBytesBuffered();
 }

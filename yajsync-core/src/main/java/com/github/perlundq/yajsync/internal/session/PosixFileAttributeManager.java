@@ -115,25 +115,25 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
         return mode;
     }
     
-    private final int _defaultGroupId;
-    private final int _defaultUserId;
+    private final int defaultGroupId;
+    private final int defaultUserId;
     
-    private final Map<String, GroupPrincipal> _nameToGroupPrincipal = new HashMap<>();
+    private final Map<String, GroupPrincipal> nameToGroupPrincipal = new HashMap<>();
     
-    private final Map<String, UserPrincipal> _nameToUserPrincipal = new HashMap<>();
+    private final Map<String, UserPrincipal> nameToUserPrincipal = new HashMap<>();
     
     public PosixFileAttributeManager(int defaultUserId, int defaultGroupId) {
-        this._defaultUserId = defaultUserId;
-        this._defaultGroupId = defaultGroupId;
+        this.defaultUserId = defaultUserId;
+        this.defaultGroupId = defaultGroupId;
     }
     
     private GroupPrincipal getGroupPrincipalFrom(String groupName) throws IOException {
         try {
-            GroupPrincipal principal = this._nameToGroupPrincipal.get(groupName);
+            GroupPrincipal principal = this.nameToGroupPrincipal.get(groupName);
             if (principal == null) {
                 UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
                 principal = service.lookupPrincipalByGroupName(groupName);
-                this._nameToGroupPrincipal.put(groupName, principal);
+                this.nameToGroupPrincipal.put(groupName, principal);
             }
             return principal;
         } catch (UnsupportedOperationException e) {
@@ -143,11 +143,11 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
     
     private UserPrincipal getUserPrincipalFrom(String userName) throws IOException {
         try {
-            UserPrincipal principal = this._nameToUserPrincipal.get(userName);
+            UserPrincipal principal = this.nameToUserPrincipal.get(userName);
             if (principal == null) {
                 UserPrincipalLookupService service = FileSystems.getDefault().getUserPrincipalLookupService();
                 principal = service.lookupPrincipalByName(userName);
-                this._nameToUserPrincipal.put(userName, principal);
+                this.nameToUserPrincipal.put(userName, principal);
             }
             return principal;
         } catch (UnsupportedOperationException e) {
@@ -168,13 +168,13 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
     
     @Override
     public void setGroup(Path path, Group group, LinkOption... linkOption) throws IOException {
-        GroupPrincipal principal = this.getGroupPrincipalFrom(group.name());
+        GroupPrincipal principal = this.getGroupPrincipalFrom(group.getName());
         Files.setAttribute(path, "posix:group", principal, linkOption);
     }
     
     @Override
     public void setOwner(Path path, User user, LinkOption... linkOption) throws IOException {
-        UserPrincipal principal = this.getUserPrincipalFrom(user.name());
+        UserPrincipal principal = this.getUserPrincipalFrom(user.getName());
         Files.setAttribute(path, "posix:owner", principal, linkOption);
     }
     
@@ -185,8 +185,8 @@ public final class PosixFileAttributeManager extends FileAttributeManager {
         String userName = userPrincipal.getName();
         GroupPrincipal groupPrincipal = attrs.group();
         String groupName = groupPrincipal.getName();
-        this._nameToUserPrincipal.putIfAbsent(userName, userPrincipal);
-        this._nameToGroupPrincipal.putIfAbsent(groupName, groupPrincipal);
-        return new RsyncFileAttributes(toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), new User(userName, this._defaultUserId), new Group(groupName, this._defaultGroupId));
+        this.nameToUserPrincipal.putIfAbsent(userName, userPrincipal);
+        this.nameToGroupPrincipal.putIfAbsent(groupName, groupPrincipal);
+        return new RsyncFileAttributes(toMode(attrs), attrs.size(), attrs.lastModifiedTime().to(TimeUnit.SECONDS), new User(userName, this.defaultUserId), new Group(groupName, this.defaultGroupId));
     }
 }

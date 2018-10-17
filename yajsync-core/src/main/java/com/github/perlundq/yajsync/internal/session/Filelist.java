@@ -34,20 +34,20 @@ import com.github.perlundq.yajsync.attr.FileInfo;
 
 public class Filelist {
     public static class Segment implements Comparable<Integer> {
-        private final FileInfo _directory;
-        private final int _dirIndex;
-        private final int _endIndex;
-        private final Map<Integer, FileInfo> _files;
-        private long _totalFileSize;
+        private final FileInfo directory;
+        private final int dirIndex;
+        private final int endIndex;
+        private final Map<Integer, FileInfo> files;
+        private long totalFileSize;
         
         private Segment(FileInfo directory, int dirIndex, List<FileInfo> files, Map<Integer, FileInfo> map, boolean isPruneDuplicates) {
             assert dirIndex >= -1;
             assert files != null;
             assert map != null;
-            this._directory = directory; // NOTE: might be null
-            this._dirIndex = dirIndex;
-            this._endIndex = dirIndex + files.size();
-            this._files = map;
+            this.directory = directory; // NOTE: might be null
+            this.dirIndex = dirIndex;
+            this.endIndex = dirIndex + files.size();
+            this.files = map;
             
             int index = dirIndex + 1;
             Collections.sort(files);
@@ -58,13 +58,13 @@ public class Filelist {
                 // Receiver) without also notifying Sender with a
                 // Filelist.DONE if the Segment ends up being empty
                 if (isPruneDuplicates && f.equals(prev)) {
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning("skipping duplicate " + f);
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning("skipping duplicate " + f);
                     }
                 } else {
-                    this._files.put(index, f);
-                    if (f.attrs().isRegularFile() || f.attrs().isSymbolicLink()) {
-                        this._totalFileSize += f.attrs().size();
+                    this.files.put(index, f);
+                    if (f.getAttributes().isRegularFile() || f.getAttributes().isSymbolicLink()) {
+                        this.totalFileSize += f.getAttributes().getSize();
                     }
                 }
                 index++;
@@ -75,53 +75,53 @@ public class Filelist {
         // Collections.binarySearch
         @Override
         public int compareTo(Integer other) {
-            return this.directoryIndex() - other;
+            return this.getDirectoryIndex() - other;
         }
         
         // use bitmap
         private boolean contains(int index) {
-            return this._files.containsKey(index);
+            return this.files.containsKey(index);
         }
         
         // generator
-        public FileInfo directory() {
-            return this._directory;
+        public FileInfo getDirectory() {
+            return this.directory;
         }
         
         // generator
-        public int directoryIndex() {
-            return this._dirIndex;
+        public int getDirectoryIndex() {
+            return this.dirIndex;
         }
         
         // generator
         // can be automatically generated or possible removed
         public Iterable<Entry<Integer, FileInfo>> entrySet() {
-            return this._files.entrySet();
+            return this.files.entrySet();
         }
         
         // generator sender
-        public Collection<FileInfo> files() {
-            return this._files.values();
+        public Collection<FileInfo> getFiles() {
+            return this.files.values();
         }
         
         // generator sender receiver
         public FileInfo getFileWithIndexOrNull(int index) {
             assert index >= 0;
-            return this._files.get(index);
+            return this.files.get(index);
         }
         
         // sender generator
         // use bitmap
         public boolean isFinished() {
-            return this._files.isEmpty();
+            return this.files.isEmpty();
         }
         
         // sender generator
         // use bitmap
         public FileInfo remove(int index) {
-            FileInfo f = this._files.remove(index);
+            FileInfo f = this.files.remove(index);
             if (f == null) {
-                throw new IllegalStateException(String.format("%s does not contain key %d (%s)", this._files, index, this));
+                throw new IllegalStateException(String.format("%s does not contain key %d (%s)", this.files, index, this));
             }
             return f;
         }
@@ -129,27 +129,27 @@ public class Filelist {
         // generator
         // use bitmap
         public void removeAll() {
-            this._files.clear();
+            this.files.clear();
         }
         
         // generator
         // inefficient, can possibly be removed
         public void removeAll(Collection<Integer> toRemove) {
             for (int i : toRemove) {
-                this._files.remove(i);
+                this.files.remove(i);
             }
         }
         
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            int active = this._files.values().size();
-            int size = this._endIndex - this._dirIndex;
-            sb.append(String.format("%s [%s, dirIndex=%d, fileIndices=%d:%d, size=%d/%d]", this.getClass().getSimpleName(), this._directory != null ? this._directory : "-", this._dirIndex,
-                    this._dirIndex + 1, this._endIndex, active, size));
+            int active = this.files.values().size();
+            int size = this.endIndex - this.dirIndex;
+            sb.append(String.format("%s [%s, dirIndex=%d, fileIndices=%d:%d, size=%d/%d]", this.getClass().getSimpleName(), this.directory != null ? this.directory : "-", this.dirIndex,
+                    this.dirIndex + 1, this.endIndex, active, size));
             
-            if (_log.isLoggable(Level.FINEST)) {
-                for (Map.Entry<Integer, FileInfo> e : this._files.entrySet()) {
+            if (LOG.isLoggable(Level.FINEST)) {
+                for (Map.Entry<Integer, FileInfo> e : this.files.entrySet()) {
                     sb.append("   ").append(e.getValue()).append(", ").append(e.getKey());
                 }
             }
@@ -159,18 +159,18 @@ public class Filelist {
     }
     
     public static class SegmentBuilder {
-        private List<FileInfo> _directories = new ArrayList<>();
-        private FileInfo _directory;
-        private List<FileInfo> _files = new ArrayList<>();
+        private List<FileInfo> directories = new ArrayList<>();
+        private FileInfo directory;
+        private List<FileInfo> files = new ArrayList<>();
         
         public SegmentBuilder(FileInfo directory) {
-            this._directory = directory;
+            this.directory = directory;
         }
         
         public SegmentBuilder(FileInfo directory, List<FileInfo> files, List<FileInfo> directories) {
-            this._directory = directory;
-            this._files = files;
-            this._directories = directories;
+            this.directory = directory;
+            this.files = files;
+            this.directories = directories;
         }
         
         /**
@@ -178,15 +178,15 @@ public class Filelist {
          *                               directory path
          */
         public void add(FileInfo fileInfo) {
-            assert this._files != null && this._directories != null;
+            assert this.files != null && this.directories != null;
             assert fileInfo != null;
-            this._files.add(fileInfo);
+            this.files.add(fileInfo);
             // NOTE: we store the directory in the builder regardless if we're
             // using recursive transfer or not
             // NOTE: we must also store DOT_DIR since this is what a native
             // sender does
-            if (fileInfo.attrs().isDirectory()) {
-                this._directories.add(fileInfo);
+            if (fileInfo.getAttributes().isDirectory()) {
+                this.directories.add(fileInfo);
             }
         }
         
@@ -197,89 +197,89 @@ public class Filelist {
         }
         
         private void clear() {
-            this._directory = null;
-            this._files = null;
-            this._directories = null;
+            this.directory = null;
+            this.files = null;
+            this.directories = null;
         }
         
-        public List<FileInfo> directories() {
-            return this._directories;
+        public List<FileInfo> getDirectories() {
+            return this.directories;
         }
         
-        public FileInfo directory() {
-            return this._directory;
+        public FileInfo getDirectory() {
+            return this.directory;
         }
         
-        public List<FileInfo> files() {
-            return this._files;
+        public List<FileInfo> getFiles() {
+            return this.files;
         }
         
         @Override
         public String toString() {
-            return String.format("%s (directory=%s, stubDirectories=%s, " + "files=%s)%n", this.getClass().getSimpleName(), this._directory, this._directories, this._files);
+            return String.format("%s (directory=%s, stubDirectories=%s, " + "files=%s)%n", this.getClass().getSimpleName(), this.directory, this.directories, this.files);
         }
     }
     
-    public static final Logger _log = Logger.getLogger(Filelist.class.getName());
+    public static final Logger LOG = Logger.getLogger(Filelist.class.getName());
     public static final int DONE = -1; // done with segment, may be deleted
     public static final int EOF = -2; // no more segments in file list
     public static final int OFFSET = -101;
     
-    private final boolean _isPruneDuplicates;
-    private final boolean _isRecursive;
-    private int _nextDirIndex;
-    private int _numFiles;
-    protected final List<Segment> _segments;
-    private final SortedMap<Integer, FileInfo> _stubDirectories;
-    private int _stubDirectoryIndex = 0;
-    private long _totalFileSize;
+    private final boolean pruneDuplicates;
+    private final boolean recursive;
+    private int nextDirIndex;
+    private int numFiles;
+    protected final List<Segment> segments;
+    private final SortedMap<Integer, FileInfo> stubDirectories;
+    private int stubDirectoryIndex = 0;
+    private long totalFileSize;
     
     public Filelist(boolean isRecursive, boolean isPruneDuplicates) {
         this(isRecursive, isPruneDuplicates, new ArrayList<Segment>());
     }
     
     protected Filelist(boolean isRecursive, boolean isPruneDuplicates, List<Segment> segments) {
-        this._segments = segments;
-        this._isRecursive = isRecursive;
-        this._isPruneDuplicates = isPruneDuplicates;
+        this.segments = segments;
+        this.recursive = isRecursive;
+        this.pruneDuplicates = isPruneDuplicates;
         if (isRecursive) {
-            this._stubDirectories = new TreeMap<>();
-            this._nextDirIndex = 0;
+            this.stubDirectories = new TreeMap<>();
+            this.nextDirIndex = 0;
         } else {
-            this._stubDirectories = null;
-            this._nextDirIndex = -1;
+            this.stubDirectories = null;
+            this.nextDirIndex = -1;
         }
     }
     
     // sender receiver generator
     public Segment deleteFirstSegment() {
-        return this._segments.remove(0);
+        return this.segments.remove(0);
     }
     
-    public int expandedSegments() {
-        return this._segments.size();
+    public int getExpandedSegments() {
+        return this.segments.size();
     }
     
     private void extractStubDirectories(List<FileInfo> directories) {
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("extracting all stub directories from " + directories);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("extracting all stub directories from " + directories);
         }
         
         Collections.sort(directories);
         for (FileInfo f : directories) {
-            assert f.attrs().isDirectory();
+            assert f.getAttributes().isDirectory();
             if (!((FileInfoImpl) f).isDotDir()) {
-                if (_log.isLoggable(Level.FINER)) {
-                    _log.finer(String.format("adding non dot dir %s with index=%d to stub " + "directories for later expansion", f, this._stubDirectoryIndex));
+                if (LOG.isLoggable(Level.FINER)) {
+                    LOG.finer(String.format("adding non dot dir %s with index=%d to stub " + "directories for later expansion", f, this.stubDirectoryIndex));
                 }
-                this._stubDirectories.put(this._stubDirectoryIndex, f);
+                this.stubDirectories.put(this.stubDirectoryIndex, f);
             }
-            this._stubDirectoryIndex++;
+            this.stubDirectoryIndex++;
         }
     }
     
-    public Segment firstSegment() {
-        return this._segments.get(0);
+    public Segment getFirstSegment() {
+        return this.segments.get(0);
     }
     
     // NOTE: fileIndex may be directoryIndex too
@@ -287,16 +287,16 @@ public class Filelist {
     public Segment getSegmentWith(int index) {
         assert index >= 0;
         
-        int result = Collections.binarySearch(this._segments, index);
+        int result = Collections.binarySearch(this.segments, index);
         if (result >= 0) {
-            return this._segments.get(result);
+            return this.segments.get(result);
         }
         int insertionPoint = -result - 1;
         int segmentIndex = insertionPoint - 1;
         if (segmentIndex < 0) {
             return null;
         }
-        Segment segment = this._segments.get(segmentIndex);
+        Segment segment = this.segments.get(segmentIndex);
         return segment.contains(index) ? segment : null;
     }
     
@@ -305,20 +305,20 @@ public class Filelist {
      * @throws RuntimeException if directoryIndex not in range
      */
     public FileInfo getStubDirectoryOrNull(int directoryIndex) {
-        if (directoryIndex < this._stubDirectories.firstKey() || directoryIndex > this._stubDirectories.lastKey()) {
-            throw new RuntimeException(String.format("%d not within [%d:%d] (%s)", directoryIndex, this._stubDirectories.firstKey(), this._stubDirectories.lastKey(), this));
+        if (directoryIndex < this.stubDirectories.firstKey() || directoryIndex > this.stubDirectories.lastKey()) {
+            throw new RuntimeException(String.format("%d not within [%d:%d] (%s)", directoryIndex, this.stubDirectories.firstKey(), this.stubDirectories.lastKey(), this));
         }
-        return this._stubDirectories.remove(directoryIndex);
+        return this.stubDirectories.remove(directoryIndex);
     }
     
     // sender receiver
     public boolean isEmpty() {
-        return this._segments.isEmpty() && !this.isExpandable();
+        return this.segments.isEmpty() && !this.isExpandable();
     }
     
     // sender receiver
     public boolean isExpandable() {
-        return this._stubDirectories != null && this._stubDirectories.size() > 0;
+        return this.stubDirectories != null && this.stubDirectories.size() > 0;
     }
     
     public Segment newSegment(SegmentBuilder builder) {
@@ -326,28 +326,28 @@ public class Filelist {
     }
     
     protected Segment newSegment(SegmentBuilder builder, SortedMap<Integer, FileInfo> map) {
-        assert builder._directory == null == (this._isRecursive && this._nextDirIndex == 0 || !this._isRecursive && this._nextDirIndex == -1);
-        assert builder._directories != null;
-        assert builder._files != null;
+        assert builder.directory == null == (this.recursive && this.nextDirIndex == 0 || !this.recursive && this.nextDirIndex == -1);
+        assert builder.directories != null;
+        assert builder.files != null;
         
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer(String.format("creating new segment from builder=%s and map=%s", builder, map));
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer(String.format("creating new segment from builder=%s and map=%s", builder, map));
         }
         
-        if (this._isRecursive) {
-            this.extractStubDirectories(builder._directories);
+        if (this.recursive) {
+            this.extractStubDirectories(builder.directories);
         }
-        Segment segment = new Segment(builder._directory, this._nextDirIndex, builder._files, map, this._isPruneDuplicates);
+        Segment segment = new Segment(builder.directory, this.nextDirIndex, builder.files, map, this.pruneDuplicates);
         builder.clear();
-        this._nextDirIndex = segment._endIndex + 1;
-        this._segments.add(segment);
-        this._totalFileSize += segment._totalFileSize;
-        this._numFiles += segment._files.size();
+        this.nextDirIndex = segment.endIndex + 1;
+        this.segments.add(segment);
+        this.totalFileSize += segment.totalFileSize;
+        this.numFiles += segment.files.size();
         return segment;
     }
     
-    public int numFiles() {
-        return this._numFiles;
+    public int getNumFiles() {
+        return this.numFiles;
     }
     
     @Override
@@ -355,15 +355,15 @@ public class Filelist {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("%s isExpandable=%s (", this.getClass().getSimpleName(), this.isExpandable()));
         
-        for (Segment s : this._segments) {
-            String str = s._directory == null || s._directory.pathName() == null ? "-" : s._directory.toString();
-            sb.append(", ").append(String.format("segment(%d, %s)", s.directoryIndex(), str));
+        for (Segment s : this.segments) {
+            String str = s.directory == null || s.directory.getPathName() == null ? "-" : s.directory.toString();
+            sb.append(", ").append(String.format("segment(%d, %s)", s.getDirectoryIndex(), str));
         }
-        sb.append(")\n").append("unexpanded: ").append(this._stubDirectories);
+        sb.append(")\n").append("unexpanded: ").append(this.stubDirectories);
         return sb.toString();
     }
     
-    public long totalFileSize() {
-        return this._totalFileSize;
+    public long getTotalFileSize() {
+        return this.totalFileSize;
     }
 }

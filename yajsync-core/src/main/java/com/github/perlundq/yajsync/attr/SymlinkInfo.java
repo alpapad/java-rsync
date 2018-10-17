@@ -17,5 +17,5 @@
 package com.github.perlundq.yajsync.attr;
 
 public interface SymlinkInfo extends FileInfo {
-    String targetPathName();
+    String getTargetPathName();
 }

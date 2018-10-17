@@ -23,61 +23,61 @@ import com.github.perlundq.yajsync.attr.Group;
 import com.github.perlundq.yajsync.attr.User;
 
 class FileInfoCache {
-    private byte[] _prevFileName = {};
-    private Group _prevGroup;
-    private long _prevLastModified = 0;
-    private int _prevMajor = -1;
-    private int _prevMode = -1;
-    private User _prevUser;
+    private byte[] prevFileName = {};
+    private Group prevGroup;
+    private long prevLastModified = 0;
+    private int prevMajor = -1;
+    private int prevMode = -1;
+    private User prevUser;
     
     public FileInfoCache() {
     }
     
     public byte[] getPrevFileNameBytes() {
-        return this._prevFileName;
+        return this.prevFileName;
     }
     
-    public Group getPrevGroupOrNull() {
-        return this._prevGroup;
+    public Group getPrevGroup() {
+        return this.prevGroup;
     }
     
     public long getPrevLastModified() {
-        return this._prevLastModified;
+        return this.prevLastModified;
     }
     
     public int getPrevMajor() {
-        return this._prevMajor;
+        return this.prevMajor;
     }
     
     public int getPrevMode() {
-        return this._prevMode;
+        return this.prevMode;
     }
     
-    public User getPrevUserOrNull() {
-        return this._prevUser;
+    public User getPrevUser() {
+        return this.prevUser;
     }
     
     public void setPrevFileNameBytes(byte[] prevFileName) {
-        this._prevFileName = prevFileName;
+        this.prevFileName = prevFileName;
     }
     
     public void setPrevGroup(Group group) {
-        this._prevGroup = group;
+        this.prevGroup = group;
     }
     
     public void setPrevLastModified(long prevLastModified) {
-        this._prevLastModified = prevLastModified;
+        this.prevLastModified = prevLastModified;
     }
     
     public void setPrevMajor(int major) {
-        this._prevMajor = major;
+        this.prevMajor = major;
     }
     
     public void setPrevMode(int prevMode) {
-        this._prevMode = prevMode;
+        this.prevMode = prevMode;
     }
     
     public void setPrevUser(User user) {
-        this._prevUser = user;
+        this.prevUser = user;
     }
 }

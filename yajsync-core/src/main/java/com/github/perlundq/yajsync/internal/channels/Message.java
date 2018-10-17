@@ -27,8 +27,8 @@ import java.util.logging.Level;
 import com.github.perlundq.yajsync.internal.text.Text;
 
 public class Message {
-    private final MessageHeader _header;
-    private final ByteBuffer _payload;
+    private final MessageHeader header;
+    private final ByteBuffer payload;
     
     /**
      * @throws IllegalArgumentException
@@ -44,11 +44,11 @@ public class Message {
      * @throws IllegalStateException    if header is of an unsupported message type
      */
     public Message(MessageHeader header, ByteBuffer payload) {
-        switch (header.messageType()) {
+        switch (header.getMessageType()) {
             case IO_ERROR:
             case NO_SEND:
-                if (header.length() != 4) {
-                    throw new IllegalArgumentException(String.format("received tag %s with an illegal number of bytes, got %d," + " expected %d", header.messageType(), header.length(), 4));
+                if (header.getLength() != 4) {
+                    throw new IllegalArgumentException(String.format("received tag %s with an illegal number of bytes, got %d," + " expected %d", header.getMessageType(), header.getLength(), 4));
                 }
                 break;
             case DATA:
@@ -59,10 +59,10 @@ public class Message {
             case LOG:
                 break;
             default:
-                throw new IllegalStateException("TODO: (not yet implemented) " + "missing case statement for " + header.messageType());
+                throw new IllegalStateException("TODO: (not yet implemented) " + "missing case statement for " + header.getMessageType());
         }
-        this._header = header;
-        this._payload = payload;
+        this.header = header;
+        this.payload = payload;
     }
     
     /**
@@ -72,8 +72,8 @@ public class Message {
     public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
             Message other = (Message) obj;
-            if (this.header().equals(other.header())) {
-                return this._payload.equals(other._payload);
+            if (this.getHeader().equals(other.getHeader())) {
+                return this.payload.equals(other.payload);
             }
         }
         return false;
@@ -84,15 +84,15 @@ public class Message {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(this._header, this._payload);
+        return Objects.hash(this.header, this.payload);
     }
     
-    public MessageHeader header() {
-        return this._header;
+    public MessageHeader getHeader() {
+        return this.header;
     }
     
     public boolean isText() {
-        switch (this._header.messageType()) {
+        switch (this.header.getMessageType()) {
             case LOG:
             case INFO:
             case WARNING:
@@ -106,7 +106,7 @@ public class Message {
     
     public Level logLevelOrNull() {
         assert this.isText();
-        switch (this._header.messageType()) {
+        switch (this.header.getMessageType()) {
             case LOG:
                 return Level.FINE;
             case INFO:
@@ -121,12 +121,12 @@ public class Message {
         }
     }
     
-    public ByteBuffer payload() {
-        return this._payload;
+    public ByteBuffer getPayload() {
+        return this.payload;
     }
     
     @Override
     public String toString() {
-        return String.format("%s %s %s %s", this.getClass().getSimpleName(), this._header, this._payload, Text.byteBufferToString(this._payload));
+        return String.format("%s %s %s %s", this.getClass().getSimpleName(), this.header, this.payload, Text.byteBufferToString(this.payload));
     }
 }

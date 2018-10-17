@@ -23,23 +23,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class AutoDeletable implements AutoCloseable {
-    private final Path _path;
+    private final Path path;
     
     public AutoDeletable(Path path) {
-        this._path = path;
+        this.path = path;
     }
     
     @Override
     public void close() throws IOException {
-        Files.deleteIfExists(this._path);
+        Files.deleteIfExists(this.path);
     }
     
-    public Path path() {
-        return this._path;
+    public Path getPath() {
+        return this.path;
     }
     
     @Override
     public String toString() {
-        return this._path.toString();
+        return this.path.toString();
     }
 }

@@ -29,10 +29,10 @@ public final class FileAttributeManagerFactory {
             try {
                 return new UnixFileAttributeManager(defaultUser, defaultGroup, isPreserveUser, isPreserveGroup);
             } catch (IOException e) {
-                return new PosixFileAttributeManager(defaultUser.id(), defaultGroup.id());
+                return new PosixFileAttributeManager(defaultUser.getId(), defaultGroup.getId());
             }
         } else if (isPosixSupported(fs) && (isPreserveUser || isPreserveGroup)) {
-            return new PosixFileAttributeManager(defaultUser.id(), defaultGroup.id());
+            return new PosixFileAttributeManager(defaultUser.getId(), defaultGroup.getId());
         } else {
             return new BasicFileAttributeManager(defaultUser, defaultGroup, defaultFilePermissions, defaultDirectoryPermissions);
         }
@@ -55,7 +55,7 @@ public final class FileAttributeManagerFactory {
             }
         }
         if (isPosixSupported(fs)) {
-            return new PosixFileAttributeManager(defaultUser.id(), defaultGroup.id());
+            return new PosixFileAttributeManager(defaultUser.getId(), defaultGroup.getId());
         } else {
             return new BasicFileAttributeManager(defaultUser, defaultGroup, defaultFilePermissions, defaultDirectoryPermissions);
         }

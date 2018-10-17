@@ -25,7 +25,7 @@ public interface Statistics {
      *         useful since yajsync uses incremental recursion only (i.e. it splits
      *         up the file list into several segments).
      */
-    long fileListBuildTime();
+    long getFileListBuildTime();
     
     /**
      * @return time for sending of end of initial segment and additional meta data
@@ -33,50 +33,50 @@ public interface Statistics {
      *         incremental recursion only (i.e. it splits up the file list into
      *         several segments).
      */
-    long fileListTransferTime();
+    long getFileListTransferTime();
     
     /**
      * @return total amount of files in all file list segments
      */
-    int numFiles();
+    int getNumFiles();
     
     /**
      * @return total amount of files transferred
      */
-    int numTransferredFiles();
+    int getNumTransferredFiles();
     
     /**
      * @return total amount of data received from peer (in bytes)
      */
-    long totalBytesRead();
+    long getTotalBytesRead();
     
     /**
      * @return total amount of data sent to peer (in bytes)
      */
-    long totalBytesWritten();
+    long getTotalBytesWritten();
     
     /**
      * @return total file list size (in bytes)
      */
-    long totalFileListSize();
+    long getTotalFileListSize();
     
     /**
      * @return total size of all files in all segments (in bytes)
      */
-    long totalFileSize();
+    long getTotalFileSize();
     
     /**
      * @return total amount of transferred literal file data (in bytes)
      */
-    long totalLiteralSize();
+    long getTotalLiteralSize();
     
     /**
      * @return total amount of matched file data (in bytes)
      */
-    long totalMatchedSize();
+    long getTotalMatchedSize();
     
     /**
      * @return total size of all files transferred (in bytes)
      */
-    long totalTransferredSize();
+    long getTotalTransferredSize();
 }

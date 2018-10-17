@@ -85,15 +85,15 @@ class FileInfoImpl implements FileInfo {
         return bytes.length == 1 && bytes[0] == Text.ASCII_DOT;
     }
     
-    private final RsyncFileAttributes _attrs;
+    private final RsyncFileAttributes attrs;
     
-    private final byte[] _pathNameBytes;
+    private final byte[] pathNameBytes;
     
-    // _pathNameOrNull may only be null internally in Receiver, any such
+    // pathName may only be null internally in Receiver, any such
     // instance will never be exposed externally
-    private final String _pathNameOrNull;
+    private final String pathName;
     
-    FileInfoImpl(String pathNameOrNull, byte[] pathNameBytes, RsyncFileAttributes attrs) {
+    FileInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs) {
         assert pathNameBytes != null;
         assert attrs != null;
         assert pathNameBytes.length > 0;
@@ -101,20 +101,20 @@ class FileInfoImpl implements FileInfo {
         assert !isDotDir(pathNameBytes) || attrs.isDirectory();
         assert pathNameBytes[pathNameBytes.length - 1] != Text.ASCII_SLASH;
         
-        this._pathNameOrNull = pathNameOrNull;
-        this._pathNameBytes = pathNameBytes;
-        this._attrs = attrs;
+        this.pathName = pathName;
+        this.pathNameBytes = pathNameBytes;
+        this.attrs = attrs;
     }
     
     @Override
-    public RsyncFileAttributes attrs() {
-        return this._attrs;
+    public RsyncFileAttributes getAttributes() {
+        return this.attrs;
     }
     
     @Override
     public int compareTo(FileInfo otherFileInfo) {
         FileInfoImpl other = (FileInfoImpl) otherFileInfo;
-        int result = compareUnixFileNamesBytes(this._pathNameBytes, this._attrs.isDirectory(), other._pathNameBytes, other._attrs.isDirectory());
+        int result = compareUnixFileNamesBytes(this.pathNameBytes, this.attrs.isDirectory(), other.pathNameBytes, other.attrs.isDirectory());
         assert result != 0 || this.equals(other);
         return result;
     }
@@ -125,7 +125,7 @@ class FileInfoImpl implements FileInfo {
         // user and all our FileInfo implementing classes extends FileInfoImpl.
         if (obj instanceof FileInfoImpl) {
             FileInfoImpl other = (FileInfoImpl) obj;
-            return Arrays.equals(this._pathNameBytes, other._pathNameBytes);
+            return Arrays.equals(this.pathNameBytes, other.pathNameBytes);
         } else {
             return false;
         }
@@ -133,21 +133,21 @@ class FileInfoImpl implements FileInfo {
     
     @Override
     public int hashCode() {
-        return Arrays.hashCode(this._pathNameBytes);
+        return Arrays.hashCode(this.pathNameBytes);
     }
     
     boolean isDotDir() {
-        return isDotDir(this._pathNameBytes);
+        return isDotDir(this.pathNameBytes);
     }
     
     @Override
-    public String pathName() {
-        return this._pathNameOrNull;
+    public String getPathName() {
+        return this.pathName;
     }
     
     @Override
     public String toString() {
-        String str = this._pathNameOrNull == null ? "untransferrable " + Text.bytesToString(this._pathNameBytes) : this._pathNameOrNull;
+        String str = this.pathName == null ? "untransferrable " + Text.bytesToString(this.pathNameBytes) : this.pathName;
         return String.format("%s (%s)", this.getClass().getSimpleName(), str);
     }
 }

@@ -54,7 +54,7 @@ import com.github.perlundq.yajsync.server.module.RestrictedModule;
 import com.github.perlundq.yajsync.server.module.RsyncAuthContext;
 
 public class ServerSessionConfig extends SessionConfig {
-    private static final Logger _log = Logger.getLogger(ServerSessionConfig.class.getName());
+    private static final Logger LOG = Logger.getLogger(ServerSessionConfig.class.getName());
     
     /**
      * @throws RsyncSecurityException
@@ -73,16 +73,16 @@ public class ServerSessionConfig extends SessionConfig {
         
         ServerSessionConfig instance = new ServerSessionConfig(in, out, charset);
         try {
-            instance.exchangeProtocolVersion();
+            instance.getExchangeProtocolVersion();
             String moduleName = instance.receiveModule();
             
             if (moduleName.isEmpty()) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine("sending module listing and exiting");
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine("sending module listing and exiting");
                 }
                 instance.sendModuleListing(modules.all());
                 instance.sendStatus(SessionStatus.EXIT);
-                instance._status = SessionStatus.EXIT; // FIXME: create separate status type instead
+                instance.status = SessionStatus.EXIT; // FIXME: create separate status type instead
                 return instance;
             }
             
@@ -93,11 +93,11 @@ public class ServerSessionConfig extends SessionConfig {
             }
             instance.setModule(module);
             instance.sendStatus(SessionStatus.OK);
-            instance._status = SessionStatus.OK;
+            instance.status = SessionStatus.OK;
             
             Collection<String> args = instance.receiveArguments();
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine("parsing arguments: " + args);
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("parsing arguments: " + args);
             }
             instance.parseArguments(args);
             instance.sendCompatibilities();
@@ -106,36 +106,36 @@ public class ServerSessionConfig extends SessionConfig {
         } catch (ArgumentParsingError | TextConversionException e) {
             throw new RsyncProtocolException(e);
         } catch (ModuleException e) {
-            if (_log.isLoggable(Level.WARNING)) {
-                _log.warning(e.getMessage());
+            if (LOG.isLoggable(Level.WARNING)) {
+                LOG.warning(e.getMessage());
             }
             instance.sendErrorStatus(e.getMessage());
-            instance._status = SessionStatus.ERROR;
+            instance.status = SessionStatus.ERROR;
             return instance;
         } finally {
             instance.flush();
         }
     }
     
-    private FileSelection _fileSelection = FileSelection.EXACT;
-    private boolean _isDelete = false;
-    private boolean _isIgnoreTimes = false;
-    private boolean _isIncrementalRecurse = false;
-    private boolean _isNumericIds = false;
-    private boolean _isPreserveDevices = false;
-    private boolean _isPreserveGroup = false;
-    private boolean _isPreserveLinks = false;
-    private boolean _isPreservePermissions = false;
-    private boolean _isPreserveSpecials = false;
-    private boolean _isPreserveTimes = false;
-    private boolean _isPreserveUser = false;
-    private boolean _isSafeFileList;
-    private boolean _isSender = false;
-    private Module _module;
-    private Path _receiverDestination;
-    private final List<Path> _sourceFiles = new LinkedList<>();
+    private FileSelection fileSelection = FileSelection.EXACT;
+    private boolean delete = false;
+    private boolean ignoreTimes = false;
+    private boolean incrementalRecurse = false;
+    private boolean numericIds = false;
+    private boolean preserveDevices = false;
+    private boolean preserveGroup = false;
+    private boolean preserveLinks = false;
+    private boolean preservePermissions = false;
+    private boolean preserveSpecials = false;
+    private boolean preserveTimes = false;
+    private boolean preserveUser = false;
+    private boolean safeFileList;
+    private boolean sender = false;
+    private Module module;
+    private Path receiverDestination;
+    private final List<Path> sourceFiles = new LinkedList<>();
     
-    private int _verbosity = 0;
+    private int verbosity = 0;
     
     /**
      * @throws IllegalArgumentException if charset is not supported
@@ -143,68 +143,68 @@ public class ServerSessionConfig extends SessionConfig {
     private ServerSessionConfig(ReadableByteChannel in, WritableByteChannel out, Charset charset) {
         super(in, out, charset);
         int seedValue = (int) System.currentTimeMillis();
-        this._checksumSeed = BitOps.toLittleEndianBuf(seedValue);
+        this.checksumSeed = BitOps.toLittleEndianBuf(seedValue);
     }
     
     public FileSelection fileSelection() {
-        return this._fileSelection;
+        return this.fileSelection;
     }
     
     private void flush() throws ChannelException {
-        this._peerConnection.flush();
+        this.peerConnection.flush();
     }
     
     public Path getReceiverDestination() {
-        assert this._receiverDestination != null;
-        return this._receiverDestination;
+        assert this.receiverDestination != null;
+        return this.receiverDestination;
     }
     
     public boolean isDelete() {
-        return this._isDelete;
+        return this.delete;
     }
     
     public boolean isIgnoreTimes() {
-        return this._isIgnoreTimes;
+        return this.ignoreTimes;
     }
     
     public boolean isNumericIds() {
-        return this._isNumericIds;
+        return this.numericIds;
     }
     
     public boolean isPreserveDevices() {
-        return this._isPreserveDevices;
+        return this.preserveDevices;
     }
     
     public boolean isPreserveGroup() {
-        return this._isPreserveGroup;
+        return this.preserveGroup;
     }
     
     public boolean isPreserveLinks() {
-        return this._isPreserveLinks;
+        return this.preserveLinks;
     }
     
     public boolean isPreservePermissions() {
-        return this._isPreservePermissions;
+        return this.preservePermissions;
     }
     
     public boolean isPreserveSpecials() {
-        return this._isPreserveSpecials;
+        return this.preserveSpecials;
     }
     
     public boolean isPreserveTimes() {
-        return this._isPreserveTimes;
+        return this.preserveTimes;
     }
     
     public boolean isPreserveUser() {
-        return this._isPreserveUser;
+        return this.preserveUser;
     }
     
     public boolean isSafeFileList() {
-        return this._isSafeFileList;
+        return this.safeFileList;
     }
     
     public boolean isSender() {
-        return this._isSender;
+        return this.sender;
     }
     
     private void parseArguments(Collection<String> receivedArguments) throws ArgumentParsingError, RsyncProtocolException, RsyncSecurityException {
@@ -213,19 +213,19 @@ public class ServerSessionConfig extends SessionConfig {
         argsParser.add(Option.newWithoutArgument(Option.Policy.REQUIRED, "server", "", "", null));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "sender", "", "", option -> {
-            this._isSender = true;
+            this.sender = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "recursive", "r", "", option -> {
-            this._fileSelection = FileSelection.RECURSE;
+            this.fileSelection = FileSelection.RECURSE;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "no-r", "", "", option -> {
             // is sent when transfer dirs and delete
-            if (this._fileSelection == FileSelection.RECURSE) {
-                this._fileSelection = FileSelection.EXACT;
+            if (this.fileSelection == FileSelection.RECURSE) {
+                this.fileSelection = FileSelection.EXACT;
             }
             return ArgumentParser.Status.CONTINUE;
         }));
@@ -241,68 +241,68 @@ public class ServerSessionConfig extends SessionConfig {
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "ignore-times", "I", "", option -> {
-            this._isIgnoreTimes = true;
+            this.ignoreTimes = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "verbose", "v", "", option -> {
-            this._verbosity++;
+            this.verbosity++;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "delete", "", "", option -> {
-            this._isDelete = true;
+            this.delete = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "", "D", "", option -> {
-            this._isPreserveDevices = true;
-            this._isPreserveSpecials = true;
+            this.preserveDevices = true;
+            this.preserveSpecials = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "specials", "", "", option -> {
-            this._isPreserveSpecials = true;
+            this.preserveSpecials = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "no-specials", "", "", option -> {
-            this._isPreserveSpecials = false;
+            this.preserveSpecials = false;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "links", "l", "", option -> {
-            this._isPreserveLinks = true;
+            this.preserveLinks = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "owner", "o", "", option -> {
-            this._isPreserveUser = true;
+            this.preserveUser = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "group", "g", "", option -> {
-            this._isPreserveGroup = true;
+            this.preserveGroup = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "numeric-ids", "", "", option -> {
-            this._isNumericIds = true;
+            this.numericIds = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "perms", "p", "", option -> {
-            this._isPreservePermissions = true;
+            this.preservePermissions = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "times", "t", "", option -> {
-            this._isPreserveTimes = true;
+            this.preserveTimes = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
         argsParser.add(Option.newWithoutArgument(Option.Policy.OPTIONAL, "dirs", "d", "", option -> {
-            this._fileSelection = FileSelection.TRANSFER_DIRS;
+            this.fileSelection = FileSelection.TRANSFER_DIRS;
             return ArgumentParser.Status.CONTINUE;
         }));
         
@@ -311,10 +311,10 @@ public class ServerSessionConfig extends SessionConfig {
         
         ArgumentParser.Status rc = argsParser.parse(receivedArguments);
         assert rc == ArgumentParser.Status.CONTINUE;
-        assert this._fileSelection != FileSelection.RECURSE || this._isIncrementalRecurse : "We support only incremental recursive transfers for now";
+        assert this.fileSelection != FileSelection.RECURSE || this.incrementalRecurse : "We support only incremental recursive transfers for now";
         
-        if (!this.isSender() && !this._module.isWritable()) {
-            throw new RsyncProtocolException(String.format("Error: module %s is not writable", this._module));
+        if (!this.isSender() && !this.module.isWritable()) {
+            throw new RsyncProtocolException(String.format("Error: module %s is not writable", this.module));
         }
         
         List<String> unnamed = argsParser.getUnnamedArguments();
@@ -330,24 +330,26 @@ public class ServerSessionConfig extends SessionConfig {
             Pattern wildcardsPattern = Pattern.compile(".*[\\[*?].*"); // matches literal [, * or ?
             for (String fileName : unnamed) {
                 if (wildcardsPattern.matcher(fileName).matches()) {
+                    // FIXME: Do we need this?
+                    // public static DirectoryStream<Path> java.nio.file.Files.newDirectoryStream(Path dir,   String glob)  throws IOException
                     throw new RsyncProtocolException(String.format("wildcards are not supported (%s)", fileName));
                 }
-                Path safePath = this._module.restrictedPath().resolve(fileName);
-                this._sourceFiles.add(safePath);
+                Path safePath = this.module.getRestrictedPath().resolve(fileName);
+                this.sourceFiles.add(safePath);
             }
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine("sender source files: " + this._sourceFiles);
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("sender source files: " + this.sourceFiles);
             }
         } else {
             if (unnamed.size() != 1) {
                 throw new RsyncProtocolException(String.format("Error: expected exactly one file argument: %s contains %d", unnamed, unnamed.size()));
             }
             String fileName = unnamed.get(0);
-            Path safePath = this._module.restrictedPath().resolve(fileName);
-            this._receiverDestination = safePath.normalize();
+            Path safePath = this.module.getRestrictedPath().resolve(fileName);
+            this.receiverDestination = safePath.normalize();
             
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine("receiver destination: " + this._receiverDestination);
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("receiver destination: " + this.receiverDestination);
             }
         }
     }
@@ -356,15 +358,15 @@ public class ServerSessionConfig extends SessionConfig {
     private void parsePeerCompatibilites(String str) throws RsyncProtocolException {
         if (str.startsWith(Text.DOT)) {
             if (str.contains("i")) { // CF_INC_RECURSE
-                assert this._fileSelection == FileSelection.RECURSE;
-                this._isIncrementalRecurse = true; // only set by client on --recursive or -r, but can also be disabled, we require
+                assert this.fileSelection == FileSelection.RECURSE;
+                this.incrementalRecurse = true; // only set by client on --recursive or -r, but can also be disabled, we require
                                                    // it however (as a start)
             }
             if (str.contains("L")) { // CF_SYMLINK_TIMES
             }
             if (str.contains("s")) { // CF_SYMLINK_ICONV
             }
-            this._isSafeFileList = str.contains("f");
+            this.safeFileList = str.contains("f");
         } else {
             throw new RsyncProtocolException(String.format("Protocol not supported - got %s from peer", str));
         }
@@ -374,7 +376,7 @@ public class ServerSessionConfig extends SessionConfig {
         ByteBuffer buf = ByteBuffer.allocate(64);
         try {
             while (true) {
-                byte b = this._peerConnection.getByte();
+                byte b = this.peerConnection.getByte();
                 if (b == Text.ASCII_NULL) {
                     break;
                 } else if (!buf.hasRemaining()) {
@@ -389,7 +391,7 @@ public class ServerSessionConfig extends SessionConfig {
         }
         buf.flip();
         try {
-            return this._characterDecoder.decode(buf);
+            return this.characterDecoder.decode(buf);
         } catch (TextConversionException e) {
             throw new RsyncProtocolException(e);
         }
@@ -423,25 +425,25 @@ public class ServerSessionConfig extends SessionConfig {
     }
     
     private void sendChecksumSeed() throws ChannelException {
-        assert this._checksumSeed != null;
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("> (checksum seed) " + BitOps.toBigEndianInt(this._checksumSeed));
+        assert this.checksumSeed != null;
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("> (checksum seed) " + BitOps.toBigEndianInt(this.checksumSeed));
         }
-        this._peerConnection.putInt(BitOps.toBigEndianInt(this._checksumSeed));
+        this.peerConnection.putInt(BitOps.toBigEndianInt(this.checksumSeed));
     }
     
     private void sendCompatibilities() throws ChannelException {
         byte flags = 0;
-        if (this._isSafeFileList) {
+        if (this.safeFileList) {
             flags |= RsyncCompatibilities.CF_SAFE_FLIST;
         }
-        if (this._isIncrementalRecurse) {
+        if (this.incrementalRecurse) {
             flags |= RsyncCompatibilities.CF_INC_RECURSE;
         }
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("> (we support) " + flags);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("> (we support) " + flags);
         }
-        this._peerConnection.putByte(flags);
+        this.peerConnection.putByte(flags);
     }
     
     private void sendErrorStatus(String msg) throws ChannelException {
@@ -453,11 +455,11 @@ public class ServerSessionConfig extends SessionConfig {
      */
     private void sendModuleListing(Iterable<Module> modules) throws ChannelException {
         for (Module module : modules) {
-            assert !module.name().isEmpty();
-            if (module.comment().isEmpty()) {
-                this.writeString(String.format("%-15s\n", module.name()));
+            assert !module.getName().isEmpty();
+            if (module.getComment().isEmpty()) {
+                this.writeString(String.format("%-15s\n", module.getName()));
             } else {
-                this.writeString(String.format("%-15s\t%s\n", module.name(), module.comment()));
+                this.writeString(String.format("%-15s\t%s\n", module.getName(), module.getComment()));
             }
         }
     }
@@ -467,11 +469,11 @@ public class ServerSessionConfig extends SessionConfig {
     }
     
     private void setModule(Module module) {
-        this._module = module;
+        this.module = module;
     }
     
-    public List<Path> sourceFiles() {
-        return this._sourceFiles;
+    public List<Path> getSourceFiles() {
+        return this.sourceFiles;
     }
     
     /**
@@ -481,8 +483,8 @@ public class ServerSessionConfig extends SessionConfig {
      * @throws RsyncProtocolException if peer sent too large amount of characters
      */
     private Module unlockModule(RestrictedModule restrictedModule) throws ModuleSecurityException, ChannelException, RsyncProtocolException {
-        RsyncAuthContext authContext = new RsyncAuthContext(this._characterEncoder);
-        this.writeString(SessionStatus.AUTHREQ + authContext.challenge() + '\n');
+        RsyncAuthContext authContext = new RsyncAuthContext(this.characterEncoder);
+        this.writeString(SessionStatus.AUTHREQ + authContext.getChallenge() + '\n');
         
         String userResponse = this.readLine();
         String[] userResponseTuple = userResponse.split(" ", 2);
@@ -500,7 +502,7 @@ public class ServerSessionConfig extends SessionConfig {
         }
     }
     
-    public int verbosity() {
-        return this._verbosity;
+    public int getVerbosity() {
+        return this.verbosity;
     }
 }

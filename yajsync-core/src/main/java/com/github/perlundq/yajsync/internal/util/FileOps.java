@@ -127,7 +127,7 @@ public class FileOps {
     
     public static boolean isDataModified(RsyncFileAttributes curAttrsOrNull, RsyncFileAttributes newAttrs) {
         assert newAttrs != null;
-        return curAttrsOrNull == null || curAttrsOrNull.size() != newAttrs.size() || curAttrsOrNull.lastModifiedTime() != newAttrs.lastModifiedTime();
+        return curAttrsOrNull == null || curAttrsOrNull.getSize() != newAttrs.getSize() || curAttrsOrNull.lastModifiedTime() != newAttrs.lastModifiedTime();
     }
     
     public static boolean isDirectory(int mode) {

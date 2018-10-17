@@ -44,22 +44,22 @@ public class TextDecoder {
         return instance;
     }
     
-    private final CharsetDecoder _decoder;
+    private final CharsetDecoder decoder;
     
     private TextDecoder(CharsetDecoder decoder) {
-        this._decoder = decoder;
+        this.decoder = decoder;
     }
     
     /**
      * @throws TextConversionException
      */
     private String _decode(ByteBuffer input, ErrorPolicy errorPolicy, MemoryPolicy memoryPolicy) {
-        this._decoder.reset();
-        CharBuffer output = CharBuffer.allocate((int) Math.ceil(input.capacity() * this._decoder.averageCharsPerByte()));
+        this.decoder.reset();
+        CharBuffer output = CharBuffer.allocate((int) Math.ceil(input.capacity() * this.decoder.averageCharsPerByte()));
         try {
             CoderResult result;
             while (true) {
-                result = this._decoder.decode(input, output, true);
+                result = this.decoder.decode(input, output, true);
                 if (result.isOverflow()) {
                     output = Util.enlargeCharBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE / 2); // throws OverflowException
                 } else {
@@ -68,7 +68,7 @@ public class TextDecoder {
             }
             
             while (!result.isError()) {
-                result = this._decoder.flush(output);
+                result = this.decoder.flush(output);
                 if (result.isOverflow()) {
                     output = Util.enlargeCharBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE / 2); // throws OverflowException
                 } else {
@@ -82,7 +82,7 @@ public class TextDecoder {
             
             if (errorPolicy == ErrorPolicy.THROW) {
                 input.limit(input.position() + result.length());
-                throw new TextConversionException(String.format("failed to decode %d bytes after %s (using %s): %s -> %s", result.length(), output.flip().toString(), this._decoder.charset(),
+                throw new TextConversionException(String.format("failed to decode %d bytes after %s (using %s): %s -> %s", result.length(), output.flip().toString(), this.decoder.charset(),
                         Text.byteBufferToString(input), result));
             }
             return null;
@@ -99,7 +99,7 @@ public class TextDecoder {
     }
     
     public Charset charset() {
-        return this._decoder.charset();
+        return this.decoder.charset();
     }
     
     /**

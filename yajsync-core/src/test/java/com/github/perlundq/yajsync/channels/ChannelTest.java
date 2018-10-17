@@ -273,9 +273,9 @@ public class ChannelTest implements MessageHandler
         WritableByteBufferChannel w = new WritableByteBufferChannel(wb);
         RsyncOutChannel _out = new RsyncOutChannel(w);
         Message testMessage = toMessage(MessageCode.INFO, "test message");
-        testMessage.payload().mark();
+        testMessage.getPayload().mark();
         _out.putMessage(testMessage);
-        testMessage.payload().reset();
+        testMessage.getPayload().reset();
         _out.flush();
 
         wb.flip();
@@ -300,11 +300,11 @@ public class ChannelTest implements MessageHandler
         WritableByteBufferChannel w = new WritableByteBufferChannel(wb);
         RsyncOutChannel _out = new RsyncOutChannel(w);
         Message testMessage = toMessage(MessageCode.INFO, "test message");
-        testMessage.payload().mark();
+        testMessage.getPayload().mark();
         int testInt = 4;
         _out.putInt(testInt);
         _out.putMessage(testMessage);
-        testMessage.payload().reset();
+        testMessage.getPayload().reset();
         _out.flush();
 
         wb.flip();
@@ -346,9 +346,9 @@ public class ChannelTest implements MessageHandler
                                              putInt(0, 31)),
         };
         for (Message msg : msgs) {
-            msg.payload().mark();
+            msg.getPayload().mark();
             _out.putMessage(msg);
-            msg.payload().reset();
+            msg.getPayload().reset();
         }
         _out.flush();
 
@@ -394,10 +394,10 @@ public class ChannelTest implements MessageHandler
 
         byte b = 0;
         for (Message msg : msgs) {
-            msg.payload().mark();
+            msg.getPayload().mark();
             _out.putMessage(msg);
             _out.putByte(b++);
-            msg.payload().reset();
+            msg.getPayload().reset();
         }
         _out.flush();
 

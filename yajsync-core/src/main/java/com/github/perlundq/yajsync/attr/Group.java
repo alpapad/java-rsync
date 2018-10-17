@@ -30,8 +30,8 @@ public final class Group {
     public static final Group ROOT = new Group("root", 0);
     public static final Group JVM_GROUP = new Group(Environment.getGroupName(), Environment.getGroupId());
     
-    private final int _id;
-    private final String _name;
+    private final int id;
+    private final String name;
     
     public Group(String name, int id) {
         if (name == null) {
@@ -43,8 +43,8 @@ public final class Group {
         if (id < 0 || id > ID_MAX) {
             throw new IllegalArgumentException();
         }
-        this._name = name;
-        this._id = id;
+        this.name = name;
+        this.id = id;
     }
     
     @Override
@@ -53,26 +53,26 @@ public final class Group {
             return true;
         } else if (other != null && this.getClass() == other.getClass()) {
             Group otherGroup = (Group) other;
-            return this._id == otherGroup._id && this._name.equals(otherGroup._name);
+            return this.id == otherGroup.id && this.name.equals(otherGroup.name);
         }
         return false;
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(this._name, this._id);
+        return Objects.hash(this.name, this.id);
     }
     
-    public int id() {
-        return this._id;
+    public int getId() {
+        return this.id;
     }
     
-    public String name() {
-        return this._name;
+    public String getName() {
+        return this.name;
     }
     
     @Override
     public String toString() {
-        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), this._name, this._id);
+        return String.format("%s (%s, %d)", this.getClass().getSimpleName(), this.name, this.id);
     }
 }

@@ -44,18 +44,18 @@ public class Option {
         return new Option(Void.class, policy, longName, shortName, shortHelp, handler);
     }
     
-    private final Handler _handler;
-    private final String _longName;
-    private int _numInstances = 0;
-    private final Policy _policy;
+    private final Handler handler;
+    private final String longName;
+    private int numInstances = 0;
+    private final Policy policy;
     
-    private final String _shortHelp;
+    private final String shortHelp;
     
-    private final String _shortName;
+    private final String shortName;
     
-    private final Class<?> _type;
+    private final Class<?> type;
     
-    private Object _value;
+    private Object value;
     
     private Option(Class<?> type, Policy policy, String longName, String shortName, String shortHelp, Handler handler) {
         assert type != null;
@@ -66,12 +66,12 @@ public class Option {
         assert handler != null || type == Void.class && policy == Policy.REQUIRED;
         assert !(longName.isEmpty() && shortName.isEmpty());
         assert longName.length() > 1 || shortName.length() == 1 : "An option must have either a long name (>=2 characters) and/or a" + " one character long short name associated with it";
-        this._type = type;
-        this._policy = policy;
-        this._longName = longName;
-        this._shortName = shortName;
-        this._shortHelp = shortHelp;
-        this._handler = handler;
+        this.type = type;
+        this.policy = policy;
+        this.longName = longName;
+        this.shortName = shortName;
+        this.shortHelp = shortHelp;
+        this.handler = handler;
     }
     
     public String exampleUsageToString() {
@@ -88,63 +88,63 @@ public class Option {
     }
     
     public boolean expectsValue() {
-        return this._type != Void.class;
+        return this.type != Void.class;
     }
     
     public Object getValue() {
         if (!this.isSet()) {
             throw new IllegalStateException(String.format("%s has not been " + "parsed yet", this));
         }
-        return this._value;
+        return this.value;
     }
     
     public boolean hasLongName() {
-        return this._longName.length() > 0;
+        return this.longName.length() > 0;
     }
     
     public boolean hasShortName() {
-        return this._shortName.length() > 0;
+        return this.shortName.length() > 0;
     }
     
     public boolean isRequired() {
-        return this._policy == Policy.REQUIRED;
+        return this.policy == Policy.REQUIRED;
     }
     
     public boolean isSet() {
-        return this._numInstances > 0;
+        return this.numInstances > 0;
     }
     
     public String longName() {
-        return this._longName;
+        return this.longName;
     }
     
     public String name() {
         if (this.hasLongName()) {
-            return String.format("--%s", this._longName);
+            return String.format("--%s", this.longName);
         } else {
-            return String.format("-%s", this._shortName);
+            return String.format("-%s", this.shortName);
         }
     }
     
     public ArgumentParser.Status setValue(String str) throws ArgumentParsingError {
         try {
-            if (this._type == Void.class) {
+            if (this.type == Void.class) {
                 if (!str.isEmpty()) {
                     throw new ArgumentParsingError(String.format("%s expects no argument - remove %s%nExample: %s", this.name(), str, this.exampleUsageToString()));
                 }
-            } else if (this._type == Integer.class) {
-                this._value = Integer.valueOf(str);
-            } else if (this._type == String.class) {
+            } else if (this.type == Integer.class) {
+                this.value = Integer.valueOf(str);
+            } else if (this.type == String.class) {
                 if (str.isEmpty()) {
                     throw new ArgumentParsingError(String.format("%s expects an argument%nExample: %s", this.name(), this.exampleUsageToString()));
                 }
-                this._value = str;
+                this.value = str;
             } else {
                 throw new IllegalStateException(String.format("BUG: %s is of an unsupported type to %s%nExample: %s", str, this.name(), this.exampleUsageToString()));
             }
-            this._numInstances++;
-            if (this._handler != null) {
-                return this._handler.handle(this);
+            this.numInstances++;
+            if (this.handler != null) {
+                return this.handler.handle(this);
             }
             return ArgumentParser.Status.CONTINUE;
         } catch (NumberFormatException e) {
@@ -153,36 +153,36 @@ public class Option {
     }
     
     public String shortHelp() {
-        return this._shortHelp;
+        return this.shortHelp;
     }
     
     public String shortName() {
-        return this._shortName;
+        return this.shortName;
     }
     
     @Override
     public String toString() {
-        return String.format("%s (type=%s policy=%s longName=%s shortName=%s)" + " { value=%s }", this.getClass().getSimpleName(), this._type, this._policy, this._longName, this._shortName,
-                this._value);
+        return String.format("%s (type=%s policy=%s longName=%s shortName=%s)" + " { value=%s }", this.getClass().getSimpleName(), this.type, this.policy, this.longName, this.shortName,
+                this.value);
     }
     
     public String usageLongToString() {
-        if (this._longName.isEmpty()) {
+        if (this.longName.isEmpty()) {
             return "";
         } else if (this.expectsValue()) {
-            return String.format("--%s=<%s>", this._longName, this._type.getSimpleName());
+            return String.format("--%s=<%s>", this.longName, this.type.getSimpleName());
         } else {
-            return String.format("--%s", this._longName);
+            return String.format("--%s", this.longName);
         }
     }
     
     public String usageShortToString() {
-        if (this._shortName.isEmpty()) {
+        if (this.shortName.isEmpty()) {
             return "";
         } else if (this.expectsValue()) {
-            return String.format("-%s <%s>", this._shortName, this._type.getSimpleName());
+            return String.format("-%s <%s>", this.shortName, this.type.getSimpleName());
         } else {
-            return String.format("-%s", this._shortName);
+            return String.format("-%s", this.shortName);
         }
     }
 }

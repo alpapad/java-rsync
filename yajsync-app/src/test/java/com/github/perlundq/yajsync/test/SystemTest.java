@@ -142,10 +142,10 @@ class FileUtil
     private static boolean isFileSameTypeAndSize(RsyncFileAttributes leftAttrs,
                                                  RsyncFileAttributes rightAttrs)
     {
-        int leftType = FileOps.fileType(leftAttrs.mode());
-        int rightType = FileOps.fileType(rightAttrs.mode());
+        int leftType = FileOps.fileType(leftAttrs.getMode());
+        int rightType = FileOps.fileType(rightAttrs.getMode());
         return leftType == rightType && (!FileOps.isRegularFile(leftType) ||
-                                         leftAttrs.size() == rightAttrs.size());
+                                         leftAttrs.getSize() == rightAttrs.getSize());
     }
 
     private static SortedMap<Path, Path> listDir(Path path) throws IOException
@@ -198,13 +198,13 @@ class FileUtil
     public static boolean isFileSameOwner(RsyncFileAttributes leftAttrs,
                                           RsyncFileAttributes rightAttrs)
     {
-        return leftAttrs.user().equals(rightAttrs.user());
+        return leftAttrs.getUser().equals(rightAttrs.getUser());
     }
 
     public static boolean isFileSameGroup(RsyncFileAttributes leftAttrs,
                                           RsyncFileAttributes rightAttrs)
     {
-        return leftAttrs.group().equals(rightAttrs.group());
+        return leftAttrs.getGroup().equals(rightAttrs.getGroup());
     }
 
     public static boolean isDirectory(Path path)
@@ -261,13 +261,13 @@ class SimpleRestrictedModule extends RestrictedModule
     }
 
     @Override
-    public String name()
+    public String getName()
     {
         return _name;
     }
 
     @Override
-    public String comment()
+    public String getComment()
     {
         return _comment;
     }
@@ -276,7 +276,7 @@ class SimpleRestrictedModule extends RestrictedModule
 class SimpleModule implements Module
 {
     private final String _name;
-    private final RestrictedPath _path;
+    private final RestrictedPath path;
     private final String _comment;
     private final boolean _isReadable;
     private final boolean _isWritable;
@@ -285,28 +285,28 @@ class SimpleModule implements Module
                  boolean isReadable, boolean isWritable)
     {
         _name = name.toString();
-        _path = new RestrictedPath(name, root);
+        path = new RestrictedPath(name, root);
         _comment = comment;
         _isReadable = isReadable;
         _isWritable = isWritable;
     }
 
     @Override
-    public String name()
+    public String getName()
     {
         return _name;
     }
 
     @Override
-    public String comment()
+    public String getComment()
     {
         return _comment;
     }
 
     @Override
-    public RestrictedPath restrictedPath()
+    public RestrictedPath getRestrictedPath()
     {
-        return _path;
+        return path;
     }
 
     @Override
@@ -330,7 +330,7 @@ class TestModules implements Modules
     {
         _modules = new HashMap<>();
         for (Module module : modules) {
-            _modules.put(module.name(), module);
+            _modules.put(module.getName(), module);
         }
     }
 
@@ -564,10 +564,10 @@ public class SystemTest
         long fileSize = 0;
         assertTrue(status.rc == 0);
         assertTrue(status.stats != null);
-        assertTrue(status.stats.numFiles() == numFiles);
-        assertTrue(status.stats.numTransferredFiles() == 0);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == 0);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -580,10 +580,10 @@ public class SystemTest
         long fileSize = 0;
         assertTrue(status.rc == 0);
         assertTrue(status.stats != null);
-        assertTrue(status.stats.numFiles() == numFiles);
-        assertTrue(status.stats.numTransferredFiles() == 0);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == 0);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -597,10 +597,10 @@ public class SystemTest
         ReturnStatus status = fileCopy(src, dst);
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -617,10 +617,10 @@ public class SystemTest
         ReturnStatus status = fileCopy(srcDotDot, dst);
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -636,10 +636,10 @@ public class SystemTest
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isDirectory(dst));
         assertTrue(FileUtil.isDirectoriesIdentical(src, copyOfSrc));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -654,10 +654,10 @@ public class SystemTest
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isDirectory(dst));
         assertTrue(FileUtil.isDirectoriesIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -679,10 +679,10 @@ public class SystemTest
         ReturnStatus status = recursiveCopyTrailingSlash(src, dst);
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isDirectoriesIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -698,10 +698,10 @@ public class SystemTest
         ReturnStatus status = fileCopy(src, dst);
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -717,10 +717,10 @@ public class SystemTest
         ReturnStatus status = fileCopy(src, dst);
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -736,10 +736,10 @@ public class SystemTest
         ReturnStatus status = fileCopy(src, dst);
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -755,10 +755,10 @@ public class SystemTest
         ReturnStatus status = fileCopy(src, dst);
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -775,17 +775,17 @@ public class SystemTest
         ReturnStatus status = fileCopy(src, dst);
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
         ReturnStatus status2 = fileCopy(src, dst);
         assertTrue(status2.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status2.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status2.stats.numTransferredFiles() == numFiles);
-        assertTrue(status2.stats.totalLiteralSize() == 0);
-        assertTrue(status2.stats.totalMatchedSize() == fileSize);
+        assertTrue(status2.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status2.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status2.stats.getTotalLiteralSize() == 0);
+        assertTrue(status2.stats.getTotalMatchedSize() == fileSize);
     }
 
     @Test
@@ -803,17 +803,17 @@ public class SystemTest
         ReturnStatus status = fileCopy(src, dst, "--times");
         assertTrue(status.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status.stats.numTransferredFiles() == numFiles);
-        assertTrue(status.stats.totalLiteralSize() == fileSize);
-        assertTrue(status.stats.totalMatchedSize() == 0);
+        assertTrue(status.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status.stats.getNumTransferredFiles() == numFiles);
+        assertTrue(status.stats.getTotalLiteralSize() == fileSize);
+        assertTrue(status.stats.getTotalMatchedSize() == 0);
         ReturnStatus status2 = fileCopy(src, dst);
         assertTrue(status2.rc == 0);
         assertTrue(FileUtil.isContentIdentical(src, dst));
-        assertTrue(status2.stats.numFiles() == numDirs + numFiles);
-        assertTrue(status2.stats.numTransferredFiles() == 0);
-        assertTrue(status2.stats.totalLiteralSize() == 0);
-        assertTrue(status2.stats.totalMatchedSize() == 0);
+        assertTrue(status2.stats.getNumFiles() == numDirs + numFiles);
+        assertTrue(status2.stats.getNumTransferredFiles() == 0);
+        assertTrue(status2.stats.getTotalLiteralSize() == 0);
+        assertTrue(status2.stats.getTotalMatchedSize() == 0);
     }
 
     @Test
@@ -830,7 +830,7 @@ public class SystemTest
         Path srcFile = srcDir.resolve("file");
         Files.createDirectory(srcDir);
         FileUtil.writeToFiles(1, srcFile);
-        FileUtil._fileManager.setUserId(srcFile, User.NOBODY.id());
+        FileUtil._fileManager.setUserId(srcFile, User.NOBODY.getId());
 
         Files.createDirectory(dst);
         Path copyOfSrc = dst.resolve(src.getFileName());
@@ -864,7 +864,7 @@ public class SystemTest
         Path srcFile = srcDir.resolve("file");
         Files.createDirectory(srcDir);
         FileUtil.writeToFiles(1, srcFile);
-        FileUtil._fileManager.setGroupId(srcFile, User.NOBODY.id());
+        FileUtil._fileManager.setGroupId(srcFile, User.NOBODY.getId());
 
         Files.createDirectory(dst);
         Path copyOfSrc = dst.resolve(src.getFileName());

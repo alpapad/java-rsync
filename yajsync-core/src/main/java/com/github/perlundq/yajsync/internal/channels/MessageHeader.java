@@ -36,9 +36,9 @@ public class MessageHeader {
         return new MessageHeader(code, length); // throws IllegalArgumentException
     }
     
-    private final MessageCode _code;
+    private final MessageCode code;
     
-    private final int _length;
+    private final int length;
     
     /**
      * @throws IllegalArgumentException if length < 0 or length > 0xFFFFFF)
@@ -48,38 +48,38 @@ public class MessageHeader {
         if (length < 0 || length > MSG_MAX_LENGTH) { // NOTE: 0-length messages are valid
             throw new IllegalArgumentException(String.format("Error: length %d out of range (0 <= length <= %d)", length, MSG_MAX_LENGTH));
         }
-        this._code = code;
-        this._length = length;
+        this.code = code;
+        this.length = length;
     }
     
     @Override
     public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
             MessageHeader other = (MessageHeader) obj;
-            return this._code == other._code && this._length == other._length;
+            return this.code == other.code && this.length == other.length;
         }
         return false;
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(this._code, this._length);
+        return Objects.hash(this.code, this.length);
     }
     
-    public int length() {
-        return this._length;
+    public int getLength() {
+        return this.length;
     }
     
-    public MessageCode messageType() {
-        return this._code;
+    public MessageCode getMessageType() {
+        return this.code;
     }
     
     @Override
     public String toString() {
-        return String.format("%s %s length=%d", this.getClass().getSimpleName(), this._code, this._length);
+        return String.format("%s %s length=%d", this.getClass().getSimpleName(), this.code, this.length);
     }
     
     public int toTag() {
-        return MSG_TYPE_OFFSET + this._code.value() << 24 | this._length;
+        return MSG_TYPE_OFFSET + this.code.getValue() << 24 | this.length;
     }
 }

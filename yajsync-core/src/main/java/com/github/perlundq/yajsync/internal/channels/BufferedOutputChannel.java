@@ -32,22 +32,22 @@ import com.github.perlundq.yajsync.internal.util.Util;
 
 public class BufferedOutputChannel implements Bufferable {
     private static final int DEFAULT_BUF_SIZE = 8 * 1024;
-    protected final ByteBuffer _buffer;
-    private long _numBytesWritten;
-    private final WritableByteChannel _sinkChannel;
+    protected final ByteBuffer buffer;
+    private long numBytesWritten;
+    private final WritableByteChannel sinkChannel;
     
     public BufferedOutputChannel(WritableByteChannel sock) {
         this(sock, DEFAULT_BUF_SIZE);
     }
     
     public BufferedOutputChannel(WritableByteChannel sock, int bufferSize) {
-        this._sinkChannel = sock;
+        this.sinkChannel = sock;
         if (Environment.isAllocateDirect()) {
-            this._buffer = ByteBuffer.allocateDirect(bufferSize);
+            this.buffer = ByteBuffer.allocateDirect(bufferSize);
         } else {
-            this._buffer = ByteBuffer.allocate(bufferSize);
+            this.buffer = ByteBuffer.allocate(bufferSize);
         }
-        this._buffer.order(ByteOrder.LITTLE_ENDIAN);
+        this.buffer.order(ByteOrder.LITTLE_ENDIAN);
     }
     
     public void close() throws ChannelException {
@@ -55,7 +55,7 @@ public class BufferedOutputChannel implements Bufferable {
             this.flush();
         } finally {
             try {
-                this._sinkChannel.close();
+                this.sinkChannel.close();
             } catch (IOException e) {
                 throw new ChannelException(e);
             }
@@ -64,20 +64,20 @@ public class BufferedOutputChannel implements Bufferable {
     
     @Override
     public void flush() throws ChannelException {
-        if (this.numBytesBuffered() > 0) {
-            this._buffer.flip();
-            this.send(this._buffer);
-            this._buffer.clear();
+        if (this.getNumBytesBuffered() > 0) {
+            this.buffer.flip();
+            this.send(this.buffer);
+            this.buffer.clear();
         }
     }
     
     @Override
-    public int numBytesBuffered() {
-        return this._buffer.position();
+    public int getNumBytesBuffered() {
+        return this.buffer.position();
     }
     
-    public long numBytesWritten() {
-        return this._numBytesWritten + this.numBytesBuffered();
+    public long getNumBytesWritten() {
+        return this.numBytesWritten + this.getNumBytesBuffered();
     }
     
     @Override
@@ -88,12 +88,12 @@ public class BufferedOutputChannel implements Bufferable {
     @Override
     public void put(ByteBuffer src) throws ChannelException {
         while (src.hasRemaining()) {
-            int l = Math.min(src.remaining(), this._buffer.remaining());
+            int l = Math.min(src.remaining(), this.buffer.remaining());
             if (l == 0) {
                 this.flush();
             } else {
                 ByteBuffer slice = Util.slice(src, src.position(), src.position() + l);
-                this._buffer.put(slice);
+                this.buffer.put(slice);
                 src.position(slice.position());
             }
         }
@@ -101,36 +101,36 @@ public class BufferedOutputChannel implements Bufferable {
     
     @Override
     public void putByte(byte b) throws ChannelException {
-        if (this._buffer.remaining() < Consts.SIZE_BYTE) {
+        if (this.buffer.remaining() < Consts.SIZE_BYTE) {
             this.flush();
         }
-        this._buffer.put(b);
+        this.buffer.put(b);
     }
     
     @Override
     public void putChar(char c) throws ChannelException {
-        if (this._buffer.remaining() < Consts.SIZE_CHAR) {
+        if (this.buffer.remaining() < Consts.SIZE_CHAR) {
             this.flush();
         }
-        this._buffer.putChar(c);
+        this.buffer.putChar(c);
     }
     
     @Override
     public void putInt(int i) throws ChannelException {
-        if (this._buffer.remaining() < Consts.SIZE_INT) {
+        if (this.buffer.remaining() < Consts.SIZE_INT) {
             this.flush();
         }
-        this._buffer.putInt(i);
+        this.buffer.putInt(i);
     }
     
     public void send(ByteBuffer buf) throws ChannelException {
         try {
             while (buf.hasRemaining()) {
-                int count = this._sinkChannel.write(buf);
+                int count = this.sinkChannel.write(buf);
                 if (count <= 0) {
                     throw new ChannelEOFException(String.format("channel write unexpectedly returned %d (EOF)", count));
                 }
-                this._numBytesWritten += count;
+                this.numBytesWritten += count;
             }
         } catch (ClosedByInterruptException e) {
             throw new RuntimeInterruptException(e);

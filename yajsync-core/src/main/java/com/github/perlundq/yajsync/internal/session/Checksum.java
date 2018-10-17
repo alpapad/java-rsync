@@ -29,29 +29,29 @@ import com.github.perlundq.yajsync.internal.util.Multimap;
 class Checksum {
     public static class Chunk {
         
-        private final int _chunkIndex;
-        private final int _length;
-        private final byte[] _md5sum;
+        private final int chunkIndex;
+        private final int length;
+        private final byte[] md5sum;
         
         private Chunk(int length, byte[] md5sum, int chunkIndex) {
             assert length >= 0;
             assert md5sum != null;
             assert md5sum.length > 0;
-            this._length = length;
-            this._md5sum = md5sum;
-            this._chunkIndex = chunkIndex;
+            this.length = length;
+            this.md5sum = md5sum;
+            this.chunkIndex = chunkIndex;
         }
         
-        public int chunkIndex() {
-            return this._chunkIndex;
+        public int getChunkIndex() {
+            return this.chunkIndex;
         }
         
-        public int length() {
-            return this._length;
+        public int getLength() {
+            return this.length;
         }
         
-        public byte[] md5Checksum() {
-            return this._md5sum;
+        public byte[] getMd5Checksum() {
+            return this.md5sum;
         }
     }
     
@@ -64,10 +64,10 @@ class Checksum {
     }
     
     public static class Header {
-        private final int _blockLength; // sum_struct.blength
-        private final int _chunkCount;
-        private final int _digestLength; // sum_struct.s2length
-        private final int _remainder; // sum_struct.remainder
+        private final int blockLength; // sum_struct.blength
+        private final int chunkCount;
+        private final int digestLength; // sum_struct.s2length
+        private final int remainder; // sum_struct.remainder
         
         /**
          * @throws IllegalArgumentException
@@ -85,61 +85,61 @@ class Checksum {
             } else if (digestLength < 0) {
                 throw new IllegalArgumentException("Error: invalid checksum " + "digest length: " + digestLength);
             }
-            this._blockLength = blockLength;
-            this._digestLength = digestLength;
-            this._remainder = remainder;
-            this._chunkCount = chunkCount;
+            this.blockLength = blockLength;
+            this.digestLength = digestLength;
+            this.remainder = remainder;
+            this.chunkCount = chunkCount;
         }
         
         public Header(int blockLength, int digestLength, long fileSize) throws ChunkOverflow {
             if (blockLength == 0) {
                 assert digestLength == 0 : digestLength;
                 assert fileSize == 0 : fileSize;
-                this._blockLength = 0;
-                this._digestLength = 0;
-                this._remainder = 0;
-                this._chunkCount = 0;
+                this.blockLength = 0;
+                this.digestLength = 0;
+                this.remainder = 0;
+                this.chunkCount = 0;
             } else {
-                this._blockLength = blockLength;
-                this._digestLength = digestLength;
-                this._remainder = (int) (fileSize % blockLength);
-                long chunkCount = fileSize / blockLength + (this._remainder > 0 ? 1 : 0);
+                this.blockLength = blockLength;
+                this.digestLength = digestLength;
+                this.remainder = (int) (fileSize % blockLength);
+                long chunkCount = fileSize / blockLength + (this.remainder > 0 ? 1 : 0);
                 if (chunkCount >= 0 && chunkCount <= Integer.MAX_VALUE) {
-                    this._chunkCount = (int) chunkCount;
+                    this.chunkCount = (int) chunkCount;
                 } else {
                     throw new ChunkOverflow(String.format("chunk count is negative or greater " + "than int max: %d > %d", chunkCount, Integer.MAX_VALUE));
                 }
             }
         }
         
-        public int blockLength() {
-            return this._blockLength;
+        public int getBlockLength() {
+            return this.blockLength;
         }
         
-        public int chunkCount() {
-            return this._chunkCount;
+        public int getChunkCount() {
+            return this.chunkCount;
         }
         
-        public int digestLength() {
-            return this._digestLength;
+        public int getDigestLength() {
+            return this.digestLength;
         }
         
-        public int remainder() {
-            return this._remainder;
+        public int getRemainder() {
+            return this.remainder;
         }
         
-        public int smallestChunkSize() {
-            if (this._remainder > 0) {
-                return this._remainder;
+        public int getSmallestChunkSize() {
+            if (this.remainder > 0) {
+                return this.remainder;
             } else {
-                return this._blockLength; // NOTE: might return 0
+                return this.blockLength; // NOTE: might return 0
             }
         }
         
         @Override
         public String toString() {
-            return String.format("%s (blockLength=%d, remainder=%d, " + "chunkCount=%d, digestLength=%d)", this.getClass().getSimpleName(), this._blockLength, this._remainder, this._chunkCount,
-                    this._digestLength);
+            return String.format("%s (blockLength=%d, remainder=%d, " + "chunkCount=%d, digestLength=%d)", this.getClass().getSimpleName(), this.blockLength, this.remainder, this.chunkCount,
+                    this.digestLength);
         }
     }
     
@@ -154,23 +154,23 @@ class Checksum {
     public static final int MAX_DIGEST_LENGTH = 16;
     public static final int MIN_DIGEST_LENGTH = 2;
     
-    private final Header _header;
-    private final Multimap<Integer, Chunk> _sums;
+    private final Header header;
+    private final Multimap<Integer, Chunk> sums;
     
     public Checksum(Header header) {
-        this._header = header;
-        this._sums = new Multimap<>(header.chunkCount());
+        this.header = header;
+        this.sums = new Multimap<>(header.getChunkCount());
     }
     
     public void addChunkInformation(int rolling, byte[] md5sum) {
         assert md5sum != null;
         assert md5sum.length >= MIN_DIGEST_LENGTH && md5sum.length <= MAX_DIGEST_LENGTH;
-        assert this._sums.size() <= this._header._chunkCount - 1;
+        assert this.sums.size() <= this.header.chunkCount - 1;
         
-        int chunkIndex = this._sums.size();
+        int chunkIndex = this.sums.size();
         int chunkLength = this.chunkLengthFor(chunkIndex);
         Chunk chunk = new Chunk(chunkLength, md5sum, chunkIndex);
-        this._sums.put(rolling, chunk);
+        this.sums.put(rolling, chunk);
     }
     
     private int binarySearch(List<Chunk> chunks, int chunkIndex) {
@@ -179,7 +179,7 @@ class Checksum {
         
         while (i_left <= i_right) {
             int i_middle = i_left + (i_right - i_left) / 2; // i_middle < i_right and i_middle >= i_left
-            int chunkIndex_m = chunks.get(i_middle).chunkIndex();
+            int chunkIndex_m = chunks.get(i_middle).getChunkIndex();
             if (chunkIndex_m == chunkIndex) {
                 return i_middle;
             } else if (chunkIndex_m < chunkIndex) {
@@ -196,11 +196,11 @@ class Checksum {
     }
     
     private int chunkLengthFor(int chunkIndex) {
-        boolean isLastChunkIndex = chunkIndex == this._header._chunkCount - 1;
-        if (isLastChunkIndex && this._header._remainder > 0) {
-            return this._header._remainder;
+        boolean isLastChunkIndex = chunkIndex == this.header.chunkCount - 1;
+        if (isLastChunkIndex && this.header.remainder > 0) {
+            return this.header.remainder;
         }
-        return this._header._blockLength;
+        return this.header.blockLength;
     }
     
     // retrieve a close index for the chunk with the supplied chunk index
@@ -214,7 +214,7 @@ class Checksum {
     }
     
     public Iterable<Chunk> getCandidateChunks(int rolling, final int length, final int preferredChunkIndex) {
-        final List<Chunk> chunks = this._sums.get(rolling);
+        final List<Chunk> chunks = this.sums.get(rolling);
         // Optimization to avoid allocating tons of empty iterators for non
         // matching entries on large files:
         if (chunks.isEmpty()) {
@@ -260,7 +260,7 @@ class Checksum {
                     
                     private int nextIndex() {
                         for (int i = it_index; i < chunks.size(); i++) {
-                            if (i != initialIndex && chunks.get(i).length() == length) {
+                            if (i != initialIndex && chunks.get(i).getLength() == length) {
                                 return i;
                             }
                         }
@@ -276,12 +276,12 @@ class Checksum {
         };
     }
     
-    public Header header() {
-        return this._header;
+    public Header getHeader() {
+        return this.header;
     }
     
     @Override
     public String toString() {
-        return String.format("%s (header=%s)", this.getClass().getSimpleName(), this._header);
+        return String.format("%s (header=%s)", this.getClass().getSimpleName(), this.header);
     }
 }

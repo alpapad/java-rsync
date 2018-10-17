@@ -35,35 +35,35 @@ public class RsyncAuthContext {
         return new RsyncAuthContext(characterEncoder, challenge);
     }
     
-    private final String _challenge;
+    private final String challenge;
     
-    private final TextEncoder _characterEncoder;
+    private final TextEncoder characterEncoder;
     
     public RsyncAuthContext(TextEncoder characterEncoder) {
-        this._challenge = this.newChallenge();
-        this._characterEncoder = characterEncoder;
+        this.challenge = this.newChallenge();
+        this.characterEncoder = characterEncoder;
     }
     
     private RsyncAuthContext(TextEncoder characterEncoder, String challenge) {
-        this._challenge = challenge;
-        this._characterEncoder = characterEncoder;
+        this.challenge = challenge;
+        this.characterEncoder = characterEncoder;
     }
     
-    public String challenge() {
-        return this._challenge;
+    public String getChallenge() {
+        return this.challenge;
     }
     
     /**
-     * @throws TextConversionException if _challenge cannot be encoded
+     * @throws TextConversionException if challenge cannot be encoded
      */
     private byte[] hash(char[] password) {
         byte[] passwordBytes = null;
         try {
-            passwordBytes = this._characterEncoder.secureEncodeOrNull(password);
+            passwordBytes = this.characterEncoder.secureEncodeOrNull(password);
             if (passwordBytes == null) {
                 throw new RuntimeException("Unable to encode characters in " + "password");
             }
-            byte[] challengeBytes = this._characterEncoder.encode(this._challenge); // throws TextConversionException
+            byte[] challengeBytes = this.characterEncoder.encode(this.challenge); // throws TextConversionException
             MessageDigest md = MD5.newInstance();
             md.update(passwordBytes);
             md.update(challengeBytes);
@@ -82,7 +82,7 @@ public class RsyncAuthContext {
     }
     
     /**
-     * @throws TextConversionException if _challenge cannot be encoded
+     * @throws TextConversionException if challenge cannot be encoded
      */
     public String response(char[] password) {
         byte[] hashedBytes = this.hash(password);

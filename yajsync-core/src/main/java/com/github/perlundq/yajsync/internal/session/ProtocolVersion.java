@@ -21,19 +21,19 @@ package com.github.perlundq.yajsync.internal.session;
 import java.util.Objects;
 
 public final class ProtocolVersion implements Comparable<ProtocolVersion> {
-    private final int _major;
-    private final int _minor;
+    private final int major;
+    private final int minor;
     
     public ProtocolVersion(int major, int minor) {
-        this._major = major;
-        this._minor = minor;
+        this.major = major;
+        this.minor = minor;
     }
     
     @Override
     public int compareTo(ProtocolVersion other) {
-        int res = this._major - other._major;
+        int res = this.major - other.major;
         if (res == 0) {
-            return this._minor - other._minor;
+            return this.minor - other.minor;
         }
         return res;
     }
@@ -48,19 +48,19 @@ public final class ProtocolVersion implements Comparable<ProtocolVersion> {
     
     @Override
     public int hashCode() {
-        return Objects.hash(this._major, this._minor);
+        return Objects.hash(this.major, this.minor);
     }
     
-    public int major() {
-        return this._major;
+    public int getMajor() {
+        return this.major;
     }
     
-    public int minor() {
-        return this._minor;
+    public int getMinor() {
+        return this.minor;
     }
     
     @Override
     public String toString() {
-        return String.format("%d.%d", this._major, this._minor);
+        return String.format("%d.%d", this.major, this.minor);
     }
 }

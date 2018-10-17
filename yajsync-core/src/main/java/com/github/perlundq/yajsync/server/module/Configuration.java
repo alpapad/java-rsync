@@ -125,7 +125,7 @@ public class Configuration implements Modules {
             throw new IllegalValueException();
         }
         
-        private String _cfgFileName = Environment.getServerConfig(DEFAULT_CONFIGURATION_FILE_NAME);
+        private String cfgFileName = Environment.getServerConfig(DEFAULT_CONFIGURATION_FILE_NAME);
         
         public Reader() {
         }
@@ -177,14 +177,14 @@ public class Configuration implements Modules {
                     RestrictedPath vp = new RestrictedPath(moduleName, p);
                     SimpleModule m = new SimpleModule(moduleName, vp);
                     String comment = Text.nullToEmptyStr(moduleContent.get(MODULE_KEY_COMMENT));
-                    m._comment = comment;
+                    m.comment = comment;
                     if (moduleContent.containsKey(MODULE_KEY_IS_READABLE)) {
                         boolean isReadable = toBoolean(moduleContent.get(MODULE_KEY_IS_READABLE));
-                        m._isReadable = isReadable;
+                        m.isReadable = isReadable;
                     }
                     if (moduleContent.containsKey(MODULE_KEY_IS_WRITABLE)) {
                         boolean isWritable = toBoolean(moduleContent.get(MODULE_KEY_IS_WRITABLE));
-                        m._isWritable = isWritable;
+                        m.isWritable = isWritable;
                     }
                     result.put(moduleName, m);
                 } catch (InvalidPathException | IllegalValueException | IOException | URISyntaxException e) {
@@ -198,7 +198,7 @@ public class Configuration implements Modules {
         
         @Override
         public Configuration newAnonymous(InetAddress address) throws ModuleException {
-            Map<String, Module> modules = this.getModules(this._cfgFileName);
+            Map<String, Module> modules = this.getModules(this.cfgFileName);
             Configuration cfg = new Configuration(modules);
             return cfg;
         }
@@ -211,8 +211,8 @@ public class Configuration implements Modules {
         @Override
         public Collection<Option> options() {
             List<Option> options = new LinkedList<>();
-            options.add(Option.newStringOption(Option.Policy.OPTIONAL, "config", "", String.format("path to configuration file (default " + "%s)", this._cfgFileName), option -> {
-                this._cfgFileName = (String) option.getValue();
+            options.add(Option.newStringOption(Option.Policy.OPTIONAL, "config", "", String.format("path to configuration file (default " + "%s)", this.cfgFileName), option -> {
+                this.cfgFileName = (String) option.getValue();
                 return ArgumentParser.Status.CONTINUE;
             }));
             return options;
@@ -220,59 +220,59 @@ public class Configuration implements Modules {
     }
     
     private static class SimpleModule implements Module {
-        private String _comment = "";
-        private boolean _isReadable = true;
-        private boolean _isWritable = false;
-        private final String _name;
-        private final RestrictedPath _restrictedPath;
+        private String comment = "";
+        private boolean isReadable = true;
+        private boolean isWritable = false;
+        private final String name;
+        private final RestrictedPath restrictedPath;
         
         public SimpleModule(String name, RestrictedPath restrictedPath) {
             assert name != null;
             assert restrictedPath != null;
-            this._name = name;
-            this._restrictedPath = restrictedPath;
+            this.name = name;
+            this.restrictedPath = restrictedPath;
         }
         
         @Override
-        public String comment() {
-            return this._comment;
+        public String getComment() {
+            return this.comment;
         }
         
         @Override
         public boolean isReadable() {
-            return this._isReadable;
+            return this.isReadable;
         }
         
         @Override
         public boolean isWritable() {
-            return this._isWritable;
+            return this.isWritable;
         }
         
         @Override
-        public String name() {
-            return this._name;
+        public String getName() {
+            return this.name;
         }
         
         @Override
-        public RestrictedPath restrictedPath() {
-            return this._restrictedPath;
+        public RestrictedPath getRestrictedPath() {
+            return this.restrictedPath;
         }
     }
     
-    private final Map<String, Module> _modules;
+    private final Map<String, Module> modules;
     
     public Configuration(Map<String, Module> modules) {
-        this._modules = modules;
+        this.modules = modules;
     }
     
     @Override
     public Iterable<Module> all() {
-        return this._modules.values();
+        return this.modules.values();
     }
     
     @Override
     public Module get(String moduleName) throws ModuleException {
-        Module m = this._modules.get(moduleName);
+        Module m = this.modules.get(moduleName);
         if (m == null) {
             throw new ModuleNotFoundException(String.format("module %s does not exist", moduleName));
         }

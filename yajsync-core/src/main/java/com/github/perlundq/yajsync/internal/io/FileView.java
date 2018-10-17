@@ -35,18 +35,18 @@ import java.util.logging.Logger;
 import com.github.perlundq.yajsync.internal.util.RuntimeInterruptException;
 
 public class FileView implements AutoCloseable {
-    private static final Logger _log = Logger.getLogger(FileView.class.getName());
+    private static final Logger LOG = Logger.getLogger(FileView.class.getName());
     public final static int DEFAULT_BLOCK_SIZE = 8 * 1024;
-    private final byte[] _buf;
-    private int _endOffset = -1; // length == _endOffset - _startOffset + 1
-    private final String _fileName;
-    private IOException _ioError = null;
-    private final InputStream _is;
-    private int _markOffset = -1;
-    private int _readOffset = -1;
-    private long _remainingBytes;
-    private int _startOffset = 0;
-    private final int _windowLength; // size of sliding window (<= _buf.length)
+    private final byte[] buf;
+    private int endOffset = -1; // length == endOffset - startOffset + 1
+    private final String fileName;
+    private IOException ioError = null;
+    private final InputStream is;
+    private int markOffset = -1;
+    private int readOffset = -1;
+    private long remainingBytes;
+    private int startOffset = 0;
+    private final int windowLength; // size of sliding window (<= buf.length)
     
     public FileView(Path path, long fileSize, int windowLength, int bufferSize) throws FileViewOpenFailed {
         assert path != null;
@@ -56,20 +56,20 @@ public class FileView implements AutoCloseable {
         assert windowLength <= bufferSize;
         
         try {
-            this._fileName = path.toString();
-            this._remainingBytes = fileSize;
+            this.fileName = path.toString();
+            this.remainingBytes = fileSize;
             
             if (fileSize > 0) {
-                this._is = Files.newInputStream(path);
-                this._windowLength = windowLength;
-                this._buf = new byte[bufferSize];
+                this.is = Files.newInputStream(path);
+                this.windowLength = windowLength;
+                this.buf = new byte[bufferSize];
                 this.slide(0);
-                assert this._startOffset == 0;
-                assert this._endOffset >= 0;
+                assert this.startOffset == 0;
+                assert this.endOffset >= 0;
             } else {
-                this._is = null;
-                this._windowLength = 0;
-                this._buf = new byte[0];
+                this.is = null;
+                this.windowLength = 0;
+                this.buf = new byte[0];
             }
             
         } catch (FileNotFoundException | NoSuchFileException e) { // TODO: which exception should we really catch
@@ -79,20 +79,20 @@ public class FileView implements AutoCloseable {
         }
     }
     
-    public byte[] array() {
-        return this._buf;
+    public byte[] getArray() {
+        return this.buf;
     }
     
-    private int bufferSpaceAvailable() {
-        assert this._readOffset <= this._buf.length - 1;
-        return this._buf.length - 1 - this._readOffset;
+    private int getBufferSpaceAvailable() {
+        assert this.readOffset <= this.buf.length - 1;
+        return this.buf.length - 1 - this.readOffset;
     }
     
     @Override
     public void close() throws FileViewException {
-        if (this._is != null) {
+        if (this.is != null) {
             try {
-                this._is.close();
+                this.is.close();
             } catch (ClosedByInterruptException e) {
                 throw new RuntimeInterruptException(e);
             } catch (IOException e) {
@@ -100,192 +100,192 @@ public class FileView implements AutoCloseable {
             }
         }
         
-        if (this._ioError != null) {
-            throw new FileViewException(this._ioError);
+        if (this.ioError != null) {
+            throw new FileViewException(this.ioError);
         }
     }
     
     private void compact() {
-        assert this.numBytesPrefetched() >= 0;
-        assert this.totalBytes() >= 0; // unless we'd support skipping
+        assert this.getNumBytesPrefetched() >= 0;
+        assert this.getTotalBytes() >= 0; // unless we'd support skipping
         
-        int shiftOffset = this.firstOffset();
-        int numShifts = this.numBytesMarked() + this.numBytesPrefetched();
+        int shiftOffset = this.getFirstOffset();
+        int numShifts = this.getNumBytesMarked() + this.getNumBytesPrefetched();
         
-        if (_log.isLoggable(Level.FINEST)) {
-            _log.finest(String.format("compact of %s before - buf[%d] %d bytes to buf[0], " + "buf.length = %d", this, shiftOffset, numShifts, this._buf.length));
+        if (LOG.isLoggable(Level.FINEST)) {
+            LOG.finest(String.format("compact of %s before - buf[%d] %d bytes to buf[0], " + "buf.length = %d", this, shiftOffset, numShifts, this.buf.length));
         }
         
-        System.arraycopy(this._buf, shiftOffset, this._buf, 0, numShifts);
-        this._startOffset -= shiftOffset;
-        this._endOffset -= shiftOffset;
-        this._readOffset -= shiftOffset;
-        if (this._markOffset >= 0) {
-            this._markOffset -= shiftOffset;
+        System.arraycopy(this.buf, shiftOffset, this.buf, 0, numShifts);
+        this.startOffset -= shiftOffset;
+        this.endOffset -= shiftOffset;
+        this.readOffset -= shiftOffset;
+        if (this.markOffset >= 0) {
+            this.markOffset -= shiftOffset;
         }
         
-        assert this._startOffset >= 0;
-        assert this._endOffset >= -1;
-        assert this._readOffset >= -1;
-        assert this._markOffset >= -1;
+        assert this.startOffset >= 0;
+        assert this.endOffset >= -1;
+        assert this.readOffset >= -1;
+        assert this.markOffset >= -1;
         
-        if (_log.isLoggable(Level.FINEST)) {
-            _log.finest(String.format("compacted %d bytes, result after: %s", numShifts, this));
+        if (LOG.isLoggable(Level.FINEST)) {
+            LOG.finest(String.format("compacted %d bytes, result after: %s", numShifts, this));
         }
     }
     
-    public int endOffset() {
-        assert this._endOffset >= -1;
-        return this._endOffset;
+    public int getEndOffset() {
+        assert this.endOffset >= -1;
+        return this.endOffset;
     }
     
     // TODO: the names startOffset and firstOffset are confusingly similar
-    public int firstOffset() {
-        assert this._startOffset >= 0;
-        assert this._markOffset >= -1;
-        return this._markOffset >= 0 ? Math.min(this._startOffset, this._markOffset) : this._startOffset;
+    public int getFirstOffset() {
+        assert this.startOffset >= 0;
+        assert this.markOffset >= -1;
+        return this.markOffset >= 0 ? Math.min(this.startOffset, this.markOffset) : this.startOffset;
     }
     
     public boolean isFull() {
-        assert this.totalBytes() <= this._buf.length;
-        return this.totalBytes() == this._buf.length; // || windowLength() == 0 && _remainingBytes == 0
+        assert this.getTotalBytes() <= this.buf.length;
+        return this.getTotalBytes() == this.buf.length; // || windowLength() == 0 && remainingBytes == 0
     }
     
     // might return -1
-    public int markOffset() {
-        assert this._markOffset >= -1;
-        assert this._markOffset <= this._buf.length - 1 || this._is == null;
-        return this._markOffset;
+    public int getMarkOffset() {
+        assert this.markOffset >= -1;
+        assert this.markOffset <= this.buf.length - 1 || this.is == null;
+        return this.markOffset;
     }
     
-    public int numBytesMarked() {
-        return this._startOffset - this.firstOffset();
+    public int getNumBytesMarked() {
+        return this.startOffset - this.getFirstOffset();
     }
     
-    public int numBytesPrefetched() {
-        return this._readOffset - this._startOffset + 1;
+    public int getNumBytesPrefetched() {
+        return this.readOffset - this.startOffset + 1;
     }
     
     private void readBetween(int min, int max) throws IOException {
         assert min >= 0 && min <= max;
-        assert max <= this._remainingBytes;
-        assert max <= this.bufferSpaceAvailable();
+        assert max <= this.remainingBytes;
+        assert max <= this.getBufferSpaceAvailable();
         
         int numBytesRead = 0;
         while (numBytesRead < min) {
-            int len = this._is.read(this._buf, this._readOffset + 1, max - numBytesRead);
+            int len = this.is.read(this.buf, this.readOffset + 1, max - numBytesRead);
             if (len <= 0) {
                 throw new EOFException(String.format("File ended prematurely " + "(%d)", len));
             }
             numBytesRead += len;
-            this._readOffset += len;
-            this._remainingBytes -= len;
+            this.readOffset += len;
+            this.remainingBytes -= len;
         }
         
-        if (_log.isLoggable(Level.FINEST)) {
-            _log.finest(String.format("prefetched %d bytes (min=%d, max=%d)", numBytesRead, min, max));
+        if (LOG.isLoggable(Level.FINEST)) {
+            LOG.finest(String.format("prefetched %d bytes (min=%d, max=%d)", numBytesRead, min, max));
         }
-        assert this._remainingBytes >= 0;
+        assert this.remainingBytes >= 0;
     }
     
     private void readZeroes(int amount) {
-        assert amount <= this._remainingBytes;
-        assert amount <= this.bufferSpaceAvailable();
+        assert amount <= this.remainingBytes;
+        assert amount <= this.getBufferSpaceAvailable();
         
-        Arrays.fill(this._buf, this._readOffset + 1, this._readOffset + 1 + amount, (byte) 0);
-        this._readOffset += amount;
-        this._remainingBytes -= amount;
+        Arrays.fill(this.buf, this.readOffset + 1, this.readOffset + 1 + amount, (byte) 0);
+        this.readOffset += amount;
+        this.remainingBytes -= amount;
     }
     
     public void setMarkRelativeToStart(int relativeOffset) {
         assert relativeOffset >= 0;
-        // it's allowed to move 1 passed _endOffset, as length is defined as:
-        // _endOffset - _startOffset + 1
-        assert this._startOffset + relativeOffset <= this._endOffset + 1;
-        this._markOffset = this._startOffset + relativeOffset;
+        // it's allowed to move 1 passed endOffset, as length is defined as:
+        // endOffset - startOffset + 1
+        assert this.startOffset + relativeOffset <= this.endOffset + 1;
+        this.markOffset = this.startOffset + relativeOffset;
     }
     
     /*
-     * slide window to right slideAmount number of bytes _startOffset is increased
-     * by slideAmount _endOffset is set to the minimum of this fileView's window
-     * size and the remaining number of bytes from the file _markOffset position
-     * relative to _startOffset is left unchanged _errorOffset might be set if an IO
-     * error occurred _readOffset will be >= _endOffset and marks the position of
+     * slide window to right slideAmount number of bytes startOffset is increased
+     * by slideAmount endOffset is set to the minimum of this fileView's window
+     * size and the remaining number of bytes from the file markOffset position
+     * relative to startOffset is left unchanged _errorOffset might be set if an IO
+     * error occurred readOffset will be >= endOffset and marks the position of
      * the last available prefetched byte read data might be compacted if there's
      * not enough room left in the buffer
      */
     public void slide(int slideAmount) {
         assert slideAmount >= 0;
-        assert slideAmount <= this.windowLength();
+        assert slideAmount <= this.getWindowLength();
         
-        if (_log.isLoggable(Level.FINEST)) {
-            _log.finest(String.format("sliding %s %d", this, slideAmount));
+        if (LOG.isLoggable(Level.FINEST)) {
+            LOG.finest(String.format("sliding %s %d", this, slideAmount));
         }
         
-        this._startOffset += slideAmount;
-        int windowLength = (int) Math.min(this._windowLength, this.numBytesPrefetched() + this._remainingBytes);
+        this.startOffset += slideAmount;
+        int windowLength = (int) Math.min(this.windowLength, this.getNumBytesPrefetched() + this.remainingBytes);
         assert windowLength >= 0;
-        assert this.numBytesPrefetched() >= 0; // a negative value would imply a skip, which we don't (yet at least) support
-        int minBytesToRead = windowLength - this.numBytesPrefetched();
+        assert this.getNumBytesPrefetched() >= 0; // a negative value would imply a skip, which we don't (yet at least) support
+        int minBytesToRead = windowLength - this.getNumBytesPrefetched();
         
-        if (_log.isLoggable(Level.FINEST)) {
-            _log.finest(String.format("next window length %d, minimum bytes to read %d", windowLength, minBytesToRead));
+        if (LOG.isLoggable(Level.FINEST)) {
+            LOG.finest(String.format("next window length %d, minimum bytes to read %d", windowLength, minBytesToRead));
         }
         
         if (minBytesToRead > 0) {
-            if (minBytesToRead > this.bufferSpaceAvailable()) {
+            if (minBytesToRead > this.getBufferSpaceAvailable()) {
                 this.compact();
             }
             
-            int saveOffset = this._readOffset;
+            int saveOffset = this.readOffset;
             try {
-                if (this._ioError == null) {
-                    this.readBetween(minBytesToRead, (int) Math.min(this._remainingBytes, this.bufferSpaceAvailable()));
+                if (this.ioError == null) {
+                    this.readBetween(minBytesToRead, (int) Math.min(this.remainingBytes, this.getBufferSpaceAvailable()));
                 } else {
                     this.readZeroes(minBytesToRead);
                 }
             } catch (ClosedByInterruptException e) {
                 throw new RuntimeInterruptException(e);
             } catch (IOException e) {
-                this._ioError = e;
-                int numBytesRead = this._readOffset - saveOffset;
+                this.ioError = e;
+                int numBytesRead = this.readOffset - saveOffset;
                 this.readZeroes(minBytesToRead - numBytesRead);
             }
         }
         
-        this._endOffset = this._startOffset + windowLength - 1;
+        this.endOffset = this.startOffset + windowLength - 1;
         
-        assert this.windowLength() == windowLength;
-        assert this._endOffset <= this._readOffset;
+        assert this.getWindowLength() == windowLength;
+        assert this.endOffset <= this.readOffset;
     }
     
     // TODO: the names startOffset and firstOffset are confusingly similar
-    public int startOffset() {
-        assert this._startOffset >= 0;
-        assert this._startOffset <= this._buf.length - 1 || this._is == null;
-        return this._startOffset;
+    public int getStartOffset() {
+        assert this.startOffset >= 0;
+        assert this.startOffset <= this.buf.length - 1 || this.is == null;
+        return this.startOffset;
     }
     
     @Override
     public String toString() {
         return String.format("%s (fileName=%s, startOffset=%d, markOffset=%d," + " endOffset=%d, windowLength=%d, " + "prefetchedOffset=%d, remainingBytes=%d)", this.getClass().getSimpleName(),
-                this._fileName, this._startOffset, this._markOffset, this.endOffset(), this.windowLength(), this._readOffset, this._remainingBytes);
+                this.fileName, this.startOffset, this.markOffset, this.getEndOffset(), this.getWindowLength(), this.readOffset, this.remainingBytes);
     }
     
-    public int totalBytes() {
-        return this._endOffset - this.firstOffset() + 1;
+    public int getTotalBytes() {
+        return this.endOffset - this.getFirstOffset() + 1;
     }
     
     public byte valueAt(int offset) {
-        assert offset >= this.firstOffset();
-        assert offset <= this._endOffset;
-        return this._buf[offset];
+        assert offset >= this.getFirstOffset();
+        assert offset <= this.endOffset;
+        return this.buf[offset];
     }
     
-    public int windowLength() {
-        int length = this._endOffset - this._startOffset + 1;
+    public int getWindowLength() {
+        int length = this.endOffset - this.startOffset + 1;
         assert length >= 0;
-        assert length <= this._windowLength : length + " maxWindowLength=" + this._windowLength;
+        assert length <= this.windowLength : length + " maxWindowLength=" + this.windowLength;
         return length;
     }
 }

@@ -45,26 +45,26 @@ public class TextEncoder {
         return instance;
     }
     
-    private final CharsetEncoder _encoder;
+    private final CharsetEncoder encoder;
     
     private TextEncoder(CharsetEncoder encoder) {
-        this._encoder = encoder;
+        this.encoder = encoder;
     }
     
     public Charset charset() {
-        return this._encoder.charset();
+        return this.encoder.charset();
     }
     
     /**
      * @throws TextConversionException
      */
     private byte[] encode(CharBuffer input, ErrorPolicy errorPolicy, MemoryPolicy memoryPolicy) {
-        this._encoder.reset();
-        ByteBuffer output = ByteBuffer.allocate((int) Math.ceil(input.capacity() * this._encoder.averageBytesPerChar()));
+        this.encoder.reset();
+        ByteBuffer output = ByteBuffer.allocate((int) Math.ceil(input.capacity() * this.encoder.averageBytesPerChar()));
         try {
             CoderResult result;
             while (true) {
-                result = this._encoder.encode(input, output, true);
+                result = this.encoder.encode(input, output, true);
                 if (result.isOverflow()) {
                     output = Util.enlargeByteBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE);
                 } else {
@@ -73,7 +73,7 @@ public class TextEncoder {
             }
             
             while (!result.isError()) {
-                result = this._encoder.flush(output);
+                result = this.encoder.flush(output);
                 if (result.isOverflow()) {
                     output = Util.enlargeByteBuffer(output, memoryPolicy, Consts.MAX_BUF_SIZE);
                 } else {
@@ -87,7 +87,7 @@ public class TextEncoder {
             
             if (errorPolicy == ErrorPolicy.THROW) { // NOTE: in some circumstances we should avoid printing the contents
                 input.limit(input.position() + result.length());
-                throw new TextConversionException(String.format("failed to encode %d bytes after %s (using %s): %s -> %s", result.length(), output.flip().toString(), this._encoder.charset(),
+                throw new TextConversionException(String.format("failed to encode %d bytes after %s (using %s): %s -> %s", result.length(), output.flip().toString(), this.encoder.charset(),
                         Text.charBufferToString(input), result));
             }
             return null;

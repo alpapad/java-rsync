@@ -21,35 +21,35 @@ import java.util.Objects;
 import com.github.perlundq.yajsync.RsyncServer;
 import com.github.perlundq.yajsync.internal.util.Environment;
 
-final class ConnInfo {
+final class ConnectionInfo {
     public static class Builder {
-        private final String _address;
-        private int _portNumber = RsyncServer.DEFAULT_LISTEN_PORT;
-        private String _userName = Environment.getUserName();
+        private final String address;
+        private int portNumber = RsyncServer.DEFAULT_LISTEN_PORT;
+        private String userName = Environment.getUserName();
         
         public Builder(String address) throws IllegalUrlException {
             assert address != null;
             if (address.isEmpty()) {
                 throw new IllegalUrlException("address is empty");
             }
-            this._address = address;
+            this.address = address;
         }
         
-        public ConnInfo build() {
-            return new ConnInfo(this);
+        public ConnectionInfo build() {
+            return new ConnectionInfo(this);
         }
         
         public Builder portNumber(int portNumber) throws IllegalUrlException {
             if (!isValidPortNumber(portNumber)) {
                 throw new IllegalUrlException(String.format("illegal port %d - must be within the range [%d, %d]", portNumber, PORT_MIN, PORT_MAX));
             }
-            this._portNumber = portNumber;
+            this.portNumber = portNumber;
             return this;
         }
         
         public Builder userName(String userName) {
             assert userName != null;
-            this._userName = userName;
+            this.userName = userName;
             return this;
         }
     }
@@ -61,46 +61,46 @@ final class ConnInfo {
         return portNumber >= PORT_MIN && portNumber <= PORT_MAX;
     }
     
-    private final String _address;
+    private final String address;
     
-    private final int _portNumber;
+    private final int portNumber;
     
-    private final String _userName;
+    private final String userName;
     
-    private ConnInfo(Builder builder) {
-        this._userName = builder._userName;
-        this._address = builder._address;
-        this._portNumber = builder._portNumber;
+    private ConnectionInfo(Builder builder) {
+        this.userName = builder.userName;
+        this.address = builder.address;
+        this.portNumber = builder.portNumber;
     }
     
-    public String address() {
-        return this._address;
+    public String getAddress() {
+        return this.address;
     }
     
     @Override
     public boolean equals(Object obj) {
         if (obj != null && this.getClass() == obj.getClass()) {
-            ConnInfo other = (ConnInfo) obj;
-            return this._userName.equals(other._userName) && this._address.equals(other._address) && this._portNumber == other._portNumber;
+            ConnectionInfo other = (ConnectionInfo) obj;
+            return this.userName.equals(other.userName) && this.address.equals(other.address) && this.portNumber == other.portNumber;
         }
         return false;
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(this._address, this._userName, this._portNumber);
+        return Objects.hash(this.address, this.userName, this.portNumber);
     }
     
-    public int portNumber() {
-        return this._portNumber;
+    public int getPortNumber() {
+        return this.portNumber;
     }
     
     @Override
     public String toString() {
-        return String.format("rsync://%s%s:%d", this._userName.isEmpty() ? "" : this._userName + "@", this._address, this._portNumber);
+        return String.format("rsync://%s%s:%d", this.userName.isEmpty() ? "" : this.userName + "@", this.address, this.portNumber);
     }
     
-    public String userName() {
-        return this._userName;
+    public String getUserName() {
+        return this.userName;
     }
 }

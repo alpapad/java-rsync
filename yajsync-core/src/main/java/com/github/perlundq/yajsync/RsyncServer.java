@@ -38,13 +38,13 @@ import com.github.perlundq.yajsync.server.module.Modules;
 
 public class RsyncServer {
     public static class Builder {
-        private Charset _charset = Charset.forName(Text.UTF8_NAME);
-        private ExecutorService _executorService;
-        private boolean _isDeferWrite;
+        private Charset charset = Charset.forName(Text.UTF8_NAME);
+        private ExecutorService executorService;
+        private boolean deferWrite;
         
         public RsyncServer build(ExecutorService executorService) {
             assert executorService != null;
-            this._executorService = executorService;
+            this.executorService = executorService;
             return new RsyncServer(this);
         }
         
@@ -55,53 +55,78 @@ public class RsyncServer {
         public Builder charset(Charset charset) {
             assert charset != null;
             Util.validateCharset(charset);
-            this._charset = charset;
+            this.charset = charset;
             return this;
         }
         
         public Builder isDeferWrite(boolean isDeferWrite) {
-            this._isDeferWrite = isDeferWrite;
+            this.deferWrite = isDeferWrite;
             return this;
         }
     }
     
     public static final int DEFAULT_LISTEN_PORT = 2873;
     
-    private final Charset _charset;
-    private final boolean _isDeferWrite;
-    private final RsyncTaskExecutor _rsyncTaskExecutor;
+    private final Charset charset;
+    private final boolean deferWrite;
+    private final RsyncTaskExecutor rsyncTaskExecutor;
     
     private RsyncServer(Builder builder) {
-        this._isDeferWrite = builder._isDeferWrite;
-        this._charset = builder._charset;
-        this._rsyncTaskExecutor = new RsyncTaskExecutor(builder._executorService);
+        this.deferWrite = builder.deferWrite;
+        this.charset = builder.charset;
+        this.rsyncTaskExecutor = new RsyncTaskExecutor(builder.executorService);
     }
     
     public boolean serve(Modules modules, ReadableByteChannel in, WritableByteChannel out, boolean isChannelsInterruptible) throws RsyncException, InterruptedException {
         assert modules != null;
         assert in != null;
         assert out != null;
-        ServerSessionConfig cfg = ServerSessionConfig.handshake(this._charset, // throws IllegalArgumentException if _charset is not supported
-                in, out, modules);
-        if (cfg.status() == SessionStatus.ERROR) {
+        // throws IllegalArgumentException if charset is not supported
+        ServerSessionConfig cfg = ServerSessionConfig.handshake(this.charset, in, out, modules);
+        if (cfg.getStatus() == SessionStatus.ERROR) {
             return false;
-        } else if (cfg.status() == SessionStatus.EXIT) {
+        } else if (cfg.getStatus() == SessionStatus.EXIT) {
             return true;
         }
         
         if (cfg.isSender()) {
-            Sender sender = Sender.Builder.newServer(in, out, cfg.sourceFiles(), cfg.checksumSeed()).filterMode(FilterMode.RECEIVE).charset(cfg.charset()).fileSelection(cfg.fileSelection())
-                    .isPreserveDevices(cfg.isPreserveDevices()).isPreserveSpecials(cfg.isPreserveSpecials()).isPreserveLinks(cfg.isPreserveLinks()).isPreserveUser(cfg.isPreserveUser())
-                    .isPreserveGroup(cfg.isPreserveGroup()).isNumericIds(cfg.isNumericIds()).isInterruptible(isChannelsInterruptible).isSafeFileList(cfg.isSafeFileList()).build();
-            return this._rsyncTaskExecutor.exec(sender);
+            Sender sender = Sender.Builder.newServer(in, out, cfg.getSourceFiles(), cfg.getChecksumSeed())//
+                    .filterMode(FilterMode.RECEIVE)//
+                    .charset(cfg.getCharset())//
+                    .fileSelection(cfg.fileSelection())//
+                    .isPreserveDevices(cfg.isPreserveDevices())//
+                    .isPreserveSpecials(cfg.isPreserveSpecials())//
+                    .isPreserveLinks(cfg.isPreserveLinks())//
+                    .isPreserveUser(cfg.isPreserveUser())//
+                    .isPreserveGroup(cfg.isPreserveGroup())//
+                    .isNumericIds(cfg.isNumericIds())//
+                    .isInterruptible(isChannelsInterruptible)//
+                    .isSafeFileList(cfg.isSafeFileList())//
+                    .build();
+            return this.rsyncTaskExecutor.exec(sender);
         } else {
-            Generator generator = new Generator.Builder(out, cfg.checksumSeed()).charset(cfg.charset()).fileSelection(cfg.fileSelection()).isDelete(cfg.isDelete())
-                    .isPreserveDevices(cfg.isPreserveDevices()).isPreserveSpecials(cfg.isPreserveSpecials()).isPreserveLinks(cfg.isPreserveLinks()).isPreservePermissions(cfg.isPreservePermissions())
-                    .isPreserveTimes(cfg.isPreserveTimes()).isPreserveUser(cfg.isPreserveUser()).isPreserveGroup(cfg.isPreserveGroup()).isNumericIds(cfg.isNumericIds())
-                    .isIgnoreTimes(cfg.isIgnoreTimes()).isAlwaysItemize(cfg.verbosity() > 1).isInterruptible(isChannelsInterruptible).build();
-            Receiver receiver = Receiver.Builder.newServer(generator, in, cfg.getReceiverDestination()).filterMode(cfg.isDelete() ? FilterMode.RECEIVE : FilterMode.NONE)
-                    .isDeferWrite(this._isDeferWrite).isSafeFileList(cfg.isSafeFileList()).build();
-            return this._rsyncTaskExecutor.exec(generator, receiver);
+            Generator generator = new Generator.Builder(out, cfg.getChecksumSeed())//
+                    .charset(cfg.getCharset())//
+                    .fileSelection(cfg.fileSelection())//
+                    .isDelete(cfg.isDelete())//
+                    .isPreserveDevices(cfg.isPreserveDevices())//
+                    .isPreserveSpecials(cfg.isPreserveSpecials())//
+                    .isPreserveLinks(cfg.isPreserveLinks())//
+                    .isPreservePermissions(cfg.isPreservePermissions())//
+                    .isPreserveTimes(cfg.isPreserveTimes()).isPreserveUser(cfg.isPreserveUser())//
+                    .isPreserveGroup(cfg.isPreserveGroup())//
+                    .isNumericIds(cfg.isNumericIds())//
+                    .isIgnoreTimes(cfg.isIgnoreTimes())//
+                    .isAlwaysItemize(cfg.getVerbosity() > 1)//
+                    .isInterruptible(isChannelsInterruptible)//
+                    .build();
+            
+            Receiver receiver = Receiver.Builder.newServer(generator, in, cfg.getReceiverDestination())//
+                    .filterMode(cfg.isDelete() ? FilterMode.RECEIVE : FilterMode.NONE)//
+                    .isDeferWrite(this.deferWrite)//
+                    .isSafeFileList(cfg.isSafeFileList())//
+                    .build();
+            return this.rsyncTaskExecutor.exec(generator, receiver);
         }
     }
 }

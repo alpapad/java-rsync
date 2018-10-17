@@ -82,56 +82,56 @@ public final class Sender implements RsyncTask, MessageHandler {
     public static class Builder {
         public static Builder newClient(ReadableByteChannel in, WritableByteChannel out, Iterable<Path> sourceFiles, byte[] checksumSeed) {
             Builder builder = new Builder(in, out, sourceFiles, checksumSeed);
-            builder._isSendStatistics = false;
-            builder._isExitEarlyIfEmptyList = false;
-            builder._isExitAfterEOF = true;
+            builder.sendStatistics = false;
+            builder.exitEarlyIfEmptyList = false;
+            builder.exitAfterEOF = true;
             return builder;
             
         }
         
         public static Builder newServer(ReadableByteChannel in, WritableByteChannel out, Iterable<Path> sourceFiles, byte[] checksumSeed) {
             Builder builder = new Builder(in, out, sourceFiles, checksumSeed);
-            builder._isSendStatistics = true;
-            builder._isExitEarlyIfEmptyList = true;
-            builder._isExitAfterEOF = false;
+            builder.sendStatistics = true;
+            builder.exitEarlyIfEmptyList = true;
+            builder.exitAfterEOF = false;
             return builder;
         }
         
-        private Charset _charset = Charset.forName(Text.UTF8_NAME);
-        private final byte[] _checksumSeed;
-        public int _defaultDirectoryPermissions = Environment.DEFAULT_DIR_PERMS;
-        public int _defaultFilePermissions = Environment.DEFAULT_FILE_PERMS;
-        public Group _defaultGroup = Group.NOBODY;
-        public User _defaultUser = User.NOBODY;
-        private FileSelection _fileSelection = FileSelection.EXACT;
-        private FilterMode _filterMode = FilterMode.NONE;
-        private FilterRuleConfiguration _filterRuleConfiguration;
-        private final ReadableByteChannel _in;
-        private boolean _isExitAfterEOF;
-        private boolean _isExitEarlyIfEmptyList;
-        private boolean _isInterruptible = true;
-        private boolean _isNumericIds;
-        private boolean _isPreserveDevices;
-        private boolean _isPreserveGroup;
-        private boolean _isPreserveLinks;
-        private boolean _isPreserveSpecials;
-        private boolean _isPreserveUser;
-        private boolean _isSafeFileList = true;
-        private boolean _isSendStatistics;
+        private Charset charset = Charset.forName(Text.UTF8_NAME);
+        private final byte[] checksumSeed;
+        public int defaultDirectoryPermissions = Environment.DEFAULT_DIR_PERMS;
+        public int defaultFilePermissions = Environment.DEFAULT_FILE_PERMS;
+        public Group defaultGroup = Group.NOBODY;
+        public User defaultUser = User.NOBODY;
+        private FileSelection fileSelection = FileSelection.EXACT;
+        private FilterMode filterMode = FilterMode.NONE;
+        private FilterRuleConfiguration filterRuleConfiguration;
+        private final ReadableByteChannel in;
+        private boolean exitAfterEOF;
+        private boolean exitEarlyIfEmptyList;
+        private boolean interruptible = true;
+        private boolean numericIds;
+        private boolean preserveDevices;
+        private boolean preserveGroup;
+        private boolean preserveLinks;
+        private boolean preserveSpecials;
+        private boolean preserveUser;
+        private boolean safeFileList = true;
+        private boolean sendStatistics;
         
-        private final WritableByteChannel _out;
+        private final WritableByteChannel out;
         
-        private final Iterable<Path> _sourceFiles;
+        private final Iterable<Path> sourceFiles;
         
         public Builder(ReadableByteChannel in, WritableByteChannel out, Iterable<Path> sourceFiles, byte[] checksumSeed) {
             assert in != null;
             assert out != null;
             assert sourceFiles != null;
             assert checksumSeed != null;
-            this._in = in;
-            this._out = out;
-            this._sourceFiles = sourceFiles;
-            this._checksumSeed = checksumSeed;
+            this.in = in;
+            this.out = out;
+            this.sourceFiles = sourceFiles;
+            this.checksumSeed = checksumSeed;
         }
         
         public Sender build() {
@@ -140,94 +140,94 @@ public final class Sender implements RsyncTask, MessageHandler {
         
         public Builder charset(Charset charset) {
             assert charset != null;
-            this._charset = charset;
+            this.charset = charset;
             return this;
         }
         
         public Builder defaultDirectoryPermissions(int defaultDirectoryPermissions) {
-            this._defaultDirectoryPermissions = defaultDirectoryPermissions;
+            this.defaultDirectoryPermissions = defaultDirectoryPermissions;
             return this;
         }
         
         public Builder defaultFilePermissions(int defaultFilePermissions) {
-            this._defaultFilePermissions = defaultFilePermissions;
+            this.defaultFilePermissions = defaultFilePermissions;
             return this;
         }
         
         public Builder defaultGroup(Group defaultGroup) {
-            this._defaultGroup = defaultGroup;
+            this.defaultGroup = defaultGroup;
             return this;
         }
         
         public Builder defaultUser(User defaultUser) {
-            this._defaultUser = defaultUser;
+            this.defaultUser = defaultUser;
             return this;
         }
         
         public Builder fileSelection(FileSelection fileSelection) {
             assert fileSelection != null;
-            this._fileSelection = fileSelection;
+            this.fileSelection = fileSelection;
             return this;
         }
         
         public Builder filterMode(FilterMode filterMode) {
             assert filterMode != null;
-            this._filterMode = filterMode;
+            this.filterMode = filterMode;
             return this;
         }
         
         public Builder isExitEarlyIfEmptyList(boolean isExitEarlyIfEmptyList) {
-            this._isExitEarlyIfEmptyList = isExitEarlyIfEmptyList;
+            this.exitEarlyIfEmptyList = isExitEarlyIfEmptyList;
             return this;
         }
         
         public Builder isInterruptible(boolean isInterruptible) {
-            this._isInterruptible = isInterruptible;
+            this.interruptible = isInterruptible;
             return this;
         }
         
         public Builder isNumericIds(boolean isNumericIds) {
-            this._isNumericIds = isNumericIds;
+            this.numericIds = isNumericIds;
             return this;
         }
         
         public Builder isPreserveDevices(boolean isPreserveDevices) {
-            this._isPreserveDevices = isPreserveDevices;
+            this.preserveDevices = isPreserveDevices;
             return this;
         }
         
         public Builder isPreserveGroup(boolean isPreserveGroup) {
-            this._isPreserveGroup = isPreserveGroup;
+            this.preserveGroup = isPreserveGroup;
             return this;
         }
         
         public Builder isPreserveLinks(boolean isPreserveLinks) {
-            this._isPreserveLinks = isPreserveLinks;
+            this.preserveLinks = isPreserveLinks;
             return this;
         }
         
         public Builder isPreserveSpecials(boolean isPreserveSpecials) {
-            this._isPreserveSpecials = isPreserveSpecials;
+            this.preserveSpecials = isPreserveSpecials;
             return this;
         }
         
         public Builder isPreserveUser(boolean isPreserveUser) {
-            this._isPreserveUser = isPreserveUser;
+            this.preserveUser = isPreserveUser;
             return this;
         }
         
         public Builder isSafeFileList(boolean isSafeFileList) {
-            this._isSafeFileList = isSafeFileList;
+            this.safeFileList = isSafeFileList;
             return this;
         }
         
         public Builder filterRuleConfiguration(FilterRuleConfiguration filterRuleConfiguration) {
-            this._filterRuleConfiguration = filterRuleConfiguration;
+            this.filterRuleConfiguration = filterRuleConfiguration;
             return this;
         }
     }
     
-    private static final Logger _log = Logger.getLogger(Sender.class.getName());
+    private static final Logger LOG = Logger.getLogger(Sender.class.getName());
     private static final int CHUNK_SIZE = 8 * 1024;
     private static final int INPUT_CHANNEL_BUF_SIZE = 8 * 1024;
     private static final int OUTPUT_CHANNEL_BUF_SIZE = 8 * 1024;
@@ -245,85 +245,85 @@ public final class Sender implements RsyncTask, MessageHandler {
         return index;
     }
     
-    private final TextDecoder _characterDecoder;
-    private final TextEncoder _characterEncoder;
-    private final byte[] _checksumSeed;
-    private int _curSegmentIndex;
-    private final int _defaultDirectoryPermissions;
-    private final int _defaultFilePermissions;
-    private final Group _defaultGroup;
-    private final User _defaultUser;
-    private final AutoFlushableRsyncDuplexChannel _duplexChannel;
-    private FileAttributeManager _fileAttributeManager;
-    private final FileInfoCache _fileInfoCache = new FileInfoCache();
-    private final FileSelection _fileSelection;
-    private final FilterMode _filterMode;
-    private final FilterRuleConfiguration _filterRuleConfiguration;
-    private int _ioError;
-    private final boolean _isExitAfterEOF;
-    private final boolean _isExitEarlyIfEmptyList;
-    private final boolean _isInterruptible;
-    private final boolean _isNumericIds;
-    private final boolean _isPreserveDevices;
-    private final boolean _isPreserveGroup;
-    private final boolean _isPreserveLinks;
-    private final boolean _isPreserveSpecials;
-    private final boolean _isPreserveUser;
-    private final boolean _isSafeFileList;
-    private final boolean _isSendStatistics;
+    private final TextDecoder characterDecoder;
+    private final TextEncoder characterEncoder;
+    private final byte[] checksumSeed;
+    private int curSegmentIndex;
+    private final int defaultDirectoryPermissions;
+    private final int defaultFilePermissions;
+    private final Group defaultGroup;
+    private final User defaultUser;
+    private final AutoFlushableRsyncDuplexChannel duplexChannel;
+    private FileAttributeManager fileAttributeManager;
+    private final FileInfoCache fileInfoCache = new FileInfoCache();
+    private final FileSelection fileSelection;
+    private final FilterMode filterMode;
+    private final FilterRuleConfiguration filterRuleConfiguration;
+    private int ioError;
+    private final boolean exitAfterEOF;
+    private final boolean exitEarlyIfEmptyList;
+    private final boolean interruptible;
+    private final boolean numericIds;
+    private final boolean preserveDevices;
+    private final boolean preserveGroup;
+    private final boolean preserveLinks;
+    private final boolean preserveSpecials;
+    private final boolean preserveUser;
+    private final boolean safeFileList;
+    private final boolean sendStatistics;
     
-    private final Iterable<Path> _sourceFiles;
-    private final SessionStatistics _stats = new SessionStatistics();
-    private final BitSet _transferred = new BitSet();
+    private final Iterable<Path> sourceFiles;
+    private final SessionStatistics stats = new SessionStatistics();
+    private final BitSet transferred = new BitSet();
     
-    private final Set<Group> _transferredGroupNames = new LinkedHashSet<>();
+    private final Set<Group> transferredGroupNames = new LinkedHashSet<>();
     
-    private final Set<User> _transferredUserNames = new LinkedHashSet<>();
+    private final Set<User> transferredUserNames = new LinkedHashSet<>();
     
     private Sender(Builder builder) {
-        this._duplexChannel = new AutoFlushableRsyncDuplexChannel(new RsyncInChannel(builder._in, this, INPUT_CHANNEL_BUF_SIZE), new RsyncOutChannel(builder._out, OUTPUT_CHANNEL_BUF_SIZE));
-        this._isExitAfterEOF = builder._isExitAfterEOF;
-        this._isExitEarlyIfEmptyList = builder._isExitEarlyIfEmptyList;
-        this._isInterruptible = builder._isInterruptible;
-        this._isPreserveDevices = builder._isPreserveDevices;
-        this._isPreserveLinks = builder._isPreserveLinks;
-        this._isPreserveSpecials = builder._isPreserveSpecials;
-        this._isPreserveUser = builder._isPreserveUser;
-        this._isPreserveGroup = builder._isPreserveGroup;
-        this._isNumericIds = builder._isNumericIds;
-        this._isSafeFileList = builder._isSafeFileList;
-        this._isSendStatistics = builder._isSendStatistics;
-        this._checksumSeed = builder._checksumSeed;
-        this._fileSelection = builder._fileSelection;
-        this._filterMode = builder._filterMode;
-        this._filterRuleConfiguration = builder._filterRuleConfiguration;
-        this._sourceFiles = builder._sourceFiles;
-        this._characterDecoder = TextDecoder.newStrict(builder._charset);
-        this._characterEncoder = TextEncoder.newStrict(builder._charset);
-        this._defaultUser = builder._defaultUser;
-        this._defaultGroup = builder._defaultGroup;
-        this._defaultFilePermissions = builder._defaultFilePermissions;
-        this._defaultDirectoryPermissions = builder._defaultDirectoryPermissions;
+        this.duplexChannel = new AutoFlushableRsyncDuplexChannel(new RsyncInChannel(builder.in, this, INPUT_CHANNEL_BUF_SIZE), new RsyncOutChannel(builder.out, OUTPUT_CHANNEL_BUF_SIZE));
+        this.exitAfterEOF = builder.exitAfterEOF;
+        this.exitEarlyIfEmptyList = builder.exitEarlyIfEmptyList;
+        this.interruptible = builder.interruptible;
+        this.preserveDevices = builder.preserveDevices;
+        this.preserveLinks = builder.preserveLinks;
+        this.preserveSpecials = builder.preserveSpecials;
+        this.preserveUser = builder.preserveUser;
+        this.preserveGroup = builder.preserveGroup;
+        this.numericIds = builder.numericIds;
+        this.safeFileList = builder.safeFileList;
+        this.sendStatistics = builder.sendStatistics;
+        this.checksumSeed = builder.checksumSeed;
+        this.fileSelection = builder.fileSelection;
+        this.filterMode = builder.filterMode;
+        this.filterRuleConfiguration = builder.filterRuleConfiguration;
+        this.sourceFiles = builder.sourceFiles;
+        this.characterDecoder = TextDecoder.newStrict(builder.charset);
+        this.characterEncoder = TextEncoder.newStrict(builder.charset);
+        this.defaultUser = builder.defaultUser;
+        this.defaultGroup = builder.defaultGroup;
+        this.defaultFilePermissions = builder.defaultFilePermissions;
+        this.defaultDirectoryPermissions = builder.defaultDirectoryPermissions;
     }
     
     @Override
     public Boolean call() throws ChannelException, InterruptedException, RsyncProtocolException {
-        Filelist fileList = new Filelist(this._fileSelection == FileSelection.RECURSE, false);
+        Filelist fileList = new Filelist(this.fileSelection == FileSelection.RECURSE, false);
         FilterRuleConfiguration filterRuleConfiguration;
         try {
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(this.toString());
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(this.toString());
             }
             
-            if (this._filterMode == FilterMode.RECEIVE) {
+            if (this.filterMode == FilterMode.RECEIVE) {
                 // read remote filter rules if server
                 try {
                     filterRuleConfiguration = new FilterRuleConfiguration(this.receiveFilterRules());
                 } catch (ArgumentParsingError e) {
                     throw new RsyncProtocolException(e);
                 }
-            } else if (this._filterMode == FilterMode.SEND) {
-                filterRuleConfiguration = this._filterRuleConfiguration;
+            } else if (this.filterMode == FilterMode.SEND) {
+                filterRuleConfiguration = this.filterRuleConfiguration;
                 this.sendFilterRules();
             } else {
                 try {
@@ -335,18 +335,18 @@ public final class Sender implements RsyncTask, MessageHandler {
             
             long t1 = System.currentTimeMillis();
             
-            StatusResult<List<FileInfo>> expandResult = this.initialExpand(this._sourceFiles, filterRuleConfiguration);
+            StatusResult<List<FileInfo>> expandResult = this.initialExpand(this.sourceFiles, filterRuleConfiguration);
             boolean isInitialListOK = expandResult.isOK();
             Filelist.SegmentBuilder builder = new Filelist.SegmentBuilder(null);
-            builder.addAll(expandResult.value());
+            builder.addAll(expandResult.getValue());
             Filelist.Segment initialSegment = fileList.newSegment(builder);
-            long numBytesWritten = this._duplexChannel.numBytesWritten();
-            for (FileInfo f : initialSegment.files()) {
+            long numBytesWritten = this.duplexChannel.numBytesWritten();
+            for (FileInfo f : initialSegment.getFiles()) {
                 this.sendFileMetaData((LocatableFileInfo) f);
             }
             long t2 = System.currentTimeMillis();
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine("expanded segment: " + initialSegment.toString());
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("expanded segment: " + initialSegment.toString());
             }
             if (isInitialListOK) {
                 this.sendSegmentDone();
@@ -355,72 +355,72 @@ public final class Sender implements RsyncTask, MessageHandler {
             }
             long t3 = System.currentTimeMillis();
             
-            if (this._isPreserveUser && !this._isNumericIds && this._fileSelection != FileSelection.RECURSE) {
+            if (this.preserveUser && !this.numericIds && this.fileSelection != FileSelection.RECURSE) {
                 this.sendUserList();
             }
-            if (this._isPreserveGroup && !this._isNumericIds && this._fileSelection != FileSelection.RECURSE) {
+            if (this.preserveGroup && !this.numericIds && this.fileSelection != FileSelection.RECURSE) {
                 this.sendGroupList();
             }
             
-            this._stats._fileListBuildTime = Math.max(1, t2 - t1);
-            this._stats._fileListTransferTime = Math.max(0, t3 - t2);
-            long segmentSize = this._duplexChannel.numBytesWritten() - numBytesWritten;
-            this._stats._totalFileListSize += segmentSize;
-            if (!this._isSafeFileList && !isInitialListOK) {
+            this.stats.fileListBuildTime = Math.max(1, t2 - t1);
+            this.stats.fileListTransferTime = Math.max(0, t3 - t2);
+            long segmentSize = this.duplexChannel.numBytesWritten() - numBytesWritten;
+            this.stats.totalFileListSize += segmentSize;
+            if (!this.safeFileList && !isInitialListOK) {
                 this.sendIntMessage(MessageCode.IO_ERROR, IoError.GENERAL);
             }
             
-            if (initialSegment.isFinished() && this._isExitEarlyIfEmptyList) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine("empty file list - exiting early");
+            if (initialSegment.isFinished() && this.exitEarlyIfEmptyList) {
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine("empty file list - exiting early");
                 }
-                if (this._fileSelection == FileSelection.RECURSE) {
-                    this._duplexChannel.encodeIndex(Filelist.EOF);
+                if (this.fileSelection == FileSelection.RECURSE) {
+                    this.duplexChannel.encodeIndex(Filelist.EOF);
                 }
-                this._duplexChannel.flush();
-                if (this._isExitAfterEOF) {
+                this.duplexChannel.flush();
+                if (this.exitAfterEOF) {
                     this.readAllMessagesUntilEOF();
                 }
-                return isInitialListOK && this._ioError == 0;
+                return isInitialListOK && this.ioError == 0;
             }
             
             int ioError = this.sendFiles(fileList, filterRuleConfiguration);
             if (ioError != 0) {
                 this.sendIntMessage(MessageCode.IO_ERROR, ioError);
             }
-            this._duplexChannel.encodeIndex(Filelist.DONE);
+            this.duplexChannel.encodeIndex(Filelist.DONE);
             
             // we update the statistics in finally clause to guarantee that the
             // statistics are updated even if there's an error
-            if (this._isSendStatistics) {
-                this._stats._totalFileSize = fileList.totalFileSize();
-                this._stats._totalBytesRead = this._duplexChannel.numBytesRead();
-                this._stats._totalBytesWritten = this._duplexChannel.numBytesWritten();
-                this._stats._numFiles = fileList.numFiles();
-                this.sendStatistics(this._stats);
+            if (this.sendStatistics) {
+                this.stats.totalFileSize = fileList.getTotalFileSize();
+                this.stats.totalBytesRead = this.duplexChannel.numBytesRead();
+                this.stats.totalBytesWritten = this.duplexChannel.numBytesWritten();
+                this.stats.numFiles = fileList.getNumFiles();
+                this.sendStatistics(this.stats);
             }
             
-            int index = this._duplexChannel.decodeIndex();
+            int index = this.duplexChannel.decodeIndex();
             if (index != Filelist.DONE) {
                 throw new RsyncProtocolException(String.format("Invalid packet at end of run (%d)", index));
             }
-            if (this._isExitAfterEOF) {
+            if (this.exitAfterEOF) {
                 this.readAllMessagesUntilEOF();
             }
-            return isInitialListOK && (ioError | this._ioError) == 0;
+            return isInitialListOK && (ioError | this.ioError) == 0;
         } catch (RuntimeInterruptException e) {
             throw new InterruptedException();
         } finally {
-            this._stats._totalFileSize = fileList.totalFileSize();
-            this._stats._totalBytesRead = this._duplexChannel.numBytesRead();
-            this._stats._totalBytesWritten = this._duplexChannel.numBytesWritten();
-            this._stats._numFiles = fileList.numFiles();
+            this.stats.totalFileSize = fileList.getTotalFileSize();
+            this.stats.totalBytesRead = this.duplexChannel.numBytesRead();
+            this.stats.totalBytesWritten = this.duplexChannel.numBytesWritten();
+            this.stats.numFiles = fileList.getNumFiles();
         }
     }
     
     @Override
     public void closeChannel() throws ChannelException {
-        this._duplexChannel.close();
+        this.duplexChannel.close();
     }
     
     private StatusResult<List<FileInfo>> expand(LocatableFileInfo directory, FilterRuleConfiguration parentFilterRuleConfiguration) throws ChannelException {
@@ -428,16 +428,16 @@ public final class Sender implements RsyncTask, MessageHandler {
         
         List<FileInfo> fileset = new ArrayList<>();
         boolean isOK = true;
-        final Path dir = directory.path();
+        final Path dir = directory.getPath();
         final Path localDir = this.localPathTo(directory);
         // that should never happen
         
         FilterRuleConfiguration localFilterRuleConfiguration;
         try {
-            localFilterRuleConfiguration = new FilterRuleConfiguration(parentFilterRuleConfiguration, directory.path());
+            localFilterRuleConfiguration = new FilterRuleConfiguration(parentFilterRuleConfiguration, directory.getPath());
         } catch (ArgumentParsingError e) {
-            if (_log.isLoggable(Level.WARNING)) {
-                _log.warning(String.format("Got argument parsing error " + "at %s: %s", directory.path(), e.getMessage()));
+            if (LOG.isLoggable(Level.WARNING)) {
+                LOG.warning(String.format("Got argument parsing error " + "at %s: %s", directory.getPath(), e.getMessage()));
             }
             isOK = false;
             return new StatusResult<>(isOK, fileset);
@@ -448,30 +448,30 @@ public final class Sender implements RsyncTask, MessageHandler {
             for (Path entry : stream) {
                 if (!PathOps.isPathPreservable(entry.getFileName())) {
                     String msg = String.format("Skipping %s - unable to " + "preserve file name", entry.getFileName());
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning(msg);
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning(msg);
                     }
-                    this._duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                    this.duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
                     isOK = false;
                     continue;
                 }
                 
                 RsyncFileAttributes attrs;
                 try {
-                    attrs = this._fileAttributeManager.stat(entry);
+                    attrs = this.fileAttributeManager.stat(entry);
                 } catch (IOException e) {
                     String msg = String.format("Failed to stat %s: %s", entry, e.getMessage());
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning(msg);
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning(msg);
                     }
-                    this._duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                    this.duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
                     isOK = false;
                     continue;
                 }
                 
                 Path relativePath = localDir.relativize(entry).normalize();
                 String relativePathName = Text.withSlashAsPathSepator(relativePath);
-                byte[] pathNameBytes = this._characterEncoder.encodeOrNull(relativePathName);
+                byte[] pathNameBytes = this.characterEncoder.encodeOrNull(relativePathName);
                 if (pathNameBytes != null) {
                     // use filter
                     if (filterByRules) {
@@ -485,23 +485,23 @@ public final class Sender implements RsyncTask, MessageHandler {
                     }
                     
                     LocatableFileInfo f;
-                    if (this._isPreserveLinks && attrs.isSymbolicLink()) {
+                    if (this.preserveLinks && attrs.isSymbolicLink()) {
                         Path symlinkTarget = FileOps.readLinkTarget(entry);
                         f = new LocatableSymlinkInfoImpl(relativePathName, pathNameBytes, attrs, symlinkTarget.toString(), entry);
-                    } else if (this._isPreserveDevices && (attrs.isBlockDevice() || attrs.isCharacterDevice())) {
-                        String msg = String.format("unable to retrieve major and minor ID of " + "%s %s", FileOps.fileTypeToString(attrs.mode()), entry);
-                        if (_log.isLoggable(Level.WARNING)) {
-                            _log.warning(msg);
+                    } else if (this.preserveDevices && (attrs.isBlockDevice() || attrs.isCharacterDevice())) {
+                        String msg = String.format("unable to retrieve major and minor ID of " + "%s %s", FileOps.fileTypeToString(attrs.getMode()), entry);
+                        if (LOG.isLoggable(Level.WARNING)) {
+                            LOG.warning(msg);
                         }
-                        this._duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                        this.duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
                         isOK = false;
                         continue;
-                    } else if (this._isPreserveSpecials && (attrs.isFifo() || attrs.isSocket())) {
-                        String msg = String.format("unable to retrieve major ID of %s %s", FileOps.fileTypeToString(attrs.mode()), entry);
-                        if (_log.isLoggable(Level.WARNING)) {
-                            _log.warning(msg);
+                    } else if (this.preserveSpecials && (attrs.isFifo() || attrs.isSocket())) {
+                        String msg = String.format("unable to retrieve major ID of %s %s", FileOps.fileTypeToString(attrs.getMode()), entry);
+                        if (LOG.isLoggable(Level.WARNING)) {
+                            LOG.warning(msg);
                         }
-                        this._duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                        this.duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
                         isOK = false;
                         continue;
                     } else {
@@ -510,30 +510,30 @@ public final class Sender implements RsyncTask, MessageHandler {
                         f = new LocatableFileInfoImpl(relativePathName, pathNameBytes, attrs, entry);
                     }
                     
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.fine(String.format("adding %s to segment", f));
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.fine(String.format("adding %s to segment", f));
                     }
                     fileset.add(f);
                 } else {
-                    String msg = String.format("Failed to encode %s using %s", relativePathName, this._characterEncoder.charset());
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning(msg);
+                    String msg = String.format("Failed to encode %s using %s", relativePathName, this.characterEncoder.charset());
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning(msg);
                     }
-                    this._duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                    this.duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
                     isOK = false;
                 }
             }
         } catch (IOException e) {
             String msg;
             if (e instanceof AccessDeniedException) {
-                msg = String.format("Failed to read directory %s: %s", directory.path(), e);
+                msg = String.format("Failed to read directory %s: %s", directory.getPath(), e);
             } else {
-                msg = String.format("Got I/O error during expansion of %s: %s", directory.path(), e);
+                msg = String.format("Got I/O error during expansion of %s: %s", directory.getPath(), e);
             }
-            if (_log.isLoggable(Level.WARNING)) {
-                _log.warning(msg);
+            if (LOG.isLoggable(Level.WARNING)) {
+                LOG.warning(msg);
             }
-            this._duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+            this.duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
             isOK = false;
         }
         return new StatusResult<>(isOK, fileset);
@@ -543,41 +543,41 @@ public final class Sender implements RsyncTask, MessageHandler {
         boolean isOK = true;
         int numFilesSent = 0;
         int numSegmentsSent = 0;
-        long numBytesWritten = this._duplexChannel.numBytesWritten();
+        long numBytesWritten = this.duplexChannel.numBytesWritten();
         
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine(String.format("expanding segments until at least %d " + "files have been sent", limit));
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine(String.format("expanding segments until at least %d " + "files have been sent", limit));
         }
         
         while (fileList.isExpandable() && numFilesSent < limit) {
             
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("sending segment index %d (as %d)", this._curSegmentIndex, Filelist.OFFSET - this._curSegmentIndex));
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("sending segment index %d (as %d)", this.curSegmentIndex, Filelist.OFFSET - this.curSegmentIndex));
             }
             
-            assert this._curSegmentIndex >= 0;
-            LocatableFileInfo directory = (LocatableFileInfo) fileList.getStubDirectoryOrNull(this._curSegmentIndex);
+            assert this.curSegmentIndex >= 0;
+            LocatableFileInfo directory = (LocatableFileInfo) fileList.getStubDirectoryOrNull(this.curSegmentIndex);
             assert directory != null;
-            this._duplexChannel.encodeIndex(Filelist.OFFSET - this._curSegmentIndex);
+            this.duplexChannel.encodeIndex(Filelist.OFFSET - this.curSegmentIndex);
             
             StatusResult<List<FileInfo>> expandResult = this.expand(directory, parentFilterRuleConfiguration);
             boolean isExpandOK = expandResult.isOK();
-            if (!isExpandOK && _log.isLoggable(Level.WARNING)) {
-                _log.warning("initial file list expansion returned an error");
+            if (!isExpandOK && LOG.isLoggable(Level.WARNING)) {
+                LOG.warning("initial file list expansion returned an error");
             }
             
             Filelist.SegmentBuilder builder = new Filelist.SegmentBuilder(directory);
-            builder.addAll(expandResult.value());
+            builder.addAll(expandResult.getValue());
             Filelist.Segment segment = fileList.newSegment(builder);
             
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("expanded segment with segment index" + " %d", this._curSegmentIndex));
-                if (_log.isLoggable(Level.FINER)) {
-                    _log.finer(segment.toString());
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("expanded segment with segment index" + " %d", this.curSegmentIndex));
+                if (LOG.isLoggable(Level.FINER)) {
+                    LOG.finer(segment.toString());
                 }
             }
             
-            for (FileInfo fileInfo : segment.files()) {
+            for (FileInfo fileInfo : segment.getFiles()) {
                 this.sendFileMetaData((LocatableFileInfo) fileInfo);
                 numFilesSent++;
             }
@@ -590,15 +590,15 @@ public final class Sender implements RsyncTask, MessageHandler {
                 isOK = false;
                 this.sendFileListErrorNotification();
             }
-            this._curSegmentIndex++;
+            this.curSegmentIndex++;
             numSegmentsSent++;
         }
         
-        long segmentSize = this._duplexChannel.numBytesWritten() - numBytesWritten;
-        this._stats._totalFileListSize += segmentSize;
+        long segmentSize = this.duplexChannel.numBytesWritten() - numBytesWritten;
+        this.stats.totalFileListSize += segmentSize;
         
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine(String.format("sent meta data for %d segments and %d " + "files", numSegmentsSent, numFilesSent));
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine(String.format("sent meta data for %d segments and %d " + "files", numSegmentsSent, numFilesSent));
         }
         
         return new StatusResult<>(isOK, numFilesSent);
@@ -609,20 +609,20 @@ public final class Sender implements RsyncTask, MessageHandler {
      */
     @Override
     public void handleMessage(Message message) throws RsyncProtocolException {
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("got message " + message);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("got message " + message);
         }
-        switch (message.header().messageType()) {
+        switch (message.getHeader().getMessageType()) {
             case IO_ERROR:
-                this._ioError |= message.payload().getInt();
+                this.ioError |= message.getPayload().getInt();
                 break;
             case ERROR:
             case ERROR_XFER:
-                this._ioError |= IoError.TRANSFER; // fall through
+                this.ioError |= IoError.TRANSFER; // fall through
             case INFO:
             case WARNING:
             case LOG:
-                if (_log.isLoggable(message.logLevelOrNull())) {
+                if (LOG.isLoggable(message.logLevelOrNull())) {
                     this.printMessage(message);
                 }
                 break;
@@ -637,50 +637,50 @@ public final class Sender implements RsyncTask, MessageHandler {
         
         for (Path p : files) {
             try {
-                if (this._fileAttributeManager == null) {
+                if (this.fileAttributeManager == null) {
                     this.setFileAttributeManager(p.getFileSystem());
                 }
                 
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine("expanding " + p);
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine("expanding " + p);
                 }
                 
                 LocatableFileInfo fileInfo = this.statAndEncode(p);
                 
-                if (this._fileSelection == FileSelection.EXACT && fileInfo.attrs().isDirectory()) {
-                    if (_log.isLoggable(Level.INFO)) {
-                        _log.info("skipping directory " + fileInfo);
+                if (this.fileSelection == FileSelection.EXACT && fileInfo.getAttributes().isDirectory()) {
+                    if (LOG.isLoggable(Level.INFO)) {
+                        LOG.info("skipping directory " + fileInfo);
                     }
                 } else {
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.fine(String.format("adding %s to segment", fileInfo));
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.fine(String.format("adding %s to segment", fileInfo));
                     }
                     fileset.add(fileInfo);
                     if (((LocatableFileInfoImpl) fileInfo).isDotDir()) {
-                        if (_log.isLoggable(Level.FINE)) {
-                            _log.fine("expanding dot dir " + fileInfo);
+                        if (LOG.isLoggable(Level.FINE)) {
+                            LOG.fine("expanding dot dir " + fileInfo);
                         }
                         StatusResult<List<FileInfo>> expandResult = this.expand(fileInfo, parentFilterRuleConfiguration);
                         isOK = isOK && expandResult.isOK();
-                        for (FileInfo f2 : expandResult.value()) {
+                        for (FileInfo f2 : expandResult.getValue()) {
                             fileset.add(f2);
                         }
-                        this._curSegmentIndex++;
+                        this.curSegmentIndex++;
                     }
                 }
             } catch (IOException e) {
                 String msg = String.format("Failed to add %s to initial file " + "list: %s", p, e);
-                if (_log.isLoggable(Level.WARNING)) {
-                    _log.warning(msg);
+                if (LOG.isLoggable(Level.WARNING)) {
+                    LOG.warning(msg);
                 }
-                this._duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                this.duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
                 isOK = false;
             } catch (TextConversionException e) {
-                String msg = String.format("Failed to encode %s using %s", p, this._characterEncoder.charset());
-                if (_log.isLoggable(Level.WARNING)) {
-                    _log.warning(msg);
+                String msg = String.format("Failed to encode %s using %s", p, this.characterEncoder.charset());
+                if (LOG.isLoggable(Level.WARNING)) {
+                    LOG.warning(msg);
                 }
-                this._duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
+                this.duplexChannel.putMessage(this.toMessage(MessageCode.ERROR_XFER, msg + '\n'));
                 isOK = false;
             }
         }
@@ -689,19 +689,19 @@ public final class Sender implements RsyncTask, MessageHandler {
     
     @Override
     public boolean isInterruptible() {
-        return this._isInterruptible;
+        return this.interruptible;
     }
     
     private boolean isTransferred(int index) {
-        return this._transferred.get(index);
+        return this.transferred.get(index);
     }
     
     // i.e. if full path is /a/b/c/d and pathNamebytes is c/d this returns /a/b
     private Path localPathTo(LocatableFileInfo fileInfo) {
-        String pathName = fileInfo.pathName(); /* never null */
-        FileSystem fs = fileInfo.path().getFileSystem();
+        String pathName = fileInfo.getPathName(); /* never null */
+        FileSystem fs = fileInfo.getPath().getFileSystem();
         Path relativePath = fs.getPath(pathName);
-        return PathOps.subtractPathOrNull(fileInfo.path(), relativePath);
+        return PathOps.subtractPathOrNull(fileInfo.getPath(), relativePath);
     }
     
     /**
@@ -710,15 +710,15 @@ public final class Sender implements RsyncTask, MessageHandler {
     private void printMessage(Message message) throws RsyncProtocolException {
         assert message.isText();
         try {
-            MessageCode msgType = message.header().messageType();
+            MessageCode msgType = message.getHeader().getMessageType();
             // throws TextConversionException
-            String text = this._characterDecoder.decode(message.payload());
+            String text = this.characterDecoder.decode(message.getPayload());
             // Receiver here means the opposite of Sender - not the process
             // (which actually is the Generator)
-            _log.log(message.logLevelOrNull(), String.format("<RECEIVER> %s: %s", msgType, Text.stripLast(text)));
+            LOG.log(message.logLevelOrNull(), String.format("<RECEIVER> %s: %s", msgType, Text.stripLast(text)));
         } catch (TextConversionException e) {
-            if (_log.isLoggable(Level.SEVERE)) {
-                _log.severe(String.format("Peer sent a message but we failed to convert all " + "characters in message. %s (%s)", e, message.toString()));
+            if (LOG.isLoggable(Level.SEVERE)) {
+                LOG.severe(String.format("Peer sent a message but we failed to convert all " + "characters in message. %s (%s)", e, message.toString()));
             }
             throw new RsyncProtocolException(e);
         }
@@ -726,18 +726,18 @@ public final class Sender implements RsyncTask, MessageHandler {
     
     private void readAllMessagesUntilEOF() throws ChannelException, RsyncProtocolException {
         try {
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine("reading final messages until EOF");
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("reading final messages until EOF");
             }
             // dummy read to get any final messages from peer
-            byte dummy = this._duplexChannel.getByte();
+            byte dummy = this.duplexChannel.getByte();
             // we're not expected to get this far, getByte should throw
             // ChannelEOFException
             ByteBuffer buf = ByteBuffer.allocate(1024);
             try {
                 buf.put(dummy);
                 while (buf.hasRemaining()) {
-                    dummy = this._duplexChannel.getByte();
+                    dummy = this.duplexChannel.getByte();
                     buf.put(dummy);
                 }
             } catch (ChannelEOFException ignored) {
@@ -752,16 +752,16 @@ public final class Sender implements RsyncTask, MessageHandler {
     }
     
     private Checksum.Header receiveChecksumHeader() throws ChannelException, RsyncProtocolException {
-        return Connection.receiveChecksumHeader(this._duplexChannel);
+        return Connection.receiveChecksumHeader(this.duplexChannel);
     }
 
     
     private Checksum receiveChecksumsFor(Checksum.Header header) throws ChannelException {
         Checksum checksum = new Checksum(header);
-        for (int i = 0; i < header.chunkCount(); i++) {
-            int rolling = this._duplexChannel.getInt();
-            byte[] md5sum = new byte[header.digestLength()];
-            this._duplexChannel.get(md5sum, 0, md5sum.length);
+        for (int i = 0; i < header.getChunkCount(); i++) {
+            int rolling = this.duplexChannel.getInt();
+            byte[] md5sum = new byte[header.getDigestLength()];
+            this.duplexChannel.get(md5sum, 0, md5sum.length);
             checksum.addChunkInformation(rolling, md5sum);
         }
         return checksum;
@@ -776,9 +776,9 @@ public final class Sender implements RsyncTask, MessageHandler {
         
         try {
             
-            while ((numBytesToRead = this._duplexChannel.getInt()) > 0) {
-                ByteBuffer buf = this._duplexChannel.get(numBytesToRead);
-                list.add(this._characterDecoder.decode(buf));
+            while ((numBytesToRead = this.duplexChannel.getInt()) > 0) {
+                ByteBuffer buf = this.duplexChannel.get(numBytesToRead);
+                list.add(this.characterDecoder.decode(buf));
             }
             
             return list;
@@ -789,7 +789,7 @@ public final class Sender implements RsyncTask, MessageHandler {
     }
     
     private void sendChecksumHeader(Checksum.Header header) throws ChannelException {
-        Connection.sendChecksumHeader(this._duplexChannel, header);
+        Connection.sendChecksumHeader(this.duplexChannel, header);
     }
     
     private void sendDataFrom(byte[] buf, int startOffset, int length) throws ChannelException {
@@ -803,8 +803,8 @@ public final class Sender implements RsyncTask, MessageHandler {
         while (currentOffset <= endOffset) {
             int len = Math.min(CHUNK_SIZE, endOffset - currentOffset + 1);
             assert len > 0;
-            this._duplexChannel.putInt(len);
-            this._duplexChannel.put(buf, currentOffset, len);
+            this.duplexChannel.putInt(len);
+            this.duplexChannel.put(buf, currentOffset, len);
             currentOffset += len;
         }
     }
@@ -822,86 +822,86 @@ public final class Sender implements RsyncTask, MessageHandler {
     
     private void sendEncodedLong(long l, int minBytes) throws ChannelException {
         ByteBuffer b = IntegerCoder.encodeLong(l, minBytes);
-        this._duplexChannel.put(b);
+        this.duplexChannel.put(b);
     }
     
     private void sendFileListErrorNotification() throws ChannelException {
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine("sending file list error notification to peer");
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine("sending file list error notification to peer");
         }
-        if (this._isSafeFileList) {
-            this._duplexChannel.putChar((char) (0xFFFF & (TransmitFlags.EXTENDED_FLAGS | TransmitFlags.IO_ERROR_ENDLIST)));
+        if (this.safeFileList) {
+            this.duplexChannel.putChar((char) (0xFFFF & (TransmitFlags.EXTENDED_FLAGS | TransmitFlags.IO_ERROR_ENDLIST)));
             this.sendEncodedInt(IoError.GENERAL);
         } else {
-            this._duplexChannel.putByte((byte) 0);
+            this.duplexChannel.putByte((byte) 0);
         }
     }
     
     private void sendFileMetaData(LocatableFileInfo fileInfo) throws ChannelException {
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine("sending meta data for " + fileInfo.path());
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine("sending meta data for " + fileInfo.getPath());
         }
         
         char xflags = 0;
         
-        RsyncFileAttributes attrs = fileInfo.attrs();
+        RsyncFileAttributes attrs = fileInfo.getAttributes();
         if (attrs.isDirectory()) {
             xflags = 1;
         }
         
-        if (this._isPreserveDevices && fileInfo instanceof DeviceInfo && (attrs.isBlockDevice() || attrs.isCharacterDevice())) {
+        if (this.preserveDevices && fileInfo instanceof DeviceInfo && (attrs.isBlockDevice() || attrs.isCharacterDevice())) {
             DeviceInfo dev = (DeviceInfo) fileInfo;
-            if (dev.major() == this._fileInfoCache.getPrevMajor()) {
+            if (dev.getMajor() == this.fileInfoCache.getPrevMajor()) {
                 xflags |= TransmitFlags.SAME_RDEV_MAJOR;
             } else {
-                this._fileInfoCache.setPrevMajor(dev.major());
+                this.fileInfoCache.setPrevMajor(dev.getMajor());
             }
-        } else if (this._isPreserveSpecials && fileInfo instanceof DeviceInfo && (attrs.isFifo() || attrs.isSocket())) {
+        } else if (this.preserveSpecials && fileInfo instanceof DeviceInfo && (attrs.isFifo() || attrs.isSocket())) {
             xflags |= TransmitFlags.SAME_RDEV_MAJOR;
         }
         
-        int mode = attrs.mode();
-        if (mode == this._fileInfoCache.getPrevMode()) {
+        int mode = attrs.getMode();
+        if (mode == this.fileInfoCache.getPrevMode()) {
             xflags |= TransmitFlags.SAME_MODE;
         } else {
-            this._fileInfoCache.setPrevMode(mode);
+            this.fileInfoCache.setPrevMode(mode);
         }
         
-        User user = fileInfo.attrs().user();
-        if (this._isPreserveUser && !user.equals(this._fileInfoCache.getPrevUserOrNull())) {
-            this._fileInfoCache.setPrevUser(user);
-            if (!this._isNumericIds && !user.equals(User.ROOT)) {
-                if (this._fileSelection == FileSelection.RECURSE && !this._transferredUserNames.contains(user)) {
+        User user = fileInfo.getAttributes().getUser();
+        if (this.preserveUser && !user.equals(this.fileInfoCache.getPrevUser())) {
+            this.fileInfoCache.setPrevUser(user);
+            if (!this.numericIds && !user.equals(User.ROOT)) {
+                if (this.fileSelection == FileSelection.RECURSE && !this.transferredUserNames.contains(user)) {
                     xflags |= TransmitFlags.USER_NAME_FOLLOWS;
                 } // else send in batch later
-                this._transferredUserNames.add(user);
+                this.transferredUserNames.add(user);
             }
         } else {
             xflags |= TransmitFlags.SAME_UID;
         }
         
-        Group group = fileInfo.attrs().group();
-        if (this._isPreserveGroup && !group.equals(this._fileInfoCache.getPrevGroupOrNull())) {
-            this._fileInfoCache.setPrevGroup(group);
-            if (!this._isNumericIds && !group.equals(Group.ROOT)) {
-                if (this._fileSelection == FileSelection.RECURSE && !this._transferredGroupNames.contains(group)) {
+        Group group = fileInfo.getAttributes().getGroup();
+        if (this.preserveGroup && !group.equals(this.fileInfoCache.getPrevGroup())) {
+            this.fileInfoCache.setPrevGroup(group);
+            if (!this.numericIds && !group.equals(Group.ROOT)) {
+                if (this.fileSelection == FileSelection.RECURSE && !this.transferredGroupNames.contains(group)) {
                     xflags |= TransmitFlags.GROUP_NAME_FOLLOWS;
                 } // else send in batch later
-                this._transferredGroupNames.add(group);
+                this.transferredGroupNames.add(group);
             }
         } else {
             xflags |= TransmitFlags.SAME_GID;
         }
         
         long lastModified = attrs.lastModifiedTime();
-        if (lastModified == this._fileInfoCache.getPrevLastModified()) {
+        if (lastModified == this.fileInfoCache.getPrevLastModified()) {
             xflags |= TransmitFlags.SAME_TIME;
         } else {
-            this._fileInfoCache.setPrevLastModified(lastModified);
+            this.fileInfoCache.setPrevLastModified(lastModified);
         }
         
-        byte[] fileNameBytes = fileInfo.pathName().getBytes(this._characterEncoder.charset());
-        int commonPrefixLength = lengthOfLargestCommonPrefix(this._fileInfoCache.getPrevFileNameBytes(), fileNameBytes);
+        byte[] fileNameBytes = fileInfo.getPathName().getBytes(this.characterEncoder.charset());
+        int commonPrefixLength = lengthOfLargestCommonPrefix(this.fileInfoCache.getPrevFileNameBytes(), fileNameBytes);
         byte[] prefixBytes = Arrays.copyOfRange(fileNameBytes, 0, commonPrefixLength);
         byte[] suffixBytes = Arrays.copyOfRange(fileNameBytes, commonPrefixLength, fileNameBytes.length);
         int numSuffixBytes = suffixBytes.length;
@@ -912,67 +912,67 @@ public final class Sender implements RsyncTask, MessageHandler {
         if (numSuffixBytes > 255) {
             xflags |= TransmitFlags.LONG_NAME;
         }
-        this._fileInfoCache.setPrevFileNameBytes(fileNameBytes);
+        this.fileInfoCache.setPrevFileNameBytes(fileNameBytes);
         
         if (xflags == 0 && !attrs.isDirectory()) {
             xflags |= TransmitFlags.TOP_DIR;
         }
         if (xflags == 0 || (xflags & 0xFF00) != 0) {
             xflags |= TransmitFlags.EXTENDED_FLAGS;
-            this._duplexChannel.putChar(xflags);
+            this.duplexChannel.putChar(xflags);
         } else {
-            this._duplexChannel.putByte((byte) xflags);
+            this.duplexChannel.putByte((byte) xflags);
         }
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("sent flags " + Integer.toBinaryString(xflags));
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("sent flags " + Integer.toBinaryString(xflags));
         }
         
         if ((xflags & TransmitFlags.SAME_NAME) != 0) {
-            this._duplexChannel.putByte((byte) numPrefixBytes);
+            this.duplexChannel.putByte((byte) numPrefixBytes);
         }
         
         if ((xflags & TransmitFlags.LONG_NAME) != 0) {
             this.sendEncodedInt(numSuffixBytes);
         } else {
-            this._duplexChannel.putByte((byte) numSuffixBytes);
+            this.duplexChannel.putByte((byte) numSuffixBytes);
         }
-        this._duplexChannel.put(ByteBuffer.wrap(suffixBytes));
+        this.duplexChannel.put(ByteBuffer.wrap(suffixBytes));
         
-        this.sendEncodedLong(attrs.size(), 3);
+        this.sendEncodedLong(attrs.getSize(), 3);
         
         if ((xflags & TransmitFlags.SAME_TIME) == 0) {
             this.sendEncodedLong(lastModified, 4);
         }
         
         if ((xflags & TransmitFlags.SAME_MODE) == 0) {
-            this._duplexChannel.putInt(mode);
+            this.duplexChannel.putInt(mode);
         }
         
-        if (this._isPreserveUser && (xflags & TransmitFlags.SAME_UID) == 0) {
-            this.sendUserId(user.id());
+        if (this.preserveUser && (xflags & TransmitFlags.SAME_UID) == 0) {
+            this.sendUserId(user.getId());
             if ((xflags & TransmitFlags.USER_NAME_FOLLOWS) != 0) {
-                this.sendUserName(user.name());
+                this.sendUserName(user.getName());
             }
         }
         
-        if (this._isPreserveGroup && (xflags & TransmitFlags.SAME_GID) == 0) {
-            this.sendGroupId(group.id());
+        if (this.preserveGroup && (xflags & TransmitFlags.SAME_GID) == 0) {
+            this.sendGroupId(group.getId());
             if ((xflags & TransmitFlags.GROUP_NAME_FOLLOWS) != 0) {
-                this.sendGroupName(group.name());
+                this.sendGroupName(group.getName());
             }
         }
         
-        if ((this._isPreserveDevices || this._isPreserveSpecials) && fileInfo instanceof DeviceInfo) {
+        if ((this.preserveDevices || this.preserveSpecials) && fileInfo instanceof DeviceInfo) {
             DeviceInfo dev = (DeviceInfo) fileInfo;
             if ((xflags & TransmitFlags.SAME_RDEV_MAJOR) == 0) {
-                this.sendEncodedInt(dev.major());
+                this.sendEncodedInt(dev.getMajor());
             }
-            this.sendEncodedInt(dev.minor());
-        } else if (this._isPreserveLinks && fileInfo instanceof SymlinkInfo) {
-            String symlinkTarget = ((SymlinkInfo) fileInfo).targetPathName();
-            byte[] symlinkTargetBytes = this._characterEncoder.encode(symlinkTarget);
+            this.sendEncodedInt(dev.getMinor());
+        } else if (this.preserveLinks && fileInfo instanceof SymlinkInfo) {
+            String symlinkTarget = ((SymlinkInfo) fileInfo).getTargetPathName();
+            byte[] symlinkTargetBytes = this.characterEncoder.encode(symlinkTarget);
             this.sendEncodedInt(symlinkTargetBytes.length);
-            this._duplexChannel.put(ByteBuffer.wrap(symlinkTargetBytes));
+            this.duplexChannel.put(ByteBuffer.wrap(symlinkTargetBytes));
         }
     }
     
@@ -980,72 +980,72 @@ public final class Sender implements RsyncTask, MessageHandler {
         boolean sentEOF = false;
         TransferPhase phase = TransferPhase.TRANSFER;
         int ioError = 0;
-        Filelist.Segment segment = fileList.firstSegment();
-        int numFilesInTransit = segment.files().size();
+        Filelist.Segment segment = fileList.getFirstSegment();
+        int numFilesInTransit = segment.getFiles().size();
         
         while (phase != TransferPhase.STOP) {
             // We must send a new segment when we have at least one segment
             // active to avoid deadlocking when talking to rsync
-            if (fileList.isExpandable() && (fileList.expandedSegments() == 1 || numFilesInTransit < PARTIAL_FILE_LIST_SIZE / 2)) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine(String.format("expanding file list. In transit: %d files, " + "%d segments", numFilesInTransit, fileList.expandedSegments()));
+            if (fileList.isExpandable() && (fileList.getExpandedSegments() == 1 || numFilesInTransit < PARTIAL_FILE_LIST_SIZE / 2)) {
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine(String.format("expanding file list. In transit: %d files, " + "%d segments", numFilesInTransit, fileList.getExpandedSegments()));
                 }
                 int lim = Math.max(1, PARTIAL_FILE_LIST_SIZE - numFilesInTransit);
                 StatusResult<Integer> res = this.expandAndSendSegments(fileList, lim, parentFilterRuleConfiguration);
-                numFilesInTransit += res.value();
+                numFilesInTransit += res.getValue();
                 if (!res.isOK()) {
-                    if (_log.isLoggable(Level.WARNING)) {
-                        _log.warning("got I/O error during file list " + "expansion, notifying peer");
+                    if (LOG.isLoggable(Level.WARNING)) {
+                        LOG.warning("got I/O error during file list " + "expansion, notifying peer");
                     }
                     ioError |= IoError.GENERAL;
                     this.sendIntMessage(MessageCode.IO_ERROR, ioError);
                 }
             }
-            if (this._fileSelection == FileSelection.RECURSE && !fileList.isExpandable() && !sentEOF) {
-                if (_log.isLoggable(Level.FINE)) {
-                    _log.fine("sending file list EOF");
+            if (this.fileSelection == FileSelection.RECURSE && !fileList.isExpandable() && !sentEOF) {
+                if (LOG.isLoggable(Level.FINE)) {
+                    LOG.fine("sending file list EOF");
                 }
-                this._duplexChannel.encodeIndex(Filelist.EOF);
+                this.duplexChannel.encodeIndex(Filelist.EOF);
                 sentEOF = true;
             }
             
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine(String.format("num bytes buffered: %d, num bytes available to read: %d", this._duplexChannel.numBytesBuffered(), this._duplexChannel.numBytesAvailable()));
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(String.format("num bytes buffered: %d, num bytes available to read: %d", this.duplexChannel.getNumBytesBuffered(), this.duplexChannel.numBytesAvailable()));
             }
             
-            final int index = this._duplexChannel.decodeIndex();
-            if (_log.isLoggable(Level.FINE)) {
-                _log.fine("Received index " + index);
+            final int index = this.duplexChannel.decodeIndex();
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine("Received index " + index);
             }
             
             if (index == Filelist.DONE) {
-                if (this._fileSelection == FileSelection.RECURSE && !fileList.isEmpty()) {
+                if (this.fileSelection == FileSelection.RECURSE && !fileList.isEmpty()) {
                     // we're unable to delete the segment opportunistically
                     // because we're not being notified about all files that
                     // the receiver is finished with
                     Filelist.Segment removed = fileList.deleteFirstSegment();
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.fine("Deleting segment: " + removed);
-//                        if (_log.isLoggable(Level.FINEST)) {
-//                            _log.finest(removed.filesToString());
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.fine("Deleting segment: " + removed);
+//                        if (LOG.isLoggable(Level.FINEST)) {
+//                            LOG.finest(removed.filesToString());
 //                        }
                     }
                     if (!fileList.isEmpty()) {
-                        this._duplexChannel.encodeIndex(Filelist.DONE);
+                        this.duplexChannel.encodeIndex(Filelist.DONE);
                     }
-                    numFilesInTransit -= removed.files().size();
+                    numFilesInTransit -= removed.getFiles().size();
                 }
-                if (this._fileSelection != FileSelection.RECURSE || fileList.isEmpty()) {
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.fine(String.format("phase transition %s -> %s", phase, phase.next()));
+                if (this.fileSelection != FileSelection.RECURSE || fileList.isEmpty()) {
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.fine(String.format("phase transition %s -> %s", phase, phase.next()));
                     }
                     phase = phase.next();
                     if (phase != TransferPhase.STOP) {
-                        this._duplexChannel.encodeIndex(Filelist.DONE);
+                        this.duplexChannel.encodeIndex(Filelist.DONE);
                     }
                 }
             } else if (index >= 0) {
-                char iFlags = this._duplexChannel.getChar();
+                char iFlags = this.duplexChannel.getChar();
                 if (!Item.isValidItem(iFlags)) {
                     throw new IllegalStateException(String.format("got flags %s - not supported", Integer.toBinaryString(iFlags)));
                 }
@@ -1054,13 +1054,13 @@ public final class Sender implements RsyncTask, MessageHandler {
                         segment = fileList.getSegmentWith(index);
                     }
                     assert segment != null;
-                    if (this._fileSelection == FileSelection.RECURSE && segment == null) {
+                    if (this.fileSelection == FileSelection.RECURSE && segment == null) {
                         throw new RsyncProtocolException(String.format("Received invalid file/directory index %d from " + "peer", index));
                     }
-                    if (index != segment.directoryIndex()) {
+                    if (index != segment.getDirectoryIndex()) {
                         FileInfo removed = segment.remove(index);
-                        if (_log.isLoggable(Level.FINE)) {
-                            _log.fine(String.format("Deleting file/dir %s %d", removed, index));
+                        if (LOG.isLoggable(Level.FINE)) {
+                            LOG.fine(String.format("Deleting file/dir %s %d", removed, index));
                         }
                         numFilesInTransit--;
                     }
@@ -1076,39 +1076,39 @@ public final class Sender implements RsyncTask, MessageHandler {
                     if (segment == null) {
                         throw new RsyncProtocolException(String.format("Received invalid file index %d from peer", index));
                     }
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.fine("caching segment: " + segment);
-//                        if (_log.isLoggable(Level.FINEST)) {
-//                            _log.finest(segment.filesToString());
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.fine("caching segment: " + segment);
+//                        if (LOG.isLoggable(Level.FINEST)) {
+//                            LOG.finest(segment.filesToString());
 //                        }
                     }
                     
                     fileInfo = (LocatableFileInfo) segment.getFileWithIndexOrNull(index);
-                    if (fileInfo == null || !fileInfo.attrs().isRegularFile()) {
+                    if (fileInfo == null || !fileInfo.getAttributes().isRegularFile()) {
                         throw new RsyncProtocolException(String.format("index %d is not a regular file (%s)", index, fileInfo));
                     }
                     
-                    if (_log.isLoggable(Level.FINE)) {
+                    if (LOG.isLoggable(Level.FINE)) {
                         if (this.isTransferred(index)) {
-                            _log.fine("Re-sending " + fileInfo);
+                            LOG.fine("Re-sending " + fileInfo);
                         } else {
-                            _log.fine("sending " + fileInfo);
+                            LOG.fine("sending " + fileInfo);
                         }
                     }
                     
                     Checksum.Header header = this.receiveChecksumHeader();
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.fine("received peer checksum " + header);
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.fine("received peer checksum " + header);
                     }
                     Checksum checksum = this.receiveChecksumsFor(header);
                     
-                    boolean isNew = header.blockLength() == 0;
-                    int blockSize = isNew ? FileView.DEFAULT_BLOCK_SIZE : header.blockLength();
+                    boolean isNew = header.getBlockLength() == 0;
+                    int blockSize = isNew ? FileView.DEFAULT_BLOCK_SIZE : header.getBlockLength();
                     int blockFactor = isNew ? 1 : 10;
-                    long fileSize = fileInfo.attrs().size();
+                    long fileSize = fileInfo.getAttributes().getSize();
                     
                     byte[] fileMD5sum = null;
-                    try (FileView fv = new FileView(fileInfo.path(), fileInfo.attrs().size(), blockSize, blockSize * blockFactor)) {
+                    try (FileView fv = new FileView(fileInfo.getPath(), fileInfo.getAttributes().getSize(), blockSize, blockSize * blockFactor)) {
                         
                         this.sendIndexAndIflags(index, iFlags);
                         this.sendChecksumHeader(header);
@@ -1119,8 +1119,8 @@ public final class Sender implements RsyncTask, MessageHandler {
                             fileMD5sum = this.sendMatchesAndData(fv, checksum, fileSize);
                         }
                     } catch (FileViewOpenFailed e) { // on FileView.open()
-                        if (_log.isLoggable(Level.WARNING)) {
-                            _log.warning(String.format("Error: cannot open %s: %s", fileInfo, e.getMessage()));
+                        if (LOG.isLoggable(Level.WARNING)) {
+                            LOG.warning(String.format("Error: cannot open %s: %s", fileInfo, e.getMessage()));
                         }
                         if (e instanceof FileViewNotFound) {
                             ioError |= IoError.VANISHED;
@@ -1129,32 +1129,32 @@ public final class Sender implements RsyncTask, MessageHandler {
                         }
                         
                         FileInfo removed = segment.remove(index);
-                        if (_log.isLoggable(Level.FINE)) {
-                            _log.fine(String.format("Purging %s index=%d", removed, index));
+                        if (LOG.isLoggable(Level.FINE)) {
+                            LOG.fine(String.format("Purging %s index=%d", removed, index));
                         }
                         this.sendIntMessage(MessageCode.NO_SEND, index);
                         continue;
                     } catch (FileViewException e) { // on FileView.close()
-                        if (_log.isLoggable(Level.WARNING)) {
-                            _log.warning(String.format("Error: general I/O error on %s (ignored and" + " skipped): %s", fileInfo, e.getMessage()));
+                        if (LOG.isLoggable(Level.WARNING)) {
+                            LOG.warning(String.format("Error: general I/O error on %s (ignored and" + " skipped): %s", fileInfo, e.getMessage()));
                         }
                         // fileMD5sum is only null for FileViewOpenFailed - not
                         // FileViewReadError which is caused by FileView.close()
                         createIncorrectChecksum(fileMD5sum);
                     }
                     
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.finer(String.format("sending checksum for %s: %s", fileInfo.path(), Text.bytesToString(fileMD5sum)));
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.finer(String.format("sending checksum for %s: %s", fileInfo.getPath(), Text.bytesToString(fileMD5sum)));
                     }
-                    this._duplexChannel.put(fileMD5sum, 0, fileMD5sum.length);
+                    this.duplexChannel.put(fileMD5sum, 0, fileMD5sum.length);
                     this.setIsTransferred(index);
                     
-                    if (_log.isLoggable(Level.FINE)) {
-                        _log.fine(String.format("sent %s (%d bytes)", fileInfo.path(), fileSize));
+                    if (LOG.isLoggable(Level.FINE)) {
+                        LOG.fine(String.format("sent %s (%d bytes)", fileInfo.getPath(), fileSize));
                     }
                     
-                    this._stats._numTransferredFiles++;
-                    this._stats._totalTransferredSize += fileInfo.attrs().size();
+                    this.stats.numTransferredFiles++;
+                    this.stats.totalTransferredSize += fileInfo.getAttributes().getSize();
                 } else {
                     throw new RsyncProtocolException(String.format("Error: received index in wrong phase (%s)", phase));
                 }
@@ -1163,23 +1163,23 @@ public final class Sender implements RsyncTask, MessageHandler {
             }
         }
         
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine("finished sending files");
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine("finished sending files");
         }
         
         return ioError;
     }
     
     private void sendFilterRules() throws InterruptedException, ChannelException {
-        if (this._filterRuleConfiguration != null) {
-            for (FilterRuleList.FilterRule rule : this._filterRuleConfiguration.getFilterRuleListForSending()._rules) {
-                byte[] encodedRule = this._characterEncoder.encode(rule.toString());
+        if (this.filterRuleConfiguration != null) {
+            for (FilterRuleList.FilterRule rule : this.filterRuleConfiguration.getFilterRuleListForSending()._rules) {
+                byte[] encodedRule = this.characterEncoder.encode(rule.toString());
                 
                 ByteBuffer buf = ByteBuffer.allocate(4 + encodedRule.length).order(ByteOrder.LITTLE_ENDIAN);
                 buf.putInt(encodedRule.length);
                 buf.put(encodedRule);
                 buf.flip();
-                this._duplexChannel.put(buf);
+                this.duplexChannel.put(buf);
             }
         }
         
@@ -1187,214 +1187,214 @@ public final class Sender implements RsyncTask, MessageHandler {
         ByteBuffer buf = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
         buf.putInt(0);
         buf.flip();
-        this._duplexChannel.put(buf);
+        this.duplexChannel.put(buf);
     }
     
     private void sendGroupId(int gid) throws ChannelException {
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("sending group id " + gid);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("sending group id " + gid);
         }
         this.sendEncodedInt(gid);
     }
     
     private void sendGroupList() throws ChannelException {
-        for (Group group : this._transferredGroupNames) {
-            assert group.id() != Group.ROOT.id();
-            this.sendGroupId(group.id());
-            this.sendGroupName(group.name());
+        for (Group group : this.transferredGroupNames) {
+            assert group.getId() != Group.ROOT.getId();
+            this.sendGroupId(group.getId());
+            this.sendGroupName(group.getName());
         }
         this.sendEncodedInt(0);
     }
     
     private void sendGroupName(String name) throws ChannelException {
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("sending group name " + name);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("sending group name " + name);
         }
-        ByteBuffer buf = ByteBuffer.wrap(this._characterEncoder.encode(name));
+        ByteBuffer buf = ByteBuffer.wrap(this.characterEncoder.encode(name));
         if (buf.remaining() > 0xFF) {
             throw new IllegalStateException(String.format("encoded length of group name %s is %d, which is larger than " + "what fits in a byte (255)", name, buf.remaining()));
         }
-        this._duplexChannel.putByte((byte) buf.remaining());
-        this._duplexChannel.put(buf);
+        this.duplexChannel.putByte((byte) buf.remaining());
+        this.duplexChannel.put(buf);
     }
     
     private void sendIndexAndIflags(int index, char iFlags) throws ChannelException {
         if (!Item.isValidItem(iFlags)) {
             throw new IllegalStateException(String.format("got flags %s - not supported", Integer.toBinaryString(iFlags)));
         }
-        this._duplexChannel.encodeIndex(index);
-        this._duplexChannel.putChar(iFlags);
+        this.duplexChannel.encodeIndex(index);
+        this.duplexChannel.putChar(iFlags);
     }
     
     private void sendIntMessage(MessageCode code, int value) throws ChannelException {
         ByteBuffer payload = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
         payload.putInt(0, value);
         Message message = new Message(code, payload);
-        this._duplexChannel.putMessage(message);
+        this.duplexChannel.putMessage(message);
     }
     
     private byte[] sendMatchesAndData(FileView fv, Checksum peerChecksum, long fileSize) throws ChannelException {
         assert fv != null;
         assert peerChecksum != null;
-        assert peerChecksum.header().blockLength() > 0;
+        assert peerChecksum.getHeader().getBlockLength() > 0;
         assert fileSize > 0;
         
         MessageDigest fileDigest = MD5.newInstance();
         MessageDigest chunkDigest = MD5.newInstance();
         
-        int rolling = Rolling.compute(fv.array(), fv.startOffset(), fv.windowLength());
+        int rolling = Rolling.compute(fv.getArray(), fv.getStartOffset(), fv.getWindowLength());
         int preferredIndex = 0;
         long sizeLiteral = 0;
         long sizeMatch = 0;
         byte[] localChunkMd5sum = null;
         fv.setMarkRelativeToStart(0);
         
-        while (fv.windowLength() >= peerChecksum.header().smallestChunkSize()) {
+        while (fv.getWindowLength() >= peerChecksum.getHeader().getSmallestChunkSize()) {
             
-            if (_log.isLoggable(Level.FINEST)) {
-                _log.finest(fv.toString());
+            if (LOG.isLoggable(Level.FINEST)) {
+                LOG.finest(fv.toString());
             }
             
-            for (Checksum.Chunk chunk : peerChecksum.getCandidateChunks(rolling, fv.windowLength(), preferredIndex)) {
+            for (Checksum.Chunk chunk : peerChecksum.getCandidateChunks(rolling, fv.getWindowLength(), preferredIndex)) {
                 
                 if (localChunkMd5sum == null) {
-                    chunkDigest.update(fv.array(), fv.startOffset(), fv.windowLength());
-                    chunkDigest.update(this._checksumSeed);
-                    localChunkMd5sum = Arrays.copyOf(chunkDigest.digest(), chunk.md5Checksum().length);
+                    chunkDigest.update(fv.getArray(), fv.getStartOffset(), fv.getWindowLength());
+                    chunkDigest.update(this.checksumSeed);
+                    localChunkMd5sum = Arrays.copyOf(chunkDigest.digest(), chunk.getMd5Checksum().length);
                 }
                 
-                if (Arrays.equals(localChunkMd5sum, chunk.md5Checksum())) {
-                    if (_log.isLoggable(Level.FINER)) {
-                        _log.finer(String.format("match %s == %s %s", MD5.md5DigestToString(localChunkMd5sum), MD5.md5DigestToString(chunk.md5Checksum()), fv));
+                if (Arrays.equals(localChunkMd5sum, chunk.getMd5Checksum())) {
+                    if (LOG.isLoggable(Level.FINER)) {
+                        LOG.finer(String.format("match %s == %s %s", MD5.md5DigestToString(localChunkMd5sum), MD5.md5DigestToString(chunk.getMd5Checksum()), fv));
                     }
-                    sizeMatch += fv.windowLength();
-                    this.sendDataFrom(fv.array(), fv.markOffset(), fv.numBytesMarked());
-                    sizeLiteral += fv.numBytesMarked();
-                    fileDigest.update(fv.array(), fv.markOffset(), fv.totalBytes());
+                    sizeMatch += fv.getWindowLength();
+                    this.sendDataFrom(fv.getArray(), fv.getMarkOffset(), fv.getNumBytesMarked());
+                    sizeLiteral += fv.getNumBytesMarked();
+                    fileDigest.update(fv.getArray(), fv.getMarkOffset(), fv.getTotalBytes());
                     
-                    this._duplexChannel.putInt(-(chunk.chunkIndex() + 1));
-                    preferredIndex = chunk.chunkIndex() + 1;
+                    this.duplexChannel.putInt(-(chunk.getChunkIndex() + 1));
+                    preferredIndex = chunk.getChunkIndex() + 1;
                     // we have sent all literal data until start of this
                     // chunk which in turn is matching peer's checksum,
                     // reset cursor:
-                    fv.setMarkRelativeToStart(fv.windowLength());
+                    fv.setMarkRelativeToStart(fv.getWindowLength());
                     // slide start to 1 byte left of mark offset,
                     // will be subtracted immediately after break of loop
-                    fv.slide(fv.windowLength() - 1);
+                    fv.slide(fv.getWindowLength() - 1);
                     // TODO: optimize away an unnecessary expensive compact
                     // operation here while we only have 1 byte to compact,
                     // before reading in more data (if we're at the last block)
-                    rolling = Rolling.compute(fv.array(), fv.startOffset(), fv.windowLength());
+                    rolling = Rolling.compute(fv.getArray(), fv.getStartOffset(), fv.getWindowLength());
                     localChunkMd5sum = null;
                     break;
                 }
             }
             
-            rolling = Rolling.subtract(rolling, fv.windowLength(), fv.valueAt(fv.startOffset()));
+            rolling = Rolling.subtract(rolling, fv.getWindowLength(), fv.valueAt(fv.getStartOffset()));
             
             if (fv.isFull()) {
-                if (_log.isLoggable(Level.FINER)) {
-                    _log.finer("view is full " + fv);
+                if (LOG.isLoggable(Level.FINER)) {
+                    LOG.finer("view is full " + fv);
                 }
-                this.sendDataFrom(fv.array(), fv.firstOffset(), fv.totalBytes());
-                sizeLiteral += fv.totalBytes();
-                fileDigest.update(fv.array(), fv.firstOffset(), fv.totalBytes());
-                fv.setMarkRelativeToStart(fv.windowLength());
-                fv.slide(fv.windowLength());
+                this.sendDataFrom(fv.getArray(), fv.getFirstOffset(), fv.getTotalBytes());
+                sizeLiteral += fv.getTotalBytes();
+                fileDigest.update(fv.getArray(), fv.getFirstOffset(), fv.getTotalBytes());
+                fv.setMarkRelativeToStart(fv.getWindowLength());
+                fv.slide(fv.getWindowLength());
             } else {
                 fv.slide(1);
             }
             
             // i.e. not at the end of the file
-            if (fv.windowLength() == peerChecksum.header().blockLength()) {
-                rolling = Rolling.add(rolling, fv.valueAt(fv.endOffset()));
+            if (fv.getWindowLength() == peerChecksum.getHeader().getBlockLength()) {
+                rolling = Rolling.add(rolling, fv.valueAt(fv.getEndOffset()));
             }
         }
         
-        this.sendDataFrom(fv.array(), fv.firstOffset(), fv.totalBytes());
-        sizeLiteral += fv.totalBytes();
-        fileDigest.update(fv.array(), fv.firstOffset(), fv.totalBytes());
-        this._duplexChannel.putInt(0);
+        this.sendDataFrom(fv.getArray(), fv.getFirstOffset(), fv.getTotalBytes());
+        sizeLiteral += fv.getTotalBytes();
+        fileDigest.update(fv.getArray(), fv.getFirstOffset(), fv.getTotalBytes());
+        this.duplexChannel.putInt(0);
         
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine(String.format("%d%% match: matched %d bytes, sent %d" + " bytes (file size %d bytes) %s", Math.round(100 * ((float) sizeMatch / (sizeMatch + sizeLiteral))), sizeMatch,
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine(String.format("%d%% match: matched %d bytes, sent %d" + " bytes (file size %d bytes) %s", Math.round(100 * ((float) sizeMatch / (sizeMatch + sizeLiteral))), sizeMatch,
                     sizeLiteral, fileSize, fv));
         }
         
-        this._stats._totalLiteralSize += sizeLiteral;
-        this._stats._totalMatchedSize += sizeMatch;
+        this.stats.totalLiteralSize += sizeLiteral;
+        this.stats.totalMatchedSize += sizeMatch;
         assert sizeLiteral + sizeMatch == fileSize;
         return fileDigest.digest();
     }
     
     private void sendSegmentDone() throws ChannelException {
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine("sending segment done");
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine("sending segment done");
         }
-        this._duplexChannel.putByte((byte) 0);
+        this.duplexChannel.putByte((byte) 0);
     }
     
     private void sendStatistics(Statistics stats) throws ChannelException {
-        this.sendEncodedLong(stats.totalBytesRead(), 3);
-        this.sendEncodedLong(stats.totalBytesWritten(), 3);
-        this.sendEncodedLong(stats.totalFileSize(), 3);
-        this.sendEncodedLong(stats.fileListBuildTime(), 3);
-        this.sendEncodedLong(stats.fileListTransferTime(), 3);
+        this.sendEncodedLong(stats.getTotalBytesRead(), 3);
+        this.sendEncodedLong(stats.getTotalBytesWritten(), 3);
+        this.sendEncodedLong(stats.getTotalFileSize(), 3);
+        this.sendEncodedLong(stats.getFileListBuildTime(), 3);
+        this.sendEncodedLong(stats.getFileListTransferTime(), 3);
     }
     
     private void sendUserId(int uid) throws ChannelException {
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("sending user id " + uid);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("sending user id " + uid);
         }
         this.sendEncodedInt(uid);
     }
     
     private void sendUserList() throws ChannelException {
-        for (User user : this._transferredUserNames) {
-            assert user.id() != User.ROOT.id();
-            this.sendUserId(user.id());
-            this.sendUserName(user.name());
+        for (User user : this.transferredUserNames) {
+            assert user.getId() != User.ROOT.getId();
+            this.sendUserId(user.getId());
+            this.sendUserName(user.getName());
         }
         this.sendEncodedInt(0);
     }
     
     private void sendUserName(String name) throws ChannelException {
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("sending user name " + name);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("sending user name " + name);
         }
-        ByteBuffer buf = ByteBuffer.wrap(this._characterEncoder.encode(name));
+        ByteBuffer buf = ByteBuffer.wrap(this.characterEncoder.encode(name));
         // unlikely scenario, we could also recover from this (by truncating or
         // falling back to nobody)
         if (buf.remaining() > 0xFF) {
             throw new IllegalStateException(String.format("encoded length of user name %s is %d, which is larger than " + "what fits in a byte (255)", name, buf.remaining()));
         }
-        this._duplexChannel.putByte((byte) buf.remaining());
-        this._duplexChannel.put(buf);
+        this.duplexChannel.putByte((byte) buf.remaining());
+        this.duplexChannel.put(buf);
     }
     
     private void setFileAttributeManager(FileSystem fs) {
-        this._fileAttributeManager = FileAttributeManagerFactory.getMostPerformant(fs, this._isPreserveUser, this._isPreserveGroup, this._isPreserveDevices, this._isPreserveSpecials,
-                this._isNumericIds, this._defaultUser, this._defaultGroup, this._defaultFilePermissions, this._defaultDirectoryPermissions);
-        if (_log.isLoggable(Level.FINE)) {
-            _log.fine("fileAttributeManager=" + this._fileAttributeManager);
+        this.fileAttributeManager = FileAttributeManagerFactory.getMostPerformant(fs, this.preserveUser, this.preserveGroup, this.preserveDevices, this.preserveSpecials,
+                this.numericIds, this.defaultUser, this.defaultGroup, this.defaultFilePermissions, this.defaultDirectoryPermissions);
+        if (LOG.isLoggable(Level.FINE)) {
+            LOG.fine("fileAttributeManager=" + this.fileAttributeManager);
         }
     }
     
     private void setIsTransferred(int index) {
-        this._transferred.set(index);
+        this.transferred.set(index);
     }
     
     private byte[] skipMatchSendData(FileView view, long fileSize) throws ChannelException {
         MessageDigest fileDigest = MD5.newInstance();
         long bytesSent = 0;
-        while (view.windowLength() > 0) {
-            this.sendDataFrom(view.array(), view.startOffset(), view.windowLength());
-            bytesSent += view.windowLength();
-            fileDigest.update(view.array(), view.startOffset(), view.windowLength());
-            view.slide(view.windowLength());
+        while (view.getWindowLength() > 0) {
+            this.sendDataFrom(view.getArray(), view.getStartOffset(), view.getWindowLength());
+            bytesSent += view.getWindowLength();
+            fileDigest.update(view.getArray(), view.getStartOffset(), view.getWindowLength());
+            view.slide(view.getWindowLength());
         }
-        this._stats._totalLiteralSize += fileSize;
-        this._duplexChannel.putInt(0);
+        this.stats.totalLiteralSize += fileSize;
+        this.duplexChannel.putInt(0);
         assert bytesSent == fileSize;
         return fileDigest.digest();
     }
@@ -1404,44 +1404,44 @@ public final class Sender implements RsyncTask, MessageHandler {
      * @throws IOException
      */
     private LocatableFileInfo statAndEncode(Path path) throws IOException {
-        RsyncFileAttributes attrs = this._fileAttributeManager.stat(path);
+        RsyncFileAttributes attrs = this.fileAttributeManager.stat(path);
         String fileName = path.getFileName().toString();
         // throws TextConversionException
-        byte[] nameBytes = this._characterEncoder.encode(fileName);
+        byte[] nameBytes = this.characterEncoder.encode(fileName);
         
         if (attrs.isRegularFile() || attrs.isDirectory()) {
             return new LocatableFileInfoImpl(fileName, nameBytes, attrs, path);
-        } else if (this._isPreserveLinks && attrs.isSymbolicLink()) {
+        } else if (this.preserveLinks && attrs.isSymbolicLink()) {
             String linkTarget = FileOps.readLinkTarget(path).toString();
             return new LocatableSymlinkInfoImpl(fileName, nameBytes, attrs, linkTarget, path);
-        } else if (this._isPreserveDevices && (attrs.isBlockDevice() || attrs.isCharacterDevice())) {
-            throw new IOException(String.format("unable to retrieve major and minor ID of %s %s", FileOps.fileTypeToString(attrs.mode()), path));
-        } else if (this._isPreserveSpecials && (attrs.isFifo() || attrs.isSocket())) {
-            throw new IOException(String.format("unable to retrieve major ID of %s %s", FileOps.fileTypeToString(attrs.mode()), path));
+        } else if (this.preserveDevices && (attrs.isBlockDevice() || attrs.isCharacterDevice())) {
+            throw new IOException(String.format("unable to retrieve major and minor ID of %s %s", FileOps.fileTypeToString(attrs.getMode()), path));
+        } else if (this.preserveSpecials && (attrs.isFifo() || attrs.isSocket())) {
+            throw new IOException(String.format("unable to retrieve major ID of %s %s", FileOps.fileTypeToString(attrs.getMode()), path));
         }
         throw new AssertionError(attrs + " " + this);
     }
     
     public Statistics statistics() {
-        return this._stats;
+        return this.stats;
     }
     
     /**
      * @throws TextConversionException
      */
     private Message toMessage(MessageCode code, String text) {
-        ByteBuffer payload = ByteBuffer.wrap(this._characterEncoder.encode(text));
+        ByteBuffer payload = ByteBuffer.wrap(this.characterEncoder.encode(text));
         return new Message(code, payload);
     }
     
     @Override
     public String toString() {
         return String.format(
-                "%s(" + "isExitAfterEOF=%b, " + "isExitEarlyIfEmptyList=%b, " + "isInterruptible=%b, " + "isNumericIds=%b, " + "isPreserveDevices=%b, " + "isPreserveLinks=%b, "
+                "%s(" + "isExitAfterEOF=%b, " + "isExitEarlyIfEmptyList=%b, " + "interruptible=%b, " + "isNumericIds=%b, " + "isPreserveDevices=%b, " + "isPreserveLinks=%b, "
                         + "isPreserveSpecials=%b, " + "isPreserveUser=%b, " + "isPreserveGroup=%b, " + "isSafeFileList=%b, " + "isSendStatistics=%b, " + "checksumSeed=%s, " + "fileSelection=%s, "
                         + "filterMode=%s, " + "sourceFiles=%s" + ")",
-                this.getClass().getSimpleName(), this._isExitAfterEOF, this._isExitEarlyIfEmptyList, this._isInterruptible, this._isNumericIds, this._isPreserveDevices, this._isPreserveLinks,
-                this._isPreserveSpecials, this._isPreserveUser, this._isPreserveGroup, this._isSafeFileList, this._isSendStatistics, Text.bytesToString(this._checksumSeed), this._fileSelection,
-                this._filterMode, this._sourceFiles);
+                this.getClass().getSimpleName(), this.exitAfterEOF, this.exitEarlyIfEmptyList, this.interruptible, this.numericIds, this.preserveDevices, this.preserveLinks,
+                this.preserveSpecials, this.preserveUser, this.preserveGroup, this.safeFileList, this.sendStatistics, Text.bytesToString(this.checksumSeed), this.fileSelection,
+                this.filterMode, this.sourceFiles);
     }
 }

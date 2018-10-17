@@ -21,81 +21,81 @@ package com.github.perlundq.yajsync.internal.channels;
 import java.nio.ByteBuffer;
 
 public class BufferedDuplexChannel implements Readable, Bufferable {
-    private final Readable _inputChannel;
-    private final Bufferable _outputChannel;
+    private final Readable inputChannel;
+    private final Bufferable outputChannel;
     
     public BufferedDuplexChannel(Readable readable, Bufferable writable) {
-        this._inputChannel = readable;
-        this._outputChannel = writable;
+        this.inputChannel = readable;
+        this.outputChannel = writable;
     }
     
     @Override
     public void flush() throws ChannelException {
-        this._outputChannel.flush();
+        this.outputChannel.flush();
     }
     
     @Override
     public void get(byte[] dst, int offset, int length) throws ChannelException {
-        this._inputChannel.get(dst, offset, length);
+        this.inputChannel.get(dst, offset, length);
     }
     
     @Override
     public ByteBuffer get(int numBytes) throws ChannelException {
-        return this._inputChannel.get(numBytes);
+        return this.inputChannel.get(numBytes);
     }
     
     @Override
     public byte getByte() throws ChannelException {
-        return this._inputChannel.getByte();
+        return this.inputChannel.getByte();
     }
     
     @Override
     public char getChar() throws ChannelException {
-        return this._inputChannel.getChar();
+        return this.inputChannel.getChar();
     }
     
     @Override
     public int getInt() throws ChannelException {
-        return this._inputChannel.getInt();
+        return this.inputChannel.getInt();
     }
     
     @Override
-    public int numBytesBuffered() {
-        return this._outputChannel.numBytesBuffered();
+    public int getNumBytesBuffered() {
+        return this.outputChannel.getNumBytesBuffered();
     }
     
     @Override
     public void put(byte[] src, int offset, int length) throws ChannelException {
-        this._outputChannel.put(src, offset, length);
+        this.outputChannel.put(src, offset, length);
     }
     
     @Override
     public void put(ByteBuffer src) throws ChannelException {
-        this._outputChannel.put(src);
+        this.outputChannel.put(src);
     }
     
     @Override
     public void putByte(byte b) throws ChannelException {
-        this._outputChannel.putByte(b);
+        this.outputChannel.putByte(b);
     }
     
     @Override
     public void putChar(char c) throws ChannelException {
-        this._outputChannel.putChar(c);
+        this.outputChannel.putChar(c);
     }
     
     @Override
     public void putInt(int i) throws ChannelException {
-        this._outputChannel.putInt(i);
+        this.outputChannel.putInt(i);
     }
     
     @Override
     public void skip(int numBytes) throws ChannelException {
-        this._inputChannel.skip(numBytes);
+        this.inputChannel.skip(numBytes);
     }
     
     @Override
     public String toString() {
-        return String.format("%s %s %s", this.getClass().getSimpleName(), this._inputChannel, this._outputChannel);
+        return String.format("%s %s %s", this.getClass().getSimpleName(), this.inputChannel, this.outputChannel);
     }
 }

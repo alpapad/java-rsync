@@ -43,7 +43,7 @@ public abstract class RestrictedModule implements Module {
     abstract public String authenticate(RsyncAuthContext authContext, String userName) throws ModuleSecurityException;
     
     @Override
-    abstract public String comment();
+    abstract public String getComment();
     
     @Override
     public final boolean isReadable() {
@@ -56,10 +56,10 @@ public abstract class RestrictedModule implements Module {
     }
     
     @Override
-    abstract public String name();
+    abstract public String getName();
     
     @Override
-    public final RestrictedPath restrictedPath() {
+    public final RestrictedPath getRestrictedPath() {
         throw new UnsupportedOperationException();
     }
     

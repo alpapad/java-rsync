@@ -39,10 +39,10 @@ public enum MessageCode {
     SUCCESS(100), /* successfully deleted a file on receiving side */
     WARNING(4); /* sender failed to open a file we wanted */
     
-    private static final Map<Integer, MessageCode> _map = new HashMap<>();
+    private static final Map<Integer, MessageCode> map = new HashMap<>();
     static {
         for (MessageCode message : MessageCode.values()) {
-            _map.put(message.value(), message);
+            map.put(message.getValue(), message);
         }
     }
     
@@ -50,20 +50,20 @@ public enum MessageCode {
      * @throws IllegalArgumentException
      */
     public static MessageCode fromInt(int value) {
-        MessageCode message = _map.get(value);
+        MessageCode message = map.get(value);
         if (message == null) {
             throw new IllegalArgumentException(String.format("Error: unknown tag for %d", value));
         }
         return message;
     }
     
-    private final int _value;
+    private final int value;
     
     MessageCode(int value) {
-        this._value = value;
+        this.value = value;
     }
     
-    public int value() {
-        return this._value;
+    public int getValue() {
+        return this.value;
     }
 }

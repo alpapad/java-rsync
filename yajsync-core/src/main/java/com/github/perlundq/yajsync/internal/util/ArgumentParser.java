@@ -82,45 +82,45 @@ public class ArgumentParser {
         return sb.toString();
     }
     
-    private final Map<String, Option> _longOptions = new HashMap<>();
-    private final List<Option> _optional = new LinkedList<>();
-    private final List<Option> _parsed = new LinkedList<>();
-    private final String _programName;
+    private final Map<String, Option> longOptions = new HashMap<>();
+    private final List<Option> optional = new LinkedList<>();
+    private final List<Option> parsed = new LinkedList<>();
+    private final String programName;
     
-    private final List<Option> _required = new LinkedList<>();
+    private final List<Option> required = new LinkedList<>();
     
-    private final Map<String, Option> _shortOptions = new HashMap<>();
+    private final Map<String, Option> shortOptions = new HashMap<>();
     
-    private final List<String> _unnamedArguments = new LinkedList<>();
+    private final List<String> unnamedArguments = new LinkedList<>();
     
-    private final String _unnamedHelpText;
+    private final String unnamedHelpText;
     
     public ArgumentParser(String programName, String unnamedHelpText) {
         assert programName != null;
-        this._programName = programName;
-        this._unnamedHelpText = unnamedHelpText;
+        this.programName = programName;
+        this.unnamedHelpText = unnamedHelpText;
     }
     
     /**
      * @throws IllegalArgumentException
      */
     public void add(Option option) {
-        if (this._longOptions.containsKey(option.longName())) {
-            throw new IllegalArgumentException(String.format("long option %s already exists (%s)", option.longName(), this._longOptions.get(option.longName())));
+        if (this.longOptions.containsKey(option.longName())) {
+            throw new IllegalArgumentException(String.format("long option %s already exists (%s)", option.longName(), this.longOptions.get(option.longName())));
         }
-        if (this._shortOptions.containsKey(option.shortName())) {
-            throw new IllegalArgumentException(String.format("short option %s already exists (%s)", option.shortName(), this._shortOptions.get(option.shortName())));
+        if (this.shortOptions.containsKey(option.shortName())) {
+            throw new IllegalArgumentException(String.format("short option %s already exists (%s)", option.shortName(), this.shortOptions.get(option.shortName())));
         }
         if (option.hasLongName()) {
-            this._longOptions.put(option.longName(), option);
+            this.longOptions.put(option.longName(), option);
         }
         if (option.hasShortName()) {
-            this._shortOptions.put(option.shortName(), option);
+            this.shortOptions.put(option.shortName(), option);
         }
         if (option.isRequired()) {
-            this._required.add(option);
+            this.required.add(option);
         } else {
-            this._optional.add(option);
+            this.optional.add(option);
         }
     }
     
@@ -137,7 +137,7 @@ public class ArgumentParser {
     
     public void addUnnamed(String arg) throws ArgumentParsingError {
         if (this.isUnnamedArgsAllowed()) {
-            this._unnamedArguments.add(arg);
+            this.unnamedArguments.add(arg);
         } else {
             throw new ArgumentParsingError(arg + " - unknown unnamed argument");
         }
@@ -145,17 +145,17 @@ public class ArgumentParser {
     
     public List<Option> getAllOptions() {
         Set<Option> all = new LinkedHashSet<>();
-        all.addAll(this._longOptions.values());
-        all.addAll(this._shortOptions.values());
+        all.addAll(this.longOptions.values());
+        all.addAll(this.shortOptions.values());
         return new LinkedList<>(all);
     }
     
     private Option getOptionForName(String name) throws ArgumentParsingError {
         Option result;
         if (name.length() == 1) {
-            result = this._shortOptions.get(name);
+            result = this.shortOptions.get(name);
         } else {
-            result = this._longOptions.get(name);
+            result = this.longOptions.get(name);
         }
         if (result == null) {
             throw new ArgumentParsingError(name + " - unknown option");
@@ -164,11 +164,11 @@ public class ArgumentParser {
     }
     
     public List<Option> getParsedOptions() {
-        return this._parsed;
+        return this.parsed;
     }
     
     public List<String> getUnnamedArguments() {
-        return this._unnamedArguments;
+        return this.unnamedArguments;
     }
     
     // make configurable?
@@ -185,7 +185,7 @@ public class ArgumentParser {
     }
     
     private boolean isUnnamedArgsAllowed() {
-        return this._unnamedHelpText != null;
+        return this.unnamedHelpText != null;
     }
     
     public Status parse(Iterable<String> args) throws ArgumentParsingError {
@@ -248,7 +248,7 @@ public class ArgumentParser {
             throw new ArgumentParsingError(String.format("%s expects an argument%nExample: %s", currentOption.name(), currentOption.exampleUsageToString()));
         }
         
-        for (Option o : this._required) {
+        for (Option o : this.required) {
             if (!o.isSet()) {
                 throw new ArgumentParsingError(String.format("%s is a required option", o.name()));
             }
@@ -258,7 +258,7 @@ public class ArgumentParser {
     
     private Status setValue(Option opt, String value) throws ArgumentParsingError {
         Status rc = opt.setValue(value);
-        this._parsed.add(opt);
+        this.parsed.add(opt);
         return rc;
     }
     
@@ -283,9 +283,9 @@ public class ArgumentParser {
     public String toUsageString() {
         final String ls = System.lineSeparator();
         final StringBuilder sb = new StringBuilder();
-        sb.append("Usage: ").append(this._programName).append(" ");
+        sb.append("Usage: ").append(this.programName).append(" ");
         
-        for (Iterator<Option> it = this._required.iterator(); it.hasNext();) {
+        for (Iterator<Option> it = this.required.iterator(); it.hasNext();) {
             Option opt = it.next();
             sb.append(optionToUsageString(opt));
             if (it.hasNext()) {
@@ -293,11 +293,11 @@ public class ArgumentParser {
             }
         }
         
-        if (!this._required.isEmpty()) {
+        if (!this.required.isEmpty()) {
             sb.append(" ");
         }
         
-        for (Iterator<Option> it = this._optional.iterator(); it.hasNext();) {
+        for (Iterator<Option> it = this.optional.iterator(); it.hasNext();) {
             Option opt = it.next();
             sb.append(optionToUsageString(opt));
             if (it.hasNext()) {
@@ -305,22 +305,22 @@ public class ArgumentParser {
             }
         }
         
-        if (this._unnamedHelpText != null) {
-            sb.append(" ").append(this._unnamedHelpText);
+        if (this.unnamedHelpText != null) {
+            sb.append(" ").append(this.unnamedHelpText);
         }
         
-        if (this._required.size() + this._optional.size() > 0) {
+        if (this.required.size() + this.optional.size() > 0) {
             sb.append(ls).append(ls).append("Options:").append(ls);
         }
         
         int maxWidth = 0;
-        for (Option opt : this._required) {
+        for (Option opt : this.required) {
             int width = optionToColumnString(opt).length();
             if (width > maxWidth) {
                 maxWidth = width;
             }
         }
-        for (Option opt : this._optional) {
+        for (Option opt : this.optional) {
             int width = optionToColumnString(opt).length();
             if (width > maxWidth) {
                 maxWidth = width;
@@ -329,11 +329,11 @@ public class ArgumentParser {
         maxWidth += 3;
         
         // TODO: automatically split shortHelp to 80 characters
-        for (Option opt : this._optional) {
+        for (Option opt : this.optional) {
             sb.append(String.format("%-" + maxWidth + "s", optionToColumnString(opt))).append(opt.shortHelp()).append(ls);
         }
         
-        for (Option opt : this._required) {
+        for (Option opt : this.required) {
             sb.append(String.format("%-" + maxWidth + "s", optionToColumnString(opt))).append(opt.shortHelp()).append(ls);
         }
         

@@ -31,31 +31,31 @@ import com.github.perlundq.yajsync.internal.util.RuntimeInterruptException;
 
 public class SimpleInputChannel implements Readable {
     private static final int DEFAULT_BUF_SIZE = 1024;
-    private final ByteBuffer _byteBuf;
-    private final ByteBuffer _charBuf;
-    private final ByteBuffer _intBuf;
-    private long _numBytesRead;
-    private final ReadableByteChannel _sourceChannel;
+    private final ByteBuffer byteBuf;
+    private final ByteBuffer charBuf;
+    private final ByteBuffer intBuf;
+    private long numBytesRead;
+    private final ReadableByteChannel sourceChannel;
     
     public SimpleInputChannel(ReadableByteChannel sock) {
         assert sock != null;
-        this._sourceChannel = sock;
+        this.sourceChannel = sock;
         if (Environment.isAllocateDirect()) {
-            this._byteBuf = ByteBuffer.allocateDirect(Consts.SIZE_BYTE);
-            this._charBuf = ByteBuffer.allocateDirect(Consts.SIZE_CHAR);
-            this._intBuf = ByteBuffer.allocateDirect(Consts.SIZE_INT);
+            this.byteBuf = ByteBuffer.allocateDirect(Consts.SIZE_BYTE);
+            this.charBuf = ByteBuffer.allocateDirect(Consts.SIZE_CHAR);
+            this.intBuf = ByteBuffer.allocateDirect(Consts.SIZE_INT);
         } else {
-            this._byteBuf = ByteBuffer.allocate(Consts.SIZE_BYTE);
-            this._charBuf = ByteBuffer.allocate(Consts.SIZE_CHAR);
-            this._intBuf = ByteBuffer.allocate(Consts.SIZE_INT);
+            this.byteBuf = ByteBuffer.allocate(Consts.SIZE_BYTE);
+            this.charBuf = ByteBuffer.allocate(Consts.SIZE_CHAR);
+            this.intBuf = ByteBuffer.allocate(Consts.SIZE_INT);
         }
-        this._charBuf.order(ByteOrder.LITTLE_ENDIAN);
-        this._intBuf.order(ByteOrder.LITTLE_ENDIAN);
+        this.charBuf.order(ByteOrder.LITTLE_ENDIAN);
+        this.intBuf.order(ByteOrder.LITTLE_ENDIAN);
     }
     
     public void close() throws ChannelException {
         try {
-            this._sourceChannel.close();
+            this.sourceChannel.close();
         } catch (IOException e) {
             throw new ChannelException(e);
         }
@@ -69,11 +69,11 @@ public class SimpleInputChannel implements Readable {
     protected void get(ByteBuffer dst) throws ChannelException {
         try {
             while (dst.hasRemaining()) {
-                int count = this._sourceChannel.read(dst);
+                int count = this.sourceChannel.read(dst);
                 if (count <= 0) {
                     throw new ChannelEOFException(String.format("channel read unexpectedly returned %d (EOF)", count));
                 }
-                this._numBytesRead += count;
+                this.numBytesRead += count;
             }
         } catch (EOFException e) {
             throw new ChannelEOFException(e);
@@ -94,30 +94,30 @@ public class SimpleInputChannel implements Readable {
     
     @Override
     public byte getByte() throws ChannelException {
-        this._byteBuf.clear();
-        this.get(this._byteBuf);
-        this._byteBuf.flip();
-        return this._byteBuf.get();
+        this.byteBuf.clear();
+        this.get(this.byteBuf);
+        this.byteBuf.flip();
+        return this.byteBuf.get();
     }
     
     @Override
     public char getChar() throws ChannelException {
-        this._charBuf.clear();
-        this.get(this._charBuf);
-        this._charBuf.flip();
-        return this._charBuf.getChar();
+        this.charBuf.clear();
+        this.get(this.charBuf);
+        this.charBuf.flip();
+        return this.charBuf.getChar();
     }
     
     @Override
     public int getInt() throws ChannelException {
-        this._intBuf.clear();
-        this.get(this._intBuf);
-        this._intBuf.flip();
-        return this._intBuf.getInt();
+        this.intBuf.clear();
+        this.get(this.intBuf);
+        this.intBuf.flip();
+        return this.intBuf.getInt();
     }
     
-    public long numBytesRead() {
-        return this._numBytesRead;
+    public long getNumBytesRead() {
+        return this.numBytesRead;
     }
     
     @Override

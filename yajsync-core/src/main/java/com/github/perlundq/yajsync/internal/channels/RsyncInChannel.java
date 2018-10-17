@@ -23,22 +23,22 @@ package com.github.perlundq.yajsync.internal.channels;
 import java.nio.channels.ReadableByteChannel;
 
 public class RsyncInChannel extends PrefetchedTaggedInputChannel implements IndexDecoder {
-    private final IndexDecoder _indexDecoder;
+    private final IndexDecoder indexDecoder;
     
     public RsyncInChannel(ReadableByteChannel sock, MessageHandler handler) {
         super(sock, handler);
-        this._indexDecoder = new IndexDecoderImpl(this);
+        this.indexDecoder = new IndexDecoderImpl(this);
         
     }
     
     public RsyncInChannel(ReadableByteChannel sock, MessageHandler handler, int bufferSize) {
         super(sock, handler, bufferSize);
-        this._indexDecoder = new IndexDecoderImpl(this);
+        this.indexDecoder = new IndexDecoderImpl(this);
         
     }
     
     @Override
     public int decodeIndex() throws ChannelException {
-        return this._indexDecoder.decodeIndex();
+        return this.indexDecoder.decodeIndex();
     }
 }

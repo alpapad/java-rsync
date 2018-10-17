@@ -34,20 +34,20 @@ import com.github.perlundq.yajsync.internal.util.ArgumentParsingError;
 public class FilterRuleConfiguration {
     
     private class Modifier {
-        boolean _dirMerge;
-        boolean _exclude;
-        boolean _excludeMergeFilename;
-        boolean _hide;
-        boolean _include;
-        boolean _merge;
-        boolean _noInheritanceOfRules;
-        boolean _protect;
-        boolean _risk;
-        boolean _show;
+        boolean dirMerge;
+        boolean exclude;
+        boolean excludeMergeFilename;
+        boolean hide;
+        boolean include;
+        boolean merge;
+        boolean noInheritanceOfRules;
+        boolean protect;
+        boolean risk;
+        boolean show;
         
         public void checkValidity(String plainRule) throws ArgumentParsingError {
-            if (this._merge && this._dirMerge || this._include && this._exclude || this._protect && this._risk) {
-                throw new ArgumentParsingError(String.format("invalid combination of modifiers in rule %s (processing %s)", plainRule, FilterRuleConfiguration.this._dirname));
+            if (this.merge && this.dirMerge || this.include && this.exclude || this.protect && this.risk) {
+                throw new ArgumentParsingError(String.format("invalid combination of modifiers in rule %s (processing %s)", plainRule, FilterRuleConfiguration.this.dirname));
             }
         }
     }
@@ -56,30 +56,30 @@ public class FilterRuleConfiguration {
         DELETION, EXCLUSION, HIDING
     }
     
-    private final FilterRuleList _deletionRuleList = new FilterRuleList();
-    private String _dirMergeFilename = null;
-    private String _dirname = null;
-    private final FilterRuleList _hidingRuleList = new FilterRuleList();
-    private boolean _inheritance = true;
+    private final FilterRuleList deletionRuleList = new FilterRuleList();
+    private String dirMergeFilename = null;
+    private String dirname = null;
+    private final FilterRuleList hidingRuleList = new FilterRuleList();
+    private boolean inheritance = true;
     
     // FSTODO: CustomFileSystem.getConfigPath( ... )
     
-    private FilterRuleList _localRuleList = new FilterRuleList();
+    private FilterRuleList localRuleList = new FilterRuleList();
     
-    private FilterRuleConfiguration _parentRuleConfiguration = null;
+    private FilterRuleConfiguration parentRuleConfiguration = null;
     
     public FilterRuleConfiguration(FilterRuleConfiguration parentRuleConfiguration, Path directory) throws ArgumentParsingError {
         
-        this._parentRuleConfiguration = parentRuleConfiguration;
-        if (this._parentRuleConfiguration != null) {
-            this._inheritance = this._parentRuleConfiguration.isInheritance();
-            this._dirMergeFilename = this._parentRuleConfiguration.getDirMergeFilename();
+        this.parentRuleConfiguration = parentRuleConfiguration;
+        if (this.parentRuleConfiguration != null) {
+            this.inheritance = this.parentRuleConfiguration.isInheritance();
+            this.dirMergeFilename = this.parentRuleConfiguration.getDirMergeFilename();
         }
-        this._dirname = directory.toString();
+        this.dirname = directory.toString();
         
-        if (this._dirMergeFilename != null && new File(this._dirname + "/" + this._dirMergeFilename).exists()) {
+        if (this.dirMergeFilename != null && new File(this.dirname + "/" + this.dirMergeFilename).exists()) {
             // merge local filter rule file
-            this.readRule(". " + this._dirname + "/" + this._dirMergeFilename);
+            this.readRule(". " + this.dirname + "/" + this.dirMergeFilename);
         }
     }
     
@@ -112,13 +112,13 @@ public class FilterRuleConfiguration {
         
         switch (ruleType) {
             case EXCLUSION:
-                result = this._localRuleList.check(filename, isDirectory);
+                result = this.localRuleList.check(filename, isDirectory);
                 break;
             case DELETION:
-                result = this._deletionRuleList.check(filename, isDirectory);
+                result = this.deletionRuleList.check(filename, isDirectory);
                 break;
             case HIDING:
-                result = this._hidingRuleList.check(filename, isDirectory);
+                result = this.hidingRuleList.check(filename, isDirectory);
                 break;
             default:
                 throw new RuntimeException("ruleType " + ruleType + " not implemented");
@@ -153,15 +153,15 @@ public class FilterRuleConfiguration {
     }
     
     public String getDirMergeFilename() {
-        return this._dirMergeFilename;
+        return this.dirMergeFilename;
     }
     
     public FilterRuleList getFilterRuleListForSending() {
-        return new FilterRuleList().addList(this._localRuleList).addList(this._deletionRuleList);
+        return new FilterRuleList().addList(this.localRuleList).addList(this.deletionRuleList);
     }
     
     public FilterRuleConfiguration getParentRuleConfiguration() {
-        return this._parentRuleConfiguration;
+        return this.parentRuleConfiguration;
     }
     
     public boolean hide(String filename, boolean isDirectory) {
@@ -183,15 +183,15 @@ public class FilterRuleConfiguration {
     }
     
     public boolean isFilterAvailable() {
-        boolean result = this._localRuleList._rules.size() > 0 || this._deletionRuleList._rules.size() > 0 || this._hidingRuleList._rules.size() > 0;
-        if (!result && this._inheritance && this._parentRuleConfiguration != null) {
-            result = this._parentRuleConfiguration.isFilterAvailable();
+        boolean result = this.localRuleList._rules.size() > 0 || this.deletionRuleList._rules.size() > 0 || this.hidingRuleList._rules.size() > 0;
+        if (!result && this.inheritance && this.parentRuleConfiguration != null) {
+            result = this.parentRuleConfiguration.isFilterAvailable();
         }
         return result;
     }
     
     public boolean isInheritance() {
-        return this._inheritance;
+        return this.inheritance;
     }
     
     public boolean protect(String filename, boolean isDirectory) {
@@ -220,12 +220,12 @@ public class FilterRuleConfiguration {
             
             if (c == '-') {
                 // exclude rule
-                m._exclude = true;
+                m.exclude = true;
                 i++;
                 continue;
             } else if (c == '+') {
                 // include rule
-                m._include = true;
+                m.include = true;
                 i++;
                 continue;
             }
@@ -233,12 +233,12 @@ public class FilterRuleConfiguration {
             if (i > 0) {
                 if (c == 'e') {
                     // exclude the merge-file name from the transfer
-                    m._excludeMergeFilename = true;
+                    m.excludeMergeFilename = true;
                     i++;
                     continue;
                 } else if (c == 'n') {
                     // don't inherit rules
-                    m._noInheritanceOfRules = true;
+                    m.noInheritanceOfRules = true;
                     i++;
                     continue;
                 } else if (c == 'w') {
@@ -253,62 +253,62 @@ public class FilterRuleConfiguration {
             
             if (c == '.') {
                 // merge
-                m._merge = true;
+                m.merge = true;
                 i++;
                 continue;
             } else if (c == ':') {
                 // dir-merge
-                m._dirMerge = true;
+                m.dirMerge = true;
                 i++;
                 continue;
             } else if (c == 'm' && i + 5 <= modifier.length() && "merge".equals(modifier.substring(i, i + 5))) {
                 // merge
-                m._merge = true;
+                m.merge = true;
                 i += 5;
                 continue;
             } else if (c == 'd' && i + 9 <= modifier.length() && "dir-merge".equals(modifier.substring(i, i + 9))) {
                 // dir-merge
-                m._dirMerge = true;
+                m.dirMerge = true;
                 i += 9;
                 continue;
             } else if (c == 'P') {
                 // protect
-                m._protect = true;
+                m.protect = true;
                 i++;
                 continue;
             } else if (c == 'p' && i + 7 <= modifier.length() && "protect".equals(modifier.substring(i, i + 7))) {
                 // protect
-                m._protect = true;
+                m.protect = true;
                 i += 7;
                 continue;
             } else if (c == 'R') {
                 // risk
-                m._risk = true;
+                m.risk = true;
                 i++;
                 continue;
             } else if (c == 'r' && i + 4 <= modifier.length() && "risk".equals(modifier.substring(i, i + 4))) {
                 // risk
-                m._risk = true;
+                m.risk = true;
                 i += 4;
                 continue;
             } else if (c == 'H') {
                 // hide
-                m._hide = true;
+                m.hide = true;
                 i++;
                 continue;
             } else if (c == 'h' && i + 4 <= modifier.length() && "hide".equals(modifier.substring(i, i + 4))) {
                 // hide
-                m._hide = true;
+                m.hide = true;
                 i += 4;
                 continue;
             } else if (c == 'S') {
                 // show
-                m._show = true;
+                m.show = true;
                 i++;
                 continue;
             } else if (c == 's' && i + 4 <= modifier.length() && "show".equals(modifier.substring(i, i + 4))) {
                 // show
-                m._show = true;
+                m.show = true;
                 i += 4;
                 continue;
             }
@@ -325,11 +325,11 @@ public class FilterRuleConfiguration {
         
         if (splittedRule.length == 1 && (splittedRule[0].startsWith("!") || splittedRule[0].startsWith("clear"))) {
             // LIST-CLEARING FILTER RULE
-            this._localRuleList = new FilterRuleList();
+            this.localRuleList = new FilterRuleList();
             // clearing refers to inclusion/exclusion lists only
-            // _deletionRuleList = new FilterRuleList();
-            // _hidingRuleList = new FilterRuleList();
-            this._parentRuleConfiguration = null;
+            // deletionRuleList = new FilterRuleList();
+            // hidingRuleList = new FilterRuleList();
+            this.parentRuleConfiguration = null;
             return;
         }
         
@@ -340,13 +340,13 @@ public class FilterRuleConfiguration {
         Modifier m = this.readModifiers(splittedRule[0].trim(), plainRule);
         m.checkValidity(plainRule);
         
-        if (m._merge == true || m._dirMerge == true) {
+        if (m.merge == true || m.dirMerge == true) {
             
-            if (m._noInheritanceOfRules == true) {
-                this._inheritance = false;
+            if (m.noInheritanceOfRules == true) {
+                this.inheritance = false;
             }
             
-            if (m._merge == true) {
+            if (m.merge == true) {
                 
                 // _mergeRuleList.add(new MergeRule(m, splittedRule[1].trim()));
                 
@@ -354,7 +354,7 @@ public class FilterRuleConfiguration {
                 Path _mergeFilename = Paths.get(splittedRule[1].trim());
                 Path _absoluteMergeFilename = _mergeFilename;
                 if (!_absoluteMergeFilename.isAbsolute()) {
-                    _absoluteMergeFilename = Paths.get(this._dirname, splittedRule[1].trim());
+                    _absoluteMergeFilename = Paths.get(this.dirname, splittedRule[1].trim());
                 }
                 
                 try (BufferedReader br = new BufferedReader(new FileReader(_absoluteMergeFilename.toString()))) {
@@ -364,10 +364,10 @@ public class FilterRuleConfiguration {
                         // ignore empty lines or comments
                         if (line.length() != 0 && !line.startsWith("#")) {
                             
-                            if (m._exclude == true) {
-                                this._localRuleList.addRule("- " + line);
-                            } else if (m._include == true) {
-                                this._localRuleList.addRule("+ " + line);
+                            if (m.exclude == true) {
+                                this.localRuleList.addRule("- " + line);
+                            } else if (m.include == true) {
+                                this.localRuleList.addRule("+ " + line);
                             } else {
                                 this.readRule(line);
                             }
@@ -375,8 +375,8 @@ public class FilterRuleConfiguration {
                         line = br.readLine();
                     }
                     
-                    if (m._excludeMergeFilename && _mergeFilename != null) {
-                        this._localRuleList.addRule("- " + _mergeFilename);
+                    if (m.excludeMergeFilename && _mergeFilename != null) {
+                        this.localRuleList.addRule("- " + _mergeFilename);
                     }
                     
                 } catch (IOException e) {
@@ -386,34 +386,34 @@ public class FilterRuleConfiguration {
                 return;
             }
             
-            if (this._dirMergeFilename == null && m._dirMerge == true) {
-                this._dirMergeFilename = splittedRule[1].trim();
+            if (this.dirMergeFilename == null && m.dirMerge == true) {
+                this.dirMergeFilename = splittedRule[1].trim();
             }
             
-            if (m._excludeMergeFilename && this._dirMergeFilename != null) {
-                this._localRuleList.addRule("- " + this._dirMergeFilename);
+            if (m.excludeMergeFilename && this.dirMergeFilename != null) {
+                this.localRuleList.addRule("- " + this.dirMergeFilename);
             }
             
             return;
         }
         
-        if (m._exclude == true) {
-            this._localRuleList.addRule("- " + splittedRule[1].trim());
+        if (m.exclude == true) {
+            this.localRuleList.addRule("- " + splittedRule[1].trim());
             return;
-        } else if (m._include == true) {
-            this._localRuleList.addRule("+ " + splittedRule[1].trim());
+        } else if (m.include == true) {
+            this.localRuleList.addRule("+ " + splittedRule[1].trim());
             return;
-        } else if (m._protect == true) {
-            this._deletionRuleList.addRule("P " + splittedRule[1].trim());
+        } else if (m.protect == true) {
+            this.deletionRuleList.addRule("P " + splittedRule[1].trim());
             return;
-        } else if (m._risk == true) {
-            this._deletionRuleList.addRule("R " + splittedRule[1].trim());
+        } else if (m.risk == true) {
+            this.deletionRuleList.addRule("R " + splittedRule[1].trim());
             return;
-        } else if (m._hide == true) {
-            this._hidingRuleList.addRule("H " + splittedRule[1].trim());
+        } else if (m.hide == true) {
+            this.hidingRuleList.addRule("H " + splittedRule[1].trim());
             return;
-        } else if (m._show == true) {
-            this._hidingRuleList.addRule("S " + splittedRule[1].trim());
+        } else if (m.show == true) {
+            this.hidingRuleList.addRule("S " + splittedRule[1].trim());
             return;
         }
         
@@ -443,17 +443,17 @@ public class FilterRuleConfiguration {
         
         StringBuilder buf = new StringBuilder();
         
-        buf.append("dir=").append(this._dirname).append("; ");
-        buf.append("rules=[").append(this._localRuleList.toString()).append("]; ");
-        buf.append("deletion_rules=[").append(this._deletionRuleList.toString()).append("]; ");
-        buf.append("hiding_rules=[").append(this._hidingRuleList.toString()).append("]; ");
-        buf.append("inheritance=").append(new Boolean(this._inheritance).toString()).append("; ");
-        if (this._dirMergeFilename != null) {
-            buf.append("dirMergeFilename=").append(this._dirMergeFilename).append("; ");
+        buf.append("dir=").append(this.dirname).append("; ");
+        buf.append("rules=[").append(this.localRuleList.toString()).append("]; ");
+        buf.append("deletion_rules=[").append(this.deletionRuleList.toString()).append("]; ");
+        buf.append("hiding_rules=[").append(this.hidingRuleList.toString()).append("]; ");
+        buf.append("inheritance=").append(new Boolean(this.inheritance).toString()).append("; ");
+        if (this.dirMergeFilename != null) {
+            buf.append("dirMergeFilename=").append(this.dirMergeFilename).append("; ");
         }
         
-        if (this._parentRuleConfiguration != null) {
-            buf.append("parent=").append(this._parentRuleConfiguration.toString());
+        if (this.parentRuleConfiguration != null) {
+            buf.append("parent=").append(this.parentRuleConfiguration.toString());
         }
         
         return buf.toString();

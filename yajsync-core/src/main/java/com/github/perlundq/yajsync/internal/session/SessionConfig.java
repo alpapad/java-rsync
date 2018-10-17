@@ -43,34 +43,34 @@ import com.github.perlundq.yajsync.internal.util.OverflowException;
 import com.github.perlundq.yajsync.internal.util.Util;
 
 public abstract class SessionConfig {
-    private static final Logger _log = Logger.getLogger(SessionConfig.class.getName());
+    private static final Logger LOG = Logger.getLogger(SessionConfig.class.getName());
     private static final Pattern PROTOCOL_VERSION_REGEX = Pattern.compile("@RSYNCD: (\\d+)\\.(\\d+)$");
     private static final ProtocolVersion VERSION = new ProtocolVersion(30, 0);
     
-    protected TextDecoder _characterDecoder;
-    protected TextEncoder _characterEncoder;
-    private Charset _charset;
-    protected byte[] _checksumSeed; // always stored in little endian
-    protected final AutoFlushableDuplexChannel _peerConnection;
+    protected TextDecoder characterDecoder;
+    protected TextEncoder characterEncoder;
+    private Charset charset;
+    protected byte[] checksumSeed; // always stored in little endian
+    protected final AutoFlushableDuplexChannel peerConnection;
     
-    protected SessionStatus _status;
+    protected SessionStatus status;
     
     /**
      * @throws IllegalArgumentException if charset is not supported
      */
     protected SessionConfig(ReadableByteChannel in, WritableByteChannel out, Charset charset) {
-        this._peerConnection = new AutoFlushableDuplexChannel(new SimpleInputChannel(in), new BufferedOutputChannel(out));
+        this.peerConnection = new AutoFlushableDuplexChannel(new SimpleInputChannel(in), new BufferedOutputChannel(out));
         this.setCharset(charset);
     }
     
-    public Charset charset() {
-        assert this._charset != null;
-        return this._charset;
+    public Charset getCharset() {
+        assert this.charset != null;
+        return this.charset;
     }
     
-    public byte[] checksumSeed() {
-        assert this._checksumSeed != null;
-        return this._checksumSeed;
+    public byte[] getChecksumSeed() {
+        assert this.checksumSeed != null;
+        return this.checksumSeed;
     }
     
     /**
@@ -82,7 +82,7 @@ public abstract class SessionConfig {
      * @throws IllegalStateException  if failing to encode output characters using
      *                                current character set
      */
-    protected void exchangeProtocolVersion() throws ChannelException, RsyncProtocolException {
+    protected void getExchangeProtocolVersion() throws ChannelException, RsyncProtocolException {
         this.sendVersion(VERSION);
         ProtocolVersion peerVersion = this.receivePeerVersion();
         if (peerVersion.compareTo(VERSION) < 0) {
@@ -101,20 +101,20 @@ public abstract class SessionConfig {
         ByteBuffer buf = ByteBuffer.allocate(64);
         String result = null;
         while (result == null) {
-            byte lastByte = this._peerConnection.getByte();
+            byte lastByte = this.peerConnection.getByte();
             switch (lastByte) {
                 case Text.ASCII_CR:
                     break;
                 case Text.ASCII_NEWLINE:
                     buf.flip();
                     try {
-                        result = this._characterDecoder.decode(buf);
+                        result = this.characterDecoder.decode(buf);
                     } catch (TextConversionException e) {
                         throw new RsyncProtocolException(e);
                     }
                     break;
                 case Text.ASCII_NULL:
-                    throw new RsyncProtocolException(String.format("got a null-terminated input string without a newline: " + "\"%s\"", this._characterDecoder.decode(buf)));
+                    throw new RsyncProtocolException(String.format("got a null-terminated input string without a newline: " + "\"%s\"", this.characterDecoder.decode(buf)));
                 default:
                     if (!buf.hasRemaining()) {
                         try {
@@ -127,8 +127,8 @@ public abstract class SessionConfig {
             }
         }
         
-        if (_log.isLoggable(Level.FINER)) {
-            _log.finer("< " + result);
+        if (LOG.isLoggable(Level.FINER)) {
+            LOG.finer("< " + result);
         }
         return result;
     }
@@ -157,7 +157,7 @@ public abstract class SessionConfig {
      * @throws ChannelException      if there is a communication failure with peer
      */
     private void sendVersion(ProtocolVersion version) throws ChannelException {
-        this.writeString(String.format("@RSYNCD: %d.%d\n", version.major(), version.minor()));
+        this.writeString(String.format("@RSYNCD: %d.%d\n", version.getMajor(), version.getMinor()));
     }
     
     /**
@@ -170,14 +170,14 @@ public abstract class SessionConfig {
                     "character set %s is not supported - cannot encode SLASH (/)," + " DOT (.), NEWLINE (\n), CARRIAGE RETURN (\r) and NULL (\0) " + "to their ASCII counterparts and vice versa",
                     charset));
         }
-        this._charset = charset;
-        this._characterEncoder = TextEncoder.newStrict(this._charset);
-        this._characterDecoder = TextDecoder.newStrict(this._charset);
+        this.charset = charset;
+        this.characterEncoder = TextEncoder.newStrict(this.charset);
+        this.characterDecoder = TextDecoder.newStrict(this.charset);
     }
     
-    public SessionStatus status() {
-        assert this._status != null;
-        return this._status;
+    public SessionStatus getStatus() {
+        assert this.status != null;
+        return this.status;
     }
     
     /**
@@ -186,11 +186,11 @@ public abstract class SessionConfig {
      */
     protected void writeString(String text) throws ChannelException {
         try {
-            if (_log.isLoggable(Level.FINER)) {
-                _log.finer("> " + text);
+            if (LOG.isLoggable(Level.FINER)) {
+                LOG.finer("> " + text);
             }
-            byte[] textEncoded = this._characterEncoder.encode(text);
-            this._peerConnection.put(textEncoded, 0, textEncoded.length);
+            byte[] textEncoded = this.characterEncoder.encode(text);
+            this.peerConnection.put(textEncoded, 0, textEncoded.length);
         } catch (TextConversionException e) {
             throw new IllegalStateException(e);
         }

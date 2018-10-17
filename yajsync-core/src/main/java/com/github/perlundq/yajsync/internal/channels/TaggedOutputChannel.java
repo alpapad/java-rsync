@@ -27,7 +27,7 @@ import com.github.perlundq.yajsync.internal.util.Consts;
 public class TaggedOutputChannel extends BufferedOutputChannel implements Taggable {
     private static final int DEFAULT_TAG_OFFSET = 0;
     private static final int TAG_SIZE = Consts.SIZE_INT;
-    private int _tag_offset;
+    private int tagOffset;
     
     public TaggedOutputChannel(WritableByteChannel sock) {
         super(sock);
@@ -41,13 +41,13 @@ public class TaggedOutputChannel extends BufferedOutputChannel implements Taggab
     
     @Override
     public void flush() throws ChannelException {
-        if (this.numBytesBuffered() > 0) {
-            if (this.numBytesUntagged() > 0) {
+        if (this.getNumBytesBuffered() > 0) {
+            if (this.getNumBytesUntagged() > 0) {
                 this.tagCurrentData();
             } else {
                 // reset buffer position
-                assert this._buffer.position() == this._tag_offset + TAG_SIZE;
-                this._buffer.position(this._buffer.position() - TAG_SIZE);
+                assert this.buffer.position() == this.tagOffset + TAG_SIZE;
+                this.buffer.position(this.buffer.position() - TAG_SIZE);
             }
             super.flush();
             this.updateTagOffsetAndBufPos(DEFAULT_TAG_OFFSET);
@@ -55,48 +55,48 @@ public class TaggedOutputChannel extends BufferedOutputChannel implements Taggab
     }
     
     @Override
-    public int numBytesBuffered() {
-        return this._buffer.position() - TAG_SIZE;
+    public int getNumBytesBuffered() {
+        return this.buffer.position() - TAG_SIZE;
     }
     
-    private int numBytesUntagged() {
-        int dataStartOffset = this._tag_offset + TAG_SIZE;
-        int numBytesUntagged = this._buffer.position() - dataStartOffset;
+    private int getNumBytesUntagged() {
+        int dataStartOffset = this.tagOffset + TAG_SIZE;
+        int numBytesUntagged = this.buffer.position() - dataStartOffset;
         assert numBytesUntagged >= 0;
         return numBytesUntagged;
     }
     
     @Override
     public void putMessage(Message message) throws ChannelException {
-        assert message.header().length() == message.payload().remaining();
+        assert message.getHeader().getLength() == message.getPayload().remaining();
         
-        int numBytesRequired = message.header().length() + TAG_SIZE;
+        int numBytesRequired = message.getHeader().getLength() + TAG_SIZE;
         int minMessageSize = TAG_SIZE + 1;
         
-        if (numBytesRequired + minMessageSize > this._buffer.remaining()) {
+        if (numBytesRequired + minMessageSize > this.buffer.remaining()) {
             this.flush();
-        } else if (this.numBytesUntagged() > 0) {
+        } else if (this.getNumBytesUntagged() > 0) {
             this.tagCurrentData();
-            this.updateTagOffsetAndBufPos(this._buffer.position());
+            this.updateTagOffsetAndBufPos(this.buffer.position());
         }
         
-        this.putMessageHeader(this._tag_offset, message.header());
-        assert this._buffer.remaining() >= message.payload().remaining();
-        this.put(message.payload());
-        this.updateTagOffsetAndBufPos(this._buffer.position());
+        this.putMessageHeader(this.tagOffset, message.getHeader());
+        assert this.buffer.remaining() >= message.getPayload().remaining();
+        this.put(message.getPayload());
+        this.updateTagOffsetAndBufPos(this.buffer.position());
     }
     
     private void putMessageHeader(int offset, MessageHeader header) {
-        this._buffer.putInt(offset, header.toTag());
+        this.buffer.putInt(offset, header.toTag());
     }
     
     private void tagCurrentData() {
-        this.putMessageHeader(this._tag_offset, new MessageHeader(MessageCode.DATA, this.numBytesUntagged()));
+        this.putMessageHeader(this.tagOffset, new MessageHeader(MessageCode.DATA, this.getNumBytesUntagged()));
     }
     
     private void updateTagOffsetAndBufPos(int position) {
-        assert position >= 0 && position < this._buffer.limit() - TAG_SIZE;
-        this._tag_offset = position;
-        this._buffer.position(this._tag_offset + TAG_SIZE);
+        assert position >= 0 && position < this.buffer.limit() - TAG_SIZE;
+        this.tagOffset = position;
+        this.buffer.position(this.tagOffset + TAG_SIZE);
     }
 }

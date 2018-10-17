@@ -50,18 +50,18 @@ public final class Environment {
     public static int getGroupId() {
         String gidString = System.getProperty(PROPERTY_KEY_GROUP_UID);
         if (gidString == null) {
-            return Group.NOBODY.id();
+            return Group.NOBODY.getId();
         }
         int gid = Integer.parseInt(gidString);
         if (gid < 0 || gid > Group.ID_MAX) {
-            return Group.NOBODY.id();
+            return Group.NOBODY.getId();
         }
         return gid;
         
     }
     
     public static String getGroupName() {
-        return getPropertyOrDefault(PROPERTY_KEY_GROUP_NAME, Group.NOBODY.name());
+        return getPropertyOrDefault(PROPERTY_KEY_GROUP_NAME, Group.NOBODY.getName());
     }
     
     private static String getNonNullProperty(String key) {
@@ -87,17 +87,17 @@ public final class Environment {
     public static int getUserId() {
         String uidString = System.getProperty(PROPERTY_KEY_USER_UID);
         if (uidString == null) {
-            return User.NOBODY.id();
+            return User.NOBODY.getId();
         }
         int uid = Integer.parseInt(uidString);
         if (uid < 0 || uid > User.ID_MAX) {
-            return User.NOBODY.id();
+            return User.NOBODY.getId();
         }
         return uid;
     }
     
     public static String getUserName() {
-        return getPropertyOrDefault(PROPERTY_KEY_USER_NAME, User.NOBODY.name());
+        return getPropertyOrDefault(PROPERTY_KEY_USER_NAME, User.NOBODY.getName());
     }
     
     public static String getWorkingDirectoryName() {

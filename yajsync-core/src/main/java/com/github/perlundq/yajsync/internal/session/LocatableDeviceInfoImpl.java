@@ -22,17 +22,17 @@ import com.github.perlundq.yajsync.attr.LocatableDeviceInfo;
 import com.github.perlundq.yajsync.attr.RsyncFileAttributes;
 
 class LocatableDeviceInfoImpl extends DeviceInfoImpl implements LocatableDeviceInfo {
-    private final Path _path;
+    private final Path path;
     
     public LocatableDeviceInfoImpl(String pathName, byte[] pathNameBytes, RsyncFileAttributes attrs, int major, int minor, Path path) {
         super(pathName, pathNameBytes, attrs, major, minor);
         assert path != null;
         assert path.isAbsolute();
-        this._path = path;
+        this.path = path;
     }
     
     @Override
-    public Path path() {
-        return this._path;
+    public Path getPath() {
+        return this.path;
     }
 }
