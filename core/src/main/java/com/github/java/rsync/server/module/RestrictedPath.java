@@ -18,6 +18,10 @@
  */
 package com.github.java.rsync.server.module;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -36,38 +40,50 @@ import com.github.java.rsync.internal.util.PathOps;
  */
 public final class RestrictedPath {
     private static final Pattern MODULE_REGEX = Pattern.compile("^\\w+$");
-    private final Path dotDir;
-    private final Path dotDotDir;
+//    private final Path dotDir;
+//    private final Path dotDotDir;
     private final String moduleName;
-    private final Path rootPath;
+    //private final Path rootPath;
 
+    private final String pathValue; 
+    private final String fsValue;
+    private FileSystem fs;
+    
     /**
      * @param moduleName
      * @param rootPath   the absolute path to the module top directory.
      */
-    public RestrictedPath(String moduleName, Path rootPath) {
+    public RestrictedPath(String moduleName,String fsValue, String pathValue) {
         if (!MODULE_REGEX.matcher(moduleName).matches()) {
             throw new IllegalArgumentException(String.format("rsync module must consist of alphanumeric characters " + "and underscore only: %s", moduleName));
         }
-        assert rootPath.isAbsolute() : rootPath;
+        this.pathValue = pathValue;
+        this.fsValue = fsValue;
+        try {
+            this.fs = getFs(null, fsValue);
+        } catch (IOException | URISyntaxException e) {
+            // TODO Auto-generated catch block
+           throw new RuntimeException(e);
+        }
+        //assert rootPath.isAbsolute() : rootPath;
         this.moduleName = moduleName;
-        this.rootPath = rootPath.normalize();
-        dotDir = this.rootPath.getFileSystem().getPath(Text.DOT);
-        dotDotDir = this.rootPath.getFileSystem().getPath(Text.DOT_DOT);
+//        this.rootPath = rootPath.normalize();
+//        dotDir = this.rootPath.getFileSystem().getPath(Text.DOT);
+//        dotDotDir = this.rootPath.getFileSystem().getPath(Text.DOT_DOT);
     }
 
     @Override
     public boolean equals(Object other) {
         if (other != null && other.getClass() == this.getClass()) {
             RestrictedPath otherPath = (RestrictedPath) other;
-            return moduleName.equals(otherPath.moduleName) && rootPath.equals(otherPath.rootPath);
+            return moduleName.equals(otherPath.moduleName) && pathValue.equals(otherPath.pathValue);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(moduleName, rootPath);
+        return Objects.hash(moduleName, pathValue);
     }
 
     /**
@@ -80,16 +96,16 @@ public final class RestrictedPath {
         Path normalized = path.normalize();
         if (normalized.startsWith(moduleName)) {
             if (normalized.getNameCount() == 1) {
-                result = rootPath;
+                result = rootPath();
             } else {
                 Path strippedOfModulePrefix = normalized.subpath(1, normalized.getNameCount());
-                result = rootPath.resolve(strippedOfModulePrefix).normalize();
+                result = rootPath().resolve(strippedOfModulePrefix).normalize();
             }
         } else {
             throw new RsyncSecurityException(String.format("\"%s\" is outside virtual dir for module %s", path, moduleName));
         }
-        if (path.endsWith(dotDir)) {
-            return result.resolve(dotDir);
+        if (path.endsWith(dotDir())) {
+            return result.resolve(dotDir());
         } else {
             return result;
         }
@@ -97,9 +113,9 @@ public final class RestrictedPath {
 
     public Path resolve(String pathName) throws RsyncSecurityException {
         try {
-            Path otherPath = PathOps.get(rootPath.getFileSystem(), pathName);
+            Path otherPath = PathOps.get(getFs(), pathName);
             Path resolved = this.resolve(otherPath);
-            if (PathOps.contains(resolved, dotDotDir)) {
+            if (PathOps.contains(resolved, dotDotDir())) {
                 throw new RsyncSecurityException(String.format("resolved path of %s contains ..: %s", pathName, resolved));
             }
             return resolved;
@@ -110,6 +126,36 @@ public final class RestrictedPath {
 
     @Override
     public String toString() {
-        return String.format("%s(name=%s, root=%s)", this.getClass().getSimpleName(), moduleName, rootPath);
+        return String.format("%s(name=%s, root=%s)", this.getClass().getSimpleName(), moduleName, rootPath());
+    }
+    
+    private Path dotDir() {
+        return getFs().getPath(Text.DOT);
+    }
+    private Path dotDotDir() {
+        return getFs().getPath(Text.DOT_DOT);
+    }
+    private Path rootPath() {
+        Path rootPath = PathOps.get(getFs(), pathValue);
+        assert rootPath.isAbsolute() : rootPath;
+        return rootPath.normalize();
+    }
+    private FileSystem getFs() {
+        try {
+            return getFs(fs, fsValue);
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private static FileSystem getFs(FileSystem fs, String fsValue) throws IOException, URISyntaxException {
+        if(fs != null && fs.isOpen()) {
+            return fs;
+        }
+        if (fsValue != null) {
+            fs = PathOps.fileSystemOf(fsValue);
+        } else {
+            fs = FileSystems.getDefault();
+        }
+        return fs;
     }
 }

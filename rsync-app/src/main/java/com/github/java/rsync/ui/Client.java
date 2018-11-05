@@ -26,12 +26,20 @@ public class Client {
             new YajsyncClient().start(args);
         }
         int rc = new YajsyncClient().start(new String[] { //
+                
+                "-v",
+                "-v",
+                "-v",
+                "-v",
+                
                 "--archive", //
+                //"-rI", //
                 "--delete", //
                 "--stats", //
                 "--filter=+ *", //
-                "/home/alpapad/git/rsync/yajsync-orig/yajsync-app/src/main/java/com/github/perlundq/", //
-                "rsync://localhost/test/src/main/java/com/github/perlundq/" //
+                "--fs=kzip:file:///home/alpapad/a.zip",
+                "/", //
+                "rsync://localhost/test/" //
         });
         System.exit(rc);
         

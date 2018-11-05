@@ -23,7 +23,7 @@ import java.io.IOException;
 public class Server {
     public static void main(String args[]) throws IOException, InterruptedException {
         {
-            new YajsyncServer().start(new String[] { "--config=/home/alpapad/git/rsync/yajsync-orig/yajsync-app/yajsyncd.conf" });
+            new YajsyncServer().start(new String[] { "--config=/home/alpapad/git/rsync/yajsync-orig/rsync-app/yajsyncd.conf", "-v", "-v" });
         }
         int rc = new YajsyncServer().start(args);
         System.exit(rc);

@@ -212,9 +212,9 @@ class SimpleModule implements Module {
     private final boolean readable;
     private final boolean writable;
 
-    SimpleModule(String name, Path root, String comment, boolean isReadable, boolean isWritable) {
+    SimpleModule(String name, String root, String comment, boolean isReadable, boolean isWritable) {
         this.name = name.toString();
-        path = new RestrictedPath(name, root);
+        path = new RestrictedPath(name, null, root);
         this.comment = comment;
         readable = isReadable;
         writable = isWritable;
@@ -723,7 +723,7 @@ public class SystemTest {
             @Override
             public Integer call() throws Exception {
                 Path modulePath = tempDir.newFolder().toPath();
-                Module m = new SimpleModule(restrictedModuleName, modulePath, "a test module", true, false);
+                Module m = new SimpleModule(restrictedModuleName, modulePath.toString(), "a test module", true, false);
                 RestrictedModule rm = new SimpleRestrictedModule(authToken, m, restrictedModuleName, "a restricted module");
                 int rc = SystemTest.this.newServer(new TestModules(rm)).setIsListeningLatch(isListeningLatch).start(new String[] { "--port=14415" });
                 return rc;
@@ -775,7 +775,7 @@ public class SystemTest {
             @Override
             public Integer call() throws Exception {
                 Path modulePath = tempDir.newFolder().toPath();
-                Module m = new SimpleModule(restrictedModuleName, modulePath, "a test module", true, false);
+                Module m = new SimpleModule(restrictedModuleName, modulePath.toString(), "a test module", true, false);
                 RestrictedModule rm = new SimpleRestrictedModule(authToken, m, restrictedModuleName, "a restricted module");
                 int rc = SystemTest.this.newServer(new TestModules(rm)).setIsListeningLatch(isListeningLatch).start(new String[] { "--port=14415" });
                 return rc;
@@ -820,7 +820,7 @@ public class SystemTest {
             @Override
             public Integer call() throws Exception {
                 Path modulePath = tempDir.newFolder().toPath();
-                Module m = new SimpleModule("test", modulePath, "a test module", true, false);
+                Module m = new SimpleModule("test", modulePath.toString(), "a test module", true, false);
                 int rc = SystemTest.this.newServer(new TestModules(m)).setIsListeningLatch(isListeningLatch).start(new String[] { "--port=14415" });
                 return rc;
             }

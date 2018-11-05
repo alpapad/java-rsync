@@ -166,15 +166,15 @@ public class Configuration implements Modules {
 
                 try {
                     String fsValue = moduleContent.get(MODULE_KEY_FS);
-                    FileSystem fs;
-                    if (fsValue != null) {
-                        fs = PathOps.fileSystemOf(fsValue);
-                    } else {
-                        fs = FileSystems.getDefault();
-                    }
-
-                    Path p = PathOps.get(fs, pathValue);
-                    RestrictedPath vp = new RestrictedPath(moduleName, p);
+//                    FileSystem fs;
+//                    if (fsValue != null) {
+//                        fs = PathOps.fileSystemOf(fsValue);
+//                    } else {
+//                        fs = FileSystems.getDefault();
+//                    }
+//
+//                    Path p = PathOps.get(fs, pathValue);
+                    RestrictedPath vp = new RestrictedPath(moduleName, fsValue, pathValue);
                     SimpleModule m = new SimpleModule(moduleName, vp);
                     String comment = Text.nullToEmptyStr(moduleContent.get(MODULE_KEY_COMMENT));
                     m.comment = comment;
@@ -187,7 +187,7 @@ public class Configuration implements Modules {
                         m.isWritable = isWritable;
                     }
                     result.put(moduleName, m);
-                } catch (InvalidPathException | IllegalValueException | IOException | URISyntaxException e) {
+                } catch (InvalidPathException | IllegalValueException e) {
                     if (_log.isLoggable(Level.WARNING)) {
                         _log.warning(String.format("skipping module %s: %s", moduleName, e.getMessage()));
                     }

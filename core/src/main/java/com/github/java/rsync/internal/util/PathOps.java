@@ -27,6 +27,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,8 @@ public final class PathOps {
         try {
             return FileSystems.getFileSystem(uri);
         } catch (FileSystemNotFoundException e) {
-            Map<String, Object> empty = Collections.emptyMap();
+            Map<String, Object> empty = new HashMap<>();
+            empty.put("create", "true");
             return FileSystems.newFileSystem(uri, empty);
         }
     }
@@ -98,7 +100,13 @@ public final class PathOps {
     }
 
     private static Path joinPaths(Path path, List<Path> paths) {
-        Path empty = path.getFileSystem().getPath(Text.EMPTY);
+        Path empty;
+        String scheme = path.toUri().getScheme();
+        if(scheme.equals("jar")) {
+            empty = path.getFileSystem().getPath(Text.EMPTY).toAbsolutePath().normalize();
+        } else {
+            empty = path.getFileSystem().getPath(Text.EMPTY);
+        }
         Path result = path.isAbsolute() ? path.getRoot() : empty;
         for (Path p : paths) {
             result = result.resolve(p);

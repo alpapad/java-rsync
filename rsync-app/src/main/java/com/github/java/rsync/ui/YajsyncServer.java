@@ -66,7 +66,7 @@ public final class YajsyncServer {
     private final RsyncServer.Builder serverBuilder = new RsyncServer.Builder();
     private int timeout = 0;
     private boolean useTLS;
-    private int verbosity = 100;
+    private int verbosity = 1;
     
     public YajsyncServer() {
     }
