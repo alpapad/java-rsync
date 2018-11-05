@@ -40,10 +40,7 @@ import com.github.java.rsync.internal.util.PathOps;
  */
 public final class RestrictedPath {
     private static final Pattern MODULE_REGEX = Pattern.compile("^\\w+$");
-//    private final Path dotDir;
-//    private final Path dotDotDir;
     private final String moduleName;
-    //private final Path rootPath;
 
     private final String pathValue; 
     private final String fsValue;
@@ -67,9 +64,6 @@ public final class RestrictedPath {
         }
         //assert rootPath.isAbsolute() : rootPath;
         this.moduleName = moduleName;
-//        this.rootPath = rootPath.normalize();
-//        dotDir = this.rootPath.getFileSystem().getPath(Text.DOT);
-//        dotDotDir = this.rootPath.getFileSystem().getPath(Text.DOT_DOT);
     }
 
     @Override

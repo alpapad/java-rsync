@@ -172,6 +172,7 @@ public class YajsyncClient {
     private final SimpleDateFormat timeFormatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     private int timeout = 0;
     private String userName;
+    private boolean cwdNameSeen = false;
     
     private boolean useTLS;
     
@@ -370,6 +371,7 @@ public class YajsyncClient {
         
         options.add(Option.newStringOption(Option.Policy.OPTIONAL, "cwd", "", "change current working directory (usable in " + "combination with --fs)", option -> {
             cwdName = (String) option.getValue();
+            cwdNameSeen = true;
             return ArgumentParser.Status.CONTINUE;
         }));
         
@@ -377,7 +379,9 @@ public class YajsyncClient {
             try {
                 String fsName = (String) option.getValue();
                 fs = PathOps.fileSystemOf(fsName);
-                cwdName = Util.firstOf(fs.getRootDirectories()).toString();
+                if (!cwdNameSeen) {
+                    cwdName = Util.firstOf(fs.getRootDirectories()).toString();
+                }
                 return ArgumentParser.Status.CONTINUE;
             } catch (IOException | URISyntaxException e) {
                 throw new ArgumentParsingError(e);
@@ -568,7 +572,7 @@ public class YajsyncClient {
                 LOG.fine(String.format("%s src: %s, dst: %s", mode, srcArgs, dstArgOrNull));
             }
             clientBuilder.filterRuleConfiguration(new FilterRuleConfiguration(inputFilterRules));
-
+            
             RsyncClient.Result result;
             if (mode.isRemote()) {
                 result = remoteTransfer(mode, srcArgs, dstArgOrNull);

@@ -22,13 +22,10 @@ package com.github.java.rsync.server.module;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.Collection;
@@ -45,7 +42,6 @@ import com.github.java.rsync.internal.text.Text;
 import com.github.java.rsync.internal.util.ArgumentParser;
 import com.github.java.rsync.internal.util.Environment;
 import com.github.java.rsync.internal.util.Option;
-import com.github.java.rsync.internal.util.PathOps;
 
 public class Configuration implements Modules {
     private static class IllegalValueException extends Exception {
@@ -166,14 +162,6 @@ public class Configuration implements Modules {
 
                 try {
                     String fsValue = moduleContent.get(MODULE_KEY_FS);
-//                    FileSystem fs;
-//                    if (fsValue != null) {
-//                        fs = PathOps.fileSystemOf(fsValue);
-//                    } else {
-//                        fs = FileSystems.getDefault();
-//                    }
-//
-//                    Path p = PathOps.get(fs, pathValue);
                     RestrictedPath vp = new RestrictedPath(moduleName, fsValue, pathValue);
                     SimpleModule m = new SimpleModule(moduleName, vp);
                     String comment = Text.nullToEmptyStr(moduleContent.get(MODULE_KEY_COMMENT));

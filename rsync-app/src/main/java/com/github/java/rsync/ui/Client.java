@@ -38,7 +38,8 @@ public class Client {
                 "--stats", //
                 "--filter=+ *", //
                 "--fs=kzip:file:///home/alpapad/a.zip",
-                "/", //
+                "--cwd=/",
+                "/plugins", //
                 "rsync://localhost/test/" //
         });
         System.exit(rc);
