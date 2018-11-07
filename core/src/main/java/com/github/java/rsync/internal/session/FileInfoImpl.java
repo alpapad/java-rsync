@@ -148,6 +148,6 @@ class FileInfoImpl implements FileInfo {
     @Override
     public String toString() {
         String str = pathName == null ? "untransferrable " + Text.bytesToString(pathNameBytes) : pathName;
-        return String.format("%s (%s)", this.getClass().getSimpleName(), str);
+        return String.format("%s (%s/%s)", this.getClass().getSimpleName(), str, attrs);
     }
 }

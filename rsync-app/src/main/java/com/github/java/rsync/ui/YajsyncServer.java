@@ -60,6 +60,7 @@ public final class YajsyncServer {
     private PrintStream err = System.err;
     private CountDownLatch listeningLatch;
     private ModuleProvider moduleProvider = ModuleProvider.getDefault();
+    private ExecutorService executorService = null;
     private int numThreads = Runtime.getRuntime().availableProcessors() * THREAD_FACTOR;
     private PrintStream out = System.out;
     private int port = RsyncServer.DEFAULT_LISTEN_PORT;
@@ -216,6 +217,18 @@ public final class YajsyncServer {
         return this;
     }
     
+    public YajsyncServer setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
+        return this;
+    }
+    
+    private ExecutorService getExecutor() {
+        if (executorService == null) {
+            executorService = Executors.newFixedThreadPool(numThreads);
+        }
+        return executorService;
+    }
+    
     public int start(String[] args) throws IOException, InterruptedException {
         ArgumentParser argsParser = ArgumentParser.newNoUnnamed(this.getClass().getSimpleName());
         try {
@@ -244,7 +257,7 @@ public final class YajsyncServer {
         socketFactory.setReuseAddress(true);
         // socketFactory.setKeepAlive(true);
         boolean isInterruptible = !useTLS;
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        ExecutorService executor = getExecutor();
         RsyncServer server = serverBuilder.build(executor);
         
         try (ServerChannel listenSock = socketFactory.open(address, port, timeout)) { // throws IOException
@@ -252,8 +265,11 @@ public final class YajsyncServer {
                 listeningLatch.countDown();
             }
             while (true) {
-                System.err.println("Got connection....");
+                
                 DuplexByteChannel sock = listenSock.accept(); // throws IOException
+                if (LOG.isLoggable(Level.INFO)) {
+                    LOG.info("Got connection from " + sock.getPeerAddress());
+                }
                 Callable<Boolean> c = createCallable(server, sock, isInterruptible);
                 executor.submit(c); // NOTE: result discarded
             }

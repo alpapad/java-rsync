@@ -809,7 +809,7 @@ public final class RsyncClient {
             return isOK;
         }
 
-        public Statistics statistics() {
+        public Statistics getStatistics() {
             return statistics;
         }
     }

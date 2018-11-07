@@ -1,4 +1,2 @@
-other.jdk.nio.zipfs.ZipFileSystemProvider
-other.jdk.nio.zipfs.JarFileSystemProvider
-moe.lymia.zipfs.ZipFileSystemProvider
-moe.lymia.zipfs.JarFileSystemProvider
+bootfs.SpringBootFileSystemProvider
+bootfs.SpringBootJarFileSystemProvider

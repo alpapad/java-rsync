@@ -334,7 +334,7 @@ public class YajsyncClient {
         options.add(Option.newIntegerOption(Option.Policy.OPTIONAL, "timeout", "", "set I/O read timeout in seconds (default 0 - " + "disabled)", option -> {
             int timeout = (int) option.getValue();
             if (timeout < 0) {
-                throw new ArgumentParsingError(String.format("invalid timeout %d - mut be greater " + "than or equal to 0", timeout));
+                throw new ArgumentParsingError(String.format("invalid timeout %d - must be greater " + "than or equal to 0", timeout));
             }
             this.timeout = timeout * 1000;
             // Timeout socket operations depend on
@@ -482,7 +482,7 @@ public class YajsyncClient {
                             if (isDone) {
                                 return listing.get();
                             }
-                            System.out.println(line);
+                            stdout.println(line);
                         }
                     } else {
                         RsyncClient.FileListing listing = client.list(srcArgs.getModuleName(), srcArgs.getPathNames());
@@ -493,7 +493,7 @@ public class YajsyncClient {
                                 return listing.get();
                             }
                             String ls = fileInfoToListingString(f);
-                            System.out.println(ls);
+                            stdout.println(ls);
                         }
                     }
                 default:
@@ -591,14 +591,14 @@ public class YajsyncClient {
                         result = listing.get();
                         break;
                     }
-                    System.out.println(fileInfoToListingString(f));
+                    stdout.println(fileInfoToListingString(f));
                 }
             } else {
                 throw new AssertionError();
             }
-            statistics = result.statistics();
+            statistics = result.getStatistics();
             if (showStatistics) {
-                showStatistics(result.statistics());
+                showStatistics(result.getStatistics());
             }
             if (LOG.isLoggable(Level.INFO)) {
                 LOG.info("exit status: " + (result.isOK() ? "OK" : "ERROR"));
