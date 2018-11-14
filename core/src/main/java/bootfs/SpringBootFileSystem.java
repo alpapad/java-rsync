@@ -1239,6 +1239,7 @@ public class SpringBootFileSystem extends FileSystem {
     
     // default time stamp for pseudo entries
     private long zfsDefaultTimeStamp = System.currentTimeMillis();
+
     
     SpringBootFileSystem(SpringBootFileSystemProvider provider, Path zfpath, Map<String, ?> env) throws IOException {
         // create a new zip if not exists
@@ -1265,7 +1266,7 @@ public class SpringBootFileSystem extends FileSystem {
         readOnly = !writeable;
         zc = ZipCoder.get(nameEncoding);
         rootdir = new ZipPath(this, new byte[] { '/' });
-        ch = Files.newByteChannel(zfpath, READ);
+        ch = new BootSeekableByteChannel(Files.newByteChannel(zfpath, READ));
         try {
             cen = initCEN();
         } catch (IOException x) {

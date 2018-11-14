@@ -1032,8 +1032,14 @@ final class ZipPath implements Path {
     
     @Override
     public URI toUri() {
+        String scheme;
+        if(zfs instanceof SpringBootJarFileSystem) {
+            scheme = "bootJar";
+        } else {
+            scheme = "boot";
+        }
         try {
-            return new URI("jar", decodeUri(zfs.getZipFile().toUri().toString()) + "!" + zfs.getString(toAbsolutePath().path), null);
+            return new URI(scheme, decodeUri(zfs.getZipFile().toUri().toString()) + "!" + zfs.getString(toAbsolutePath().path), null);
         } catch (Exception ex) {
             throw new AssertionError(ex);
         }
