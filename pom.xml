@@ -61,6 +61,7 @@
     <modules>
         <module>core</module>
         <module>rsync-app</module>
+        <module>boot-fs</module>
     </modules>
 
 </project>
